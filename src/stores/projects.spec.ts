@@ -58,7 +58,7 @@ describe('refresh', () => {
     expect(store.changed.size).toBe(0)
   })
 
-  it('highlights the changed row for a few seconds, then fades it out', async () => {
+  it('highlights the changed row and its changed fields for 10 s, then fades it out', async () => {
     const store = useProjectsStore()
     await store.load()
     api.projects[1]!.php = '8.4'
@@ -66,9 +66,13 @@ describe('refresh', () => {
     await store.refresh()
 
     expect(store.items.find(item => item.id === 2)?.php).toBe('8.4')
-    expect([...store.changed]).toEqual([2])
+    expect([...store.changed.keys()]).toEqual([2])
+    expect([...store.changed.get(2)!]).toEqual(['php'])
 
-    vi.advanceTimersByTime(4000)
+    vi.advanceTimersByTime(9999)
+    expect(store.changed.size).toBe(1)
+
+    vi.advanceTimersByTime(1)
     expect(store.changed.size).toBe(0)
     expect([...store.fading]).toEqual([2])
 
@@ -84,10 +88,22 @@ describe('refresh', () => {
 
     await store.refresh()
     vi.advanceTimersByTime(60_000)
-    expect([...store.changed]).toEqual([1])
+    expect([...store.changed.keys()]).toEqual([1])
 
     focusWindow()
-    vi.advanceTimersByTime(4000)
+    vi.advanceTimersByTime(10_000)
     expect(store.changed.size).toBe(0)
+  })
+
+  it('collects every changed field, a new project as \'*\'', async () => {
+    const store = useProjectsStore()
+    await store.load()
+    api.projects[0] = { ...api.projects[0], php: '8.4', theme: 'Betheme' }
+    api.projects.push({ id: 3, name: 'c.pl' })
+
+    await store.refresh()
+
+    expect([...store.changed.get(1)!].toSorted()).toEqual(['php', 'theme'])
+    expect([...store.changed.get(3)!]).toEqual(['*'])
   })
 })

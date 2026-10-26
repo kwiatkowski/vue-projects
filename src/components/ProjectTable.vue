@@ -72,7 +72,7 @@
           @dragend="endDrag"
           @dragstart="startProject($event, project.id)"
         >
-          <td class="cell-name">
+          <td class="cell-name" :class="cellChanged(project, 'name', 'domains')">
             <GripVertical v-if="canDrag" aria-hidden="true" class="row-grip" />
 
             <a
@@ -89,20 +89,12 @@
             </a>
 
             <span v-else class="site site--plain">{{ project.name }}</span>
-
-            <span
-              v-if="projects.changed.has(project.id)"
-              aria-label="Zaktualizowano"
-              class="refreshing"
-              role="status"
-              title="Dane zaktualizowane"
-            />
           </td>
 
-          <td><StatusChip :status="project.status" /></td>
+          <td :class="cellChanged(project, 'status')"><StatusChip :status="project.status" /></td>
 
           <template v-if="full">
-            <td>
+            <td :class="cellChanged(project, 'server', 'serverUrl', 'serverAccount')">
               <a
                 v-if="project.server && project.serverUrl"
                 class="link"
@@ -116,15 +108,15 @@
               <span v-if="project.serverAccount" class="cell-sub mono">{{ project.serverAccount }}</span>
             </td>
 
-            <td class="mono" :class="{ warn: outdatedPhp(project.php) }">{{ project.php }}</td>
+            <td class="mono" :class="[{ warn: outdatedPhp(project.php) }, cellChanged(project, 'php')]">{{ project.php }}</td>
           </template>
 
-          <td><span v-if="project.engine" class="chip chip--soft">{{ project.engine }}</span></td>
-          <td class="mono" :class="{ latest: isLatest(project) }" :title="isLatest(project) ? latestTitle : undefined">{{ project.version }}</td>
-          <td class="cell-theme">{{ project.theme }}</td>
+          <td :class="cellChanged(project, 'engine')"><span v-if="project.engine" class="chip chip--soft">{{ project.engine }}</span></td>
+          <td class="mono" :class="[{ latest: isLatest(project) }, cellChanged(project, 'version')]" :title="isLatest(project) ? latestTitle : undefined">{{ project.version }}</td>
+          <td class="cell-theme" :class="cellChanged(project, 'theme')">{{ project.theme }}</td>
 
           <template v-if="full">
-            <td class="center">
+            <td class="center" :class="cellChanged(project, 'repo')">
               <a
                 v-if="project.repo"
                 class="chip chip--soft repo"
@@ -136,11 +128,16 @@
               >{{ repoHost(project.repo) }}</a>
             </td>
 
-            <td v-for="flag in ['deploy', 'dev', 'bedrock', 'security'] as const" :key="flag" class="center">
+            <td
+              v-for="flag in ['deploy', 'dev', 'bedrock', 'security'] as const"
+              :key="flag"
+              class="center"
+              :class="cellChanged(project, flag)"
+            >
               <Check v-if="project[flag]" :aria-label="FLAG_LABELS[flag]" class="yes" />
             </td>
 
-            <td class="center">
+            <td class="center" :class="cellChanged(project, 'localUrl')">
               <a
                 v-if="project.localUrl"
                 class="local"
@@ -152,19 +149,24 @@
               ><Laptop /></a>
             </td>
 
-            <td v-for="flag in ['acf', 'miModal'] as const" :key="flag" class="center">
+            <td
+              v-for="flag in ['acf', 'miModal'] as const"
+              :key="flag"
+              class="center"
+              :class="cellChanged(project, flag)"
+            >
               <Check v-if="project[flag]" :aria-label="FLAG_LABELS[flag]" class="yes" />
             </td>
 
-            <td class="mono nowrap">{{ formatDay(project.dbSync) }}</td>
+            <td class="mono nowrap" :class="cellChanged(project, 'dbSync')">{{ formatDay(project.dbSync) }}</td>
 
-            <td class="nowrap">
+            <td class="nowrap" :class="cellChanged(project, 'reportedAt')">
               <span v-if="project.reportedAt" class="report" :class="{ 'report--stale': reportStale(project.reportedAt) }" :title="project.reportedAt">
                 <span class="dot" /> {{ ago(project.reportedAt) }}
               </span>
             </td>
 
-            <td class="nowrap">
+            <td class="nowrap" :class="cellChanged(project, 'todo')">
               <TodoChip v-if="project.todo" :todo="project.todo" />
             </td>
           </template>
@@ -283,6 +285,13 @@
 
   /** headers only when there are categories to tell apart */
   const showHeaders = computed(() => props.grouped && props.groups.some(group => group.category !== null))
+
+  /** a cell whose fields the last refresh changed – blurred under a spinner while the row is highlighted */
+  function cellChanged (project: Project, ...fields: string[]): string | undefined {
+    const changed = projects.changed.get(project.id)
+
+    return changed && (changed.has('*') || fields.some(field => changed.has(field))) ? 'cell--changed' : undefined
+  }
 
   const isLatest = (project: Project) => latestWordpress(project, config.latestWordpress)
   const latestTitle = config.latestWordpress ? `Najnowszy WordPress (${config.latestWordpress})` : undefined
@@ -534,12 +543,64 @@ tbody:first-of-type .group-row td {
 }
 
 /*
- * changed by the minute's refresh – the hover colour and a small spinner until the user has seen it (the store keeps
- * it a few seconds once the window has focus), then the colour fades out
+ * changed by the minute's refresh – for 10 s once the window has focus (the store) the row has the hover colour and
+ * its text a bit greyed out; the cells that changed are blurred under a spinner. Then the colour fades out.
  */
 .row--changed td,
 .card.row--changed {
   background: var(--hover);
+}
+
+.row--changed td,
+.card.row--changed {
+  color: var(--text-3);
+}
+
+.row--changed td > *,
+.card.row--changed > * {
+  opacity: .6;
+}
+
+/* plain text has no element to blur – it turns into its own blurred shadow; elements get the filter */
+.cell--changed {
+  position: relative;
+  color: transparent;
+  text-shadow: 0 0 6px var(--text-3);
+}
+
+.cell--changed > * {
+  filter: blur(3px);
+}
+
+.cell--changed::after,
+.refreshing {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--line-strong);
+  border-top-color: var(--positive);
+  border-radius: 50%;
+  animation: refreshing .8s linear infinite;
+}
+
+.cell--changed::after {
+  position: absolute;
+  top: 50%;
+  /* over the start of the text, where the cell's padding ends; centred in the centred columns */
+  left: 12px;
+  margin-top: -7px;
+  content: '';
+}
+
+.cell--changed.center::after {
+  left: 50%;
+  margin-left: -7px;
+}
+
+/* the cards (phones) – the spinner next to the name */
+.refreshing {
+  display: inline-block;
+  margin-left: 8px;
+  vertical-align: middle;
 }
 
 .row--fading td,
@@ -553,18 +614,6 @@ tbody:first-of-type .group-row td {
   }
 }
 
-.refreshing {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  margin-left: 8px;
-  border: 2px solid var(--line-strong);
-  border-top-color: var(--positive);
-  border-radius: 50%;
-  vertical-align: middle;
-  animation: refreshing .8s linear infinite;
-}
-
 @keyframes refreshing {
   to {
     rotate: 1turn;
@@ -572,6 +621,7 @@ tbody:first-of-type .group-row td {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .cell--changed::after,
   .refreshing {
     animation: none;
   }

@@ -27,15 +27,16 @@ export const useProjectsStore = defineStore('projects', () => {
   const sortedCategories = computed(() => categories.value.toSorted(compareManual))
 
   /**
-   * Projects a refresh found changed (or new): highlighted with a spinner until the user has seen them – a few seconds
-   * once the window has focus (a refresh in a window behind the terminal waits) – then `fading` for the fade-out.
+   * Projects a refresh found changed (or new) → the fields that changed ('*' – a new project). The table highlights
+   * the row and blurs those cells under a spinner until the user has seen them – 10 s once the window has focus (a
+   * refresh in a window behind the terminal waits) – then the row is `fading` for the fade-out.
    */
-  const changed = ref<Set<number>>(new Set())
+  const changed = ref<Map<number, Set<string>>>(new Map())
   const fading = ref<Set<number>>(new Set())
   let changedTimer: ReturnType<typeof setTimeout> | undefined
   let fadingTimer: ReturnType<typeof setTimeout> | undefined
 
-  const SHOW_MS = 4000
+  const SHOW_MS = 10_000
   const FADE_MS = 1000
 
   function settleWhenSeen (): void {
@@ -49,8 +50,8 @@ export const useProjectsStore = defineStore('projects', () => {
     }
 
     changedTimer = setTimeout(() => {
-      fading.value = changed.value
-      changed.value = new Set()
+      fading.value = new Set(changed.value.keys())
+      changed.value = new Map()
       clearTimeout(fadingTimer)
       fadingTimer = setTimeout(() => {
         fading.value = new Set()
@@ -105,20 +106,45 @@ export const useProjectsStore = defineStore('projects', () => {
       categories.value = freshCategories
     }
 
-    const known = new Map(itemsBefore.map(item => [item.id, JSON.stringify(item)]))
-    const ids = freshItems.filter(item => known.get(item.id) !== JSON.stringify(item)).map(item => item.id)
+    const known = new Map(itemsBefore.map(item => [item.id, item]))
+    const found = new Map<number, Set<string>>()
 
-    if (ids.length === 0 && freshItems.length === itemsBefore.length) {
+    for (const item of freshItems) {
+      const fields = changedFields(known.get(item.id), item)
+
+      if (fields.size > 0) {
+        found.set(item.id, fields)
+      }
+    }
+
+    if (found.size === 0 && freshItems.length === itemsBefore.length) {
       return
     }
 
     items.value = freshItems
 
-    if (ids.length > 0) {
+    if (found.size > 0) {
       // still unseen ones from an earlier refresh stay highlighted too
-      changed.value = new Set([...changed.value, ...ids])
+      const merged = new Map(changed.value)
+
+      for (const [id, fields] of found) {
+        merged.set(id, new Set([...merged.get(id) ?? [], ...fields]))
+      }
+
+      changed.value = merged
       settleWhenSeen()
     }
+  }
+
+  /** The fields of `before` and `after` that differ; '*' when there was no `before` (a new project). */
+  function changedFields (before: Project | undefined, after: Project): Set<string> {
+    if (!before) {
+      return new Set(['*'])
+    }
+
+    const keys = new Set([...Object.keys(before), ...Object.keys(after)]) as Set<keyof Project>
+
+    return new Set([...keys].filter(key => JSON.stringify(before[key]) !== JSON.stringify(after[key])))
   }
 
   function replace (project: Project): void {
