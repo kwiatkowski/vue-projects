@@ -39,7 +39,7 @@ export interface TodoTask {
 
 /**
  * A project as the owner sees it. The public list has only `id`, `name`, `categoryId`, `position` and the public
- * fields (domain, status, engine, version, theme) – the rest is missing there, not null.
+ * fields (domains, status, engine, version, theme) – the rest is missing there, not null.
  */
 export interface Project extends Record<Flag, boolean> {
   id: number
@@ -47,7 +47,8 @@ export interface Project extends Record<Flag, boolean> {
   categoryId: number | null
   /** the user's order within the category; null – never placed (last, by name) */
   position: number | null
-  domain: string | null
+  /** the site's addresses without https://, the first is the main one; [] – not a site */
+  domains: string[]
   status: Status | null
   server: string | null
   serverUrl: string | null

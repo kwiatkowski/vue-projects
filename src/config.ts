@@ -44,7 +44,7 @@ export const config: AppConfig = {
   logoutUrl: injected.logoutUrl ?? null,
   reportUrl: injected.reportUrl ?? '/wp-json/projects/v1/report',
   todoUrl: injected.todoUrl ?? null,
-  publicFields: injected.publicFields ?? ['domain', 'status', 'engine', 'version', 'theme'],
+  publicFields: injected.publicFields ?? ['domains', 'status', 'engine', 'version', 'theme'],
   latestWordpress: injected.latestWordpress ?? null,
   siteName: injected.siteName ?? 'kwiatkowski.co',
   homeUrl: injected.homeUrl ?? '/',

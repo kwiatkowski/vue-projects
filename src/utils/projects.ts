@@ -16,7 +16,7 @@ const STATUS_ORDER: Array<Status | null> = ['online', 'dev', 'offline', 'suspend
 const collator = new Intl.Collator('pl', { numeric: true, sensitivity: 'base' })
 
 export function matches (project: Partial<Project>, filter: Filter, query: string): boolean {
-  if (filter === 'other' ? Boolean(project.domain) : filter !== 'all' && project.status !== filter) {
+  if (filter === 'other' ? (project.domains?.length ?? 0) > 0 : filter !== 'all' && project.status !== filter) {
     return false
   }
 
@@ -26,7 +26,7 @@ export function matches (project: Partial<Project>, filter: Filter, query: strin
     return true
   }
 
-  return [project.name, project.domain, project.theme, project.server, project.serverAccount, project.engine]
+  return [project.name, ...(project.domains ?? []), project.theme, project.server, project.serverAccount, project.engine]
     .some(value => value?.toLowerCase().includes(needle))
 }
 
@@ -122,6 +122,11 @@ export function repoHost (url: string | null | undefined): string | null {
 /** A WordPress site on the newest release. */
 export function latestWordpress (project: Partial<Project>, latest: string | null): boolean {
   return Boolean(latest) && project.engine === 'wordpress' && project.version === latest
+}
+
+/** "https://Example.pl/x" → "example.pl" – how domains are kept. */
+export function bareDomain (value: string): string {
+  return value.trim().replace(/^https?:\/\//i, '').replace(/\/.*$/, '').toLowerCase()
 }
 
 /** https:// in front of a bare domain. */

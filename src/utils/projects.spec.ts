@@ -1,14 +1,14 @@
 import type { Project } from '@/types'
 import { describe, expect, it } from 'vitest'
-import { ago, compareManual, formatDay, groupProjects, latestWordpress, matches, moveId, repoHost, reportStale, siteUrl, sortProjects } from './projects'
+import { ago, bareDomain, compareManual, formatDay, groupProjects, latestWordpress, matches, moveId, repoHost, reportStale, siteUrl, sortProjects } from './projects'
 
-const p = (name: string, extra: Partial<Project> = {}): Partial<Project> => ({ name, domain: name, status: 'online', ...extra })
+const p = (name: string, extra: Partial<Project> = {}): Partial<Project> => ({ name, domains: [name], status: 'online', ...extra })
 
 describe('matches', () => {
   it('filters by status and by having no domain', () => {
     expect(matches(p('a.pl'), 'online', '')).toBe(true)
     expect(matches(p('a.pl', { status: 'suspended' }), 'online', '')).toBe(false)
-    expect(matches(p('HOME', { domain: null, status: null }), 'other', '')).toBe(true)
+    expect(matches(p('HOME', { domains: [], status: null }), 'other', '')).toBe(true)
     expect(matches(p('a.pl'), 'other', '')).toBe(false)
   })
 
@@ -16,6 +16,7 @@ describe('matches', () => {
     expect(matches(p('rakprostaty.com.pl', { theme: 'Betheme Child' }), 'all', 'betheme')).toBe(true)
     expect(matches(p('ckmed.pl', { server: 'hostido.pl' }), 'all', 'HOSTIDO')).toBe(true)
     expect(matches(p('ckmed.pl'), 'all', 'meden.com')).toBe(false)
+    expect(matches(p('edgemedical', { domains: ['edgemedical.eu', 'edgemedical.bg'] }), 'all', '.bg')).toBe(true)
   })
 })
 
@@ -87,6 +88,7 @@ describe('helpers', () => {
     expect(formatDay('2026-07-24')).toBe('24.07.2026')
     expect(formatDay(null)).toBe('')
     expect(siteUrl('ckmed.pl')).toBe('https://ckmed.pl/')
+    expect(bareDomain(' HTTPS://Edgemedical.EU/bg/ ')).toBe('edgemedical.eu')
   })
 
   it('tells how old a report is', () => {

@@ -73,19 +73,11 @@
           <td v-if="editingId === project.id" class="cell-name" @click.stop>
             <form class="inline-edit" @keydown.esc.prevent="editingId = null" @submit.prevent="saveInline(project)">
               <input
-                ref="inlineDomain"
-                v-model.trim="inline.domain"
-                aria-label="Domena"
+                ref="nameInput"
+                v-model.trim="inlineName"
+                aria-label="Nazwa projektu"
                 class="input inline-edit__input"
-                placeholder="domena.pl"
-                type="text"
-              >
-
-              <input
-                v-model.trim="inline.name"
-                aria-label="Nazwa"
-                class="input inline-edit__input"
-                placeholder="Nazwa"
+                placeholder="Nazwa projektu"
                 type="text"
               >
 
@@ -114,27 +106,27 @@
 
             <button
               v-if="full"
-              aria-label="Zmień nazwę i domenę"
+              aria-label="Zmień nazwę"
               class="rename"
-              title="Zmień nazwę i domenę"
+              title="Zmień nazwę"
               type="button"
               @click.stop="startInline(project)"
             ><Pencil /></button>
 
             <a
-              v-if="project.domain"
+              v-if="project.domains[0]"
               class="site"
-              :href="siteUrl(project.domain)"
+              :href="siteUrl(project.domains[0])"
               rel="noopener"
               target="_blank"
+              :title="project.domains.join(', ')"
               @click.stop
             >
-              {{ project.domain }}
+              {{ project.name }}
               <ArrowUpRight class="site__icon" />
             </a>
 
             <span v-else class="site site--plain">{{ project.name }}</span>
-            <span v-if="project.domain && project.name !== project.domain" class="cell-sub">{{ project.name }}</span>
           </td>
 
           <td><StatusChip :status="project.status" /></td>
@@ -234,14 +226,15 @@
         >
           <div class="card__head">
             <a
-              v-if="project.domain"
+              v-if="project.domains[0]"
               class="site"
-              :href="siteUrl(project.domain)"
+              :href="siteUrl(project.domains[0])"
               rel="noopener"
               target="_blank"
+              :title="project.domains.join(', ')"
               @click.stop
             >
-              {{ project.domain }} <ArrowUpRight class="site__icon" />
+              {{ project.name }} <ArrowUpRight class="site__icon" />
             </a>
 
             <span v-else class="site site--plain">{{ project.name }}</span>
@@ -274,7 +267,7 @@
   import type { Category, Flag, Project, SortKey } from '@/types'
   import type { Group } from '@/utils/projects'
   import { ArrowUpRight, Check, ChevronDown, GripVertical, Laptop, Pencil, X } from 'lucide-vue-next'
-  import { computed, nextTick, reactive, ref, useTemplateRef } from 'vue'
+  import { computed, nextTick, ref, useTemplateRef } from 'vue'
   import CategoryMenu from '@/components/CategoryMenu.vue'
   import StatusChip from '@/components/StatusChip.vue'
   import TodoChip from '@/components/TodoChip.vue'
@@ -300,31 +293,28 @@
 
   const projects = useProjectsStore()
 
-  // ---- name and domain edited in place: the pencil after the name, Enter saves, Esc cancels
+  // ---- the name edited in place: the pencil after it, Enter saves, Esc cancels (domains – in the dialog)
 
   const editingId = ref<number | null>(null)
-  const inline = reactive({ domain: '', name: '' })
+  const inlineName = ref('')
   const inlineBusy = ref(false)
-  const inlineDomain = useTemplateRef<HTMLInputElement[]>('inlineDomain')
+  const nameInput = useTemplateRef<HTMLInputElement[]>('nameInput')
 
   async function startInline (project: Project): Promise<void> {
     editingId.value = project.id
-    inline.domain = project.domain ?? ''
-    inline.name = project.name
+    inlineName.value = project.name
     await nextTick()
-    inlineDomain.value?.[0]?.select()
+    nameInput.value?.[0]?.select()
   }
 
   async function saveInline (project: Project): Promise<void> {
-    const domain = inline.domain.replace(/^https?:\/\//, '').replace(/\/$/, '') || null
-    // the name followed the domain – it follows the new one too, unless it was typed
-    const name = inline.name === project.name && project.name === project.domain && domain ? domain : inline.name
+    const name = inlineName.value
 
     if (!name) {
       return
     }
 
-    if (name === project.name && domain === project.domain) {
+    if (name === project.name) {
       editingId.value = null
 
       return
@@ -332,7 +322,7 @@
 
     inlineBusy.value = true
 
-    if (await projects.update(project.id, { name, domain })) {
+    if (await projects.update(project.id, { name })) {
       editingId.value = null
     }
 
@@ -363,7 +353,7 @@
 
   const columns = computed<Column[]>(() => props.full
     ? [
-      { key: 'name', label: 'Domena', sort: 'name' },
+      { key: 'name', label: 'Projekt', sort: 'name' },
       { key: 'status', label: 'Status', sort: 'status' },
       { key: 'server', label: 'Serwer', sort: 'server' },
       { key: 'php', label: 'PHP', sort: 'php' },
@@ -383,7 +373,7 @@
       { key: 'todo', label: 'Todo' },
     ]
     : [
-      { key: 'name', label: 'Domena', sort: 'name' },
+      { key: 'name', label: 'Projekt', sort: 'name' },
       { key: 'status', label: 'Status', sort: 'status' },
       { key: 'engine', label: 'Silnik' },
       { key: 'version', label: 'Wersja', sort: 'version' },
@@ -656,7 +646,7 @@ tr:hover .rename,
   display: flex;
   align-items: center;
   gap: 6px;
-  min-width: 360px;
+  min-width: 240px;
 }
 
 .inline-edit__input {

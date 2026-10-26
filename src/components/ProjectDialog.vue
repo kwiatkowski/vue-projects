@@ -18,18 +18,37 @@
 
     <span v-if="nameError" class="error-text">{{ nameError }}</span>
 
-    <div class="grid grid--3">
-      <label class="field">
-        <span>Domena</span>
+    <div class="field">
+      <span>Domeny <span class="faint">– pierwsza jest główna (link na liście)</span></span>
 
-        <input
-          v-model.trim="form.domain"
-          class="input"
-          placeholder="przyklad.pl"
-          type="text"
-          @blur="nameFromDomain"
-        >
-      </label>
+      <div class="domains">
+        <div v-for="(_, index) in form.domains" :key="index" class="domains__row">
+          <input
+            v-model.trim="form.domains[index]"
+            :aria-label="`Domena ${index + 1}`"
+            class="input"
+            placeholder="przyklad.pl"
+            type="text"
+            @blur="onDomainBlur(index)"
+          >
+
+          <button
+            v-if="form.domains.length > 1"
+            aria-label="Usuń domenę"
+            class="btn btn--icon btn--sm"
+            title="Usuń domenę"
+            type="button"
+            @click="form.domains.splice(index, 1)"
+          ><X /></button>
+        </div>
+
+        <button class="btn btn--sm domains__add" type="button" @click="addDomain">
+          <Plus /> Dodaj domenę
+        </button>
+      </div>
+    </div>
+
+    <div class="grid">
 
       <label class="field">
         <span>Status</span>
@@ -234,7 +253,7 @@
 
 <script lang="ts" setup>
   import type { Flag, Project, ProjectInput, Status, TodoTask } from '@/types'
-  import { Copy, KeyRound, ListChecks } from 'lucide-vue-next'
+  import { Copy, KeyRound, ListChecks, Plus, X } from 'lucide-vue-next'
   import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
   import BaseDialog from '@/components/ui/BaseDialog.vue'
@@ -242,7 +261,7 @@
   import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
-  import { ago, formatDay, STATUS_LABELS } from '@/utils/projects'
+  import { ago, bareDomain, formatDay, STATUS_LABELS } from '@/utils/projects'
 
   const projects = useProjectsStore()
   const notify = useNotifyStore()
@@ -258,11 +277,12 @@
 
   type Form = Required<Omit<ProjectInput, 'status'>> & { status: Status | null }
 
-  const TEXT_FIELDS = ['domain', 'server', 'serverUrl', 'serverAccount', 'php', 'engine', 'version', 'theme', 'repo', 'localUrl', 'dbSync', 'notes'] as const
+  const TEXT_FIELDS = ['server', 'serverUrl', 'serverAccount', 'php', 'engine', 'version', 'theme', 'repo', 'localUrl', 'dbSync', 'notes'] as const
 
   function blank (): Form {
     return {
       name: '',
+      domains: [''],
       status: null,
       categoryId: null,
       todoProject: null,
@@ -279,6 +299,8 @@
       const value = project[key as keyof Project]
       ;(form as Record<string, unknown>)[key] = value ?? (typeof form[key] === 'string' ? '' : form[key])
     }
+
+    form.domains = project.domains.length > 0 ? [...project.domains] : ['']
 
     return form
   }
@@ -343,11 +365,21 @@
     return JSON.stringify(form.value) === initial.value || window.confirm('Odrzucić niezapisane zmiany?')
   }
 
-  /** a new site: the domain is the name, until a name is typed */
-  function nameFromDomain (): void {
-    if (!form.value.name && form.value.domain) {
-      form.value.name = form.value.domain.replace(/^https?:\/\//, '').replace(/\/.*$/, '')
+  /** a domain is kept bare (no https://, no path); the main one names a new project, until a name is typed */
+  function onDomainBlur (index: number): void {
+    const domain = bareDomain(form.value.domains[index] ?? '')
+    form.value.domains[index] = domain
+
+    if (index === 0 && !form.value.name && domain) {
+      form.value.name = domain
     }
+  }
+
+  async function addDomain (): Promise<void> {
+    form.value.domains.push('')
+    await nextTick()
+    // the new, last field
+    ;[...document.querySelectorAll<HTMLInputElement>('.domains__row input')].at(-1)?.focus()
   }
 
   function payload (): ProjectInput & { name: string } {
@@ -358,7 +390,7 @@
       data[field] = (data[field] as string).trim() || null
     }
 
-    data.domain = (data.domain as string | null)?.replace(/^https?:\/\//, '').replace(/\/$/, '') ?? null
+    data.domains = [...new Set(form.value.domains.map(domain => bareDomain(domain)).filter(Boolean))]
 
     return data as ProjectInput & { name: string }
   }
@@ -501,6 +533,21 @@ code {
 .report__actions {
   display: flex;
   gap: 6px;
+}
+
+.domains {
+  display: grid;
+  gap: 6px;
+}
+
+.domains__row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.domains__add {
+  justify-self: start;
 }
 
 /* open tasks of the linked Todo project – the circle in the priority colour, as in Todo */

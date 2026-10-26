@@ -119,7 +119,7 @@
   /** dragging changes the order of whole categories – only when all of them are shown */
   const canDrag = computed(() => config.canManage && sort.value === null && !filtered.value)
 
-  const sites = computed(() => projects.items.filter(project => project.domain))
+  const sites = computed(() => projects.items.filter(project => project.domains.length > 0))
 
   const filters = computed(() => {
     const count = (status: Filter) => projects.items.filter(project => matches(project, status, '')).length
