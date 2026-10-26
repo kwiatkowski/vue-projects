@@ -160,10 +160,14 @@
 
             <td class="mono nowrap" :class="cellChanged(project, 'dbSync')">{{ formatDay(project.dbSync) }}</td>
 
-            <td class="nowrap" :class="cellChanged(project, 'reportedAt')">
-              <span v-if="project.reportedAt" class="report" :class="{ 'report--stale': reportStale(project.reportedAt) }" :title="ago(project.reportedAt)">
-                <span class="dot" /> {{ formatDateTime(project.reportedAt) }}
-              </span>
+            <td class="center" :class="cellChanged(project, 'reportedAt', 'token')">
+              <span
+                :aria-label="reportTitle(project)"
+                class="report"
+                :class="`report--${reportState(project)}`"
+                role="img"
+                :title="reportTitle(project)"
+              />
             </td>
 
             <td class="nowrap" :class="cellChanged(project, 'todo')">
@@ -256,7 +260,7 @@
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
   import { dragId, dragKind, dropTarget, setDrag } from '@/utils/drag'
-  import { ago, formatDateTime, formatDay, latestWordpress, repoHost, reportStale, siteUrl } from '@/utils/projects'
+  import { formatDateTime, formatDay, latestWordpress, repoHost, reportState, siteUrl } from '@/utils/projects'
 
   const props = defineProps<{
     groups: Array<Group<Project>>
@@ -293,6 +297,23 @@
     return changed && (changed.has('*') || fields.some(field => changed.has(field))) ? 'cell--changed' : undefined
   }
 
+  /** the report dot's tooltip – when the site last reported, or why it doesn't */
+  function reportTitle (project: Project): string {
+    const last = formatDateTime(project.reportedAt)
+
+    switch (reportState(project)) {
+      case 'ok': {
+        return `Raport: ${last}`
+      }
+      case 'failed': {
+        return last ? `Brak nowego raportu – ostatni: ${last}` : 'Raport skonfigurowany, ale strona jeszcze nic nie wysłała'
+      }
+      default: {
+        return 'Raport nieskonfigurowany'
+      }
+    }
+  }
+
   const isLatest = (project: Project) => latestWordpress(project, config.latestWordpress)
   const latestTitle = config.latestWordpress ? `Najnowszy WordPress (${config.latestWordpress})` : undefined
 
@@ -321,7 +342,7 @@
       { key: 'acf', label: 'ACF', class: 'center' },
       { key: 'miModal', label: 'MI Modal', class: 'center' },
       { key: 'dbSync', label: 'DB sync', sort: 'dbSync' },
-      { key: 'report', label: 'Raport', sort: 'reportedAt' },
+      { key: 'report', label: 'Raport', sort: 'reportedAt', class: 'center' },
       { key: 'todo', label: 'Todo' },
     ]
     : [
@@ -792,15 +813,55 @@ tr:hover .row-grip {
   color: var(--accent-text);
 }
 
+/* the site's report as one dot: green and pulsing like the status – it reports; red – set up, but no report;
+   dark – not set up. The date and time in the tooltip. */
 .report {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  position: relative;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentcolor;
+  vertical-align: middle;
+}
+
+.report--ok {
   color: var(--positive);
 }
 
-.report--stale {
-  color: var(--warn);
+.report--ok::after {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: currentcolor;
+  opacity: .75;
+  animation: ping 1s cubic-bezier(0, 0, .2, 1) infinite;
+  content: '';
+}
+
+.report--failed {
+  color: var(--danger);
+}
+
+/* the ink of the dark theme – a hairline keeps it visible on the dark background */
+.report--off {
+  color: #151513;
+  box-shadow: 0 0 0 1px var(--line-strong);
+}
+
+@keyframes ping {
+  75%,
+  100% {
+    opacity: 0;
+    transform: scale(2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .report--ok::after {
+    animation: none;
+    opacity: 0;
+  }
 }
 
 /* ---- phones */

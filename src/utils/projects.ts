@@ -181,3 +181,15 @@ export function ago (iso: string | null | undefined, now: Date = new Date()): st
 export function reportStale (iso: string | null | undefined, now: Date = new Date()): boolean {
   return !iso || now.getTime() - new Date(iso).getTime() > 2 * 86_400_000
 }
+
+/**
+ * The report of a site at a glance: 'off' – not set up (no token); 'failed' – set up, but no report yet or none for
+ * two days (WP-Cron sends one at least daily); 'ok' – it reports.
+ */
+export function reportState (project: Pick<Project, 'token' | 'reportedAt'>, now: Date = new Date()): 'ok' | 'failed' | 'off' {
+  if (!project.token) {
+    return 'off'
+  }
+
+  return reportStale(project.reportedAt, now) ? 'failed' : 'ok'
+}

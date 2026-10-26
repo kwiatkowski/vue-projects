@@ -1,6 +1,6 @@
 import type { Project } from '@/types'
 import { describe, expect, it } from 'vitest'
-import { ago, bareDomain, compareManual, formatDateTime, formatDay, groupProjects, latestWordpress, matches, moveId, repoHost, reportStale, siteUrl, sortProjects } from './projects'
+import { ago, bareDomain, compareManual, formatDateTime, formatDay, groupProjects, latestWordpress, matches, moveId, repoHost, reportStale, reportState, siteUrl, sortProjects } from './projects'
 
 const p = (name: string, extra: Partial<Project> = {}): Partial<Project> => ({ name, domains: [name], status: 'online', ...extra })
 
@@ -111,5 +111,14 @@ describe('helpers', () => {
     expect(reportStale('2026-10-25T08:00:00Z', now)).toBe(false)
     expect(reportStale('2026-10-20T08:00:00Z', now)).toBe(true)
     expect(reportStale(null, now)).toBe(true)
+  })
+
+  it('tells whether a site reports, failed to or is not set up', () => {
+    const now = new Date('2026-10-26T12:00:00Z')
+
+    expect(reportState({ token: 'x', reportedAt: '2026-10-26T11:55:00Z' }, now)).toBe('ok')
+    expect(reportState({ token: 'x', reportedAt: '2026-10-20T08:00:00Z' }, now)).toBe('failed')
+    expect(reportState({ token: 'x', reportedAt: null }, now)).toBe('failed')
+    expect(reportState({ token: null, reportedAt: '2026-10-26T11:55:00Z' }, now)).toBe('off')
   })
 })
