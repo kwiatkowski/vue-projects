@@ -137,16 +137,16 @@
               <Check v-if="project[flag]" :aria-label="FLAG_LABELS[flag]" class="yes" />
             </td>
 
-            <td class="center" :class="cellChanged(project, 'localUrl')">
-              <a
-                v-if="project.localUrl"
-                class="local"
-                :href="project.localUrl"
-                rel="noopener"
-                target="_blank"
-                :title="project.localUrl"
-                @click.stop
-              ><Laptop /></a>
+            <td class="center" :class="cellChanged(project, 'localUrl', 'localAdminUrl')">
+              <SiteLinkMenu v-if="project.localUrl" :admin-url="project.localAdminUrl" label="Lokalnie" :url="project.localUrl">
+                <Laptop />
+              </SiteLinkMenu>
+            </td>
+
+            <td class="center" :class="cellChanged(project, 'stagingUrl', 'stagingAdminUrl')">
+              <SiteLinkMenu v-if="project.stagingUrl" :admin-url="project.stagingAdminUrl" label="Staging" :url="project.stagingUrl">
+                <FlaskConical />
+              </SiteLinkMenu>
             </td>
 
             <td
@@ -251,9 +251,10 @@
 <script lang="ts" setup>
   import type { Category, Flag, Project, SortKey } from '@/types'
   import type { Group } from '@/utils/projects'
-  import { ArrowUpRight, Check, ChevronDown, GripVertical, Laptop } from 'lucide-vue-next'
+  import { ArrowUpRight, Check, ChevronDown, FlaskConical, GripVertical, Laptop } from 'lucide-vue-next'
   import { computed, ref } from 'vue'
   import CategoryMenu from '@/components/CategoryMenu.vue'
+  import SiteLinkMenu from '@/components/SiteLinkMenu.vue'
   import StatusChip from '@/components/StatusChip.vue'
   import TodoChip from '@/components/TodoChip.vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
@@ -340,6 +341,7 @@
       { key: 'bedrock', label: 'Bedrock', class: 'center' },
       { key: 'security', label: 'Security', class: 'center' },
       { key: 'local', label: 'Local', class: 'center' },
+      { key: 'stage', label: 'Stage', class: 'center' },
       { key: 'acf', label: 'ACF', class: 'center' },
       { key: 'miModal', label: 'MI Modal', class: 'center' },
       { key: 'report', label: 'Raport', sort: 'reportedAt', class: 'center' },
@@ -802,22 +804,6 @@ tr:hover .row-grip {
 
 .repo:hover {
   background: var(--accent-soft);
-  color: var(--accent-text);
-}
-
-.local {
-  display: inline-grid;
-  place-items: center;
-  color: var(--text-2);
-  vertical-align: middle;
-}
-
-.local svg {
-  width: 16px;
-  height: 16px;
-}
-
-.local:hover {
   color: var(--accent-text);
 }
 
