@@ -75,9 +75,9 @@
             <input v-model.trim="form.repo" class="input" placeholder="https://github.com/…" type="url">
 
             <button
+              v-if="form.repo"
               aria-label="Kopiuj adres repozytorium"
               class="btn btn--icon btn--sm input-copy"
-              :disabled="!form.repo"
               title="Kopiuj adres repozytorium"
               type="button"
               @click="copy(form.repo, 'Adres repozytorium')"
@@ -277,9 +277,9 @@
                 ><ArrowUpRight /></a>
 
                 <button
+                  v-if="form[link.field]"
                   :aria-label="`Kopiuj: ${link.label}`"
                   class="btn btn--icon btn--sm input-copy"
-                  :disabled="!form[link.field]"
                   :title="`Kopiuj: ${link.label}`"
                   type="button"
                   @click="copy(form[link.field], link.label)"
@@ -294,9 +294,9 @@
                 <input v-model.trim="form.login" autocomplete="off" class="input mono" type="text">
 
                 <button
+                  v-if="form.login"
                   aria-label="Kopiuj login"
                   class="btn btn--icon btn--sm input-copy"
-                  :disabled="!form.login"
                   title="Kopiuj login"
                   type="button"
                   @click="copy(form.login, 'Login')"
@@ -328,9 +328,9 @@
                 </button>
 
                 <button
+                  v-if="password"
                   aria-label="Kopiuj hasło"
                   class="btn btn--icon btn--sm input-copy"
-                  :disabled="!password"
                   title="Kopiuj hasło"
                   type="button"
                   @click="copy(password, 'Hasło')"
@@ -968,8 +968,9 @@
   translate: 0 -50%;
 }
 
-/* the second button, left of copy – the password's eye, an address's "open" */
-.input-row--two .btn:not(.input-copy),
+/* the second button, left of copy – the password's eye, an address's "open"; the eye takes copy's place when the
+   field is empty (no copy then) */
+.input-row--two:has(.input-copy:not(.input-open)) .btn:not(.input-copy),
 .input-row--two .input-open {
   right: 36px;
 }
