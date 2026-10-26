@@ -961,30 +961,43 @@
   padding-right: 40px;
 }
 
+/* small grey icons like the × in a select: 22px, square-ish, a soft patch and the text colour on hover */
 .input-row--inside .btn {
   position: absolute;
   top: 50%;
-  right: 4px;
+  right: 7px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--text-3);
   translate: 0 -50%;
+}
+
+.input-row--inside .btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* the hover patch over the field's own background – opaque, so the text under the icon stays hidden */
+.input-row--inside .btn:hover {
+  background: linear-gradient(var(--hover), var(--hover)), var(--panel);
+  color: var(--text);
 }
 
 /* the second button, left of copy – the password's eye, an address's "open"; the eye takes copy's place when the
    field is empty (no copy then) */
 .input-row--two:has(.input-copy:not(.input-open)) .btn:not(.input-copy),
 .input-row--two .input-open {
-  right: 36px;
+  right: 32px;
 }
 
 .input-copy {
-  background: var(--panel);
   box-shadow: -6px 0 6px var(--panel);
   opacity: 0;
   transition: opacity .12s;
-}
-
-.input-copy:hover {
-  background: var(--panel);
-  color: var(--text);
 }
 
 .input-row--inside:hover .input-copy,
