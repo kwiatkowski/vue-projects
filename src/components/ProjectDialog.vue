@@ -4,7 +4,7 @@
     v-model="open"
     :can-close="canClose"
     :title="project ? 'Edycja projektu' : 'Nowy projekt'"
-    :width="1040"
+    :width="1100"
     @submit="save"
   >
     <input
@@ -19,7 +19,7 @@
 
     <span v-if="nameError" class="error-text">{{ nameError }}</span>
 
-    <!-- two columns: the site and its tech on the left; visibility, Todo, notes and the report on the right -->
+    <!-- two columns: what defines the project on the left, always in view; the details on the right, in tabs -->
     <div class="cols">
       <div class="col">
         <div class="field">
@@ -52,29 +52,129 @@
           </div>
         </div>
 
-        <div class="grid">
-
-          <label class="field">
-            <span>Status</span>
-
-            <select v-model="form.status" class="input">
-              <option :value="null">—</option>
-              <option v-for="(label, value) in STATUS_LABELS" :key="value" :value="value">{{ label }}</option>
-            </select>
-          </label>
-
-          <label class="field">
-            <span>Kategoria</span>
-
-            <select v-model="form.categoryId" class="input">
-              <option :value="null">— bez kategorii —</option>
-              <option v-for="category in projects.sortedCategories" :key="category.id" :value="category.id">{{ category.name }}</option>
-            </select>
-          </label>
+        <div class="field">
+          <span>Status</span>
+          <StatusSelect v-model="form.status" />
         </div>
 
+        <label class="field">
+          <span>Kategoria</span>
+
+          <select v-model="form.categoryId" class="input">
+            <option :value="null">— bez kategorii —</option>
+            <option v-for="category in projects.sortedCategories" :key="category.id" :value="category.id">{{ category.name }}</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Repozytorium</span>
+          <input v-model.trim="form.repo" class="input" placeholder="https://github.com/…" type="url">
+        </label>
+
         <fieldset class="group">
-          <legend class="eyebrow">Serwer</legend>
+          <legend class="eyebrow">Konfiguracja</legend>
+
+          <div class="checks checks--column">
+            <label v-for="flag in FLAGS" :key="flag" class="check">
+              <input v-model="form[flag]" type="checkbox"> {{ FLAG_LABELS[flag] }}
+            </label>
+          </div>
+        </fieldset>
+
+        <label class="field">
+          <span>Notatki</span>
+          <textarea v-model="form.notes" class="input" rows="3" />
+        </label>
+      </div>
+
+      <div class="col">
+        <div class="tabs" role="tablist">
+          <button
+            v-for="item in TABS"
+            :key="item.key"
+            :aria-selected="tab === item.key"
+            class="tabs__tab"
+            role="tab"
+            type="button"
+            @click="tab = item.key"
+          >
+            <component :is="item.icon" /> {{ item.label }}
+            <PenLine v-if="tabChanged(item.key)" aria-label="zmienione" class="tabs__changed" />
+          </button>
+        </div>
+
+        <div v-show="tab === 'report'" class="tab-panel" role="tabpanel">
+          <template v-if="project">
+
+            <p class="muted report__state">
+              <template v-if="project.reportedAt">
+                Ostatni: <strong class="mono">{{ formatDateTime(project.reportedAt) }}</strong> <span class="faint">{{ ago(project.reportedAt) }}</span>
+              </template>
+
+              <template v-else>Strona jeszcze nic nie wysłała.</template>
+            </p>
+
+            <dl v-if="siteReport?.users || siteReport?.plugins" class="site">
+              <template v-if="siteReport.users">
+                <dt>Użytkownicy</dt>
+
+                <dd>
+                  <strong class="mono">{{ siteReport.users.total }}</strong>
+                  <span v-if="siteReport.users.online !== null" class="site__online"><span class="dot" /> {{ siteReport.users.online }} online</span>
+                  <span v-for="role in siteReport.users.roles" :key="role.role" class="chip chip--soft">{{ role.name }} <span class="mono">{{ role.count }}</span></span>
+                </dd>
+              </template>
+
+              <template v-if="siteReport.plugins">
+                <dt>Wtyczki</dt>
+
+                <dd>
+                  <strong class="mono">{{ siteReport.plugins.length }}</strong>
+                  <span class="faint">{{ activePlugins }} aktywnych</span>
+                  <span v-if="pluginUpdates.length > 0" class="chip chip--warn">{{ pluginUpdates.length }} do aktualizacji</span>
+                  <span v-else class="site__ok">aktualne</span>
+                </dd>
+
+                <dd class="site__plugins">
+                  <details :open="pluginUpdates.length > 0">
+                    <summary class="faint">Lista wtyczek</summary>
+
+                    <ul class="plugins">
+                      <li v-for="plugin in sortedPlugins" :key="plugin.file" class="plugin" :class="{ 'plugin--off': !plugin.active }">
+                        <span class="plugin__name">{{ plugin.name }}</span>
+                        <span v-if="plugin.mu" class="faint">MU</span>
+                        <span v-else-if="!plugin.active" class="faint">nieaktywna</span>
+
+                        <span class="plugin__version mono">
+                          {{ plugin.version }}<template v-if="plugin.update"> → <strong>{{ plugin.update }}</strong></template>
+                        </span>
+                      </li>
+                    </ul>
+                  </details>
+                </dd>
+              </template>
+            </dl>
+
+            <template v-if="project.token">
+              <p class="muted">W <code>.env</code> strony (moduł <code>report</code> MK Core):</p>
+              <pre class="env mono">{{ envLines }}</pre>
+            </template>
+
+            <div class="report__actions">
+              <button v-if="project.token" class="btn btn--sm btn--outline" type="button" @click="copyEnv">
+                <Copy /> Kopiuj
+              </button>
+
+              <button class="btn btn--sm" :disabled="busy" type="button" @click="newToken">
+                <KeyRound /> {{ project.token ? 'Nowy token' : 'Utwórz token' }}
+              </button>
+            </div>
+          </template>
+
+          <p v-else class="faint">Token raportu pojawi się po utworzeniu projektu.</p>
+        </div>
+
+        <div v-show="tab === 'server'" class="tab-panel" role="tabpanel">
 
           <div class="grid grid--3">
             <label class="field">
@@ -92,10 +192,10 @@
               <input v-model.trim="form.serverAccount" class="input mono" type="text">
             </label>
           </div>
-        </fieldset>
+        </div>
 
-        <fieldset class="group">
-          <legend class="eyebrow">Technologia <span class="group__hint">– uzupełnia też raport strony</span></legend>
+        <div v-show="tab === 'tech'" class="tab-panel" role="tabpanel">
+          <p class="faint">Uzupełnia też raport strony.</p>
 
           <div class="grid grid--3">
             <label class="field">
@@ -126,31 +226,9 @@
             <option value="vue" />
             <option value="static" />
           </datalist>
-        </fieldset>
+        </div>
 
-        <fieldset class="group">
-          <legend class="eyebrow">Kod</legend>
-
-          <label class="field">
-            <span>Repozytorium</span>
-            <input v-model.trim="form.repo" class="input" placeholder="https://github.com/…" type="url">
-          </label>
-        </fieldset>
-
-        <fieldset class="group">
-          <legend class="eyebrow">Konfiguracja</legend>
-
-          <div class="checks checks--column">
-            <label v-for="flag in FLAGS" :key="flag" class="check">
-              <input v-model="form[flag]" type="checkbox"> {{ FLAG_LABELS[flag] }}
-            </label>
-          </div>
-        </fieldset>
-      </div>
-
-      <div class="col">
-        <fieldset class="group">
-          <legend class="eyebrow">Dostęp</legend>
+        <div v-show="tab === 'access'" class="tab-panel" role="tabpanel">
 
           <div class="grid">
             <label v-for="link in ACCESS_LINKS" :key="link.field" class="field" :class="{ 'field--2': link.wide }">
@@ -222,10 +300,9 @@
               </span>
             </label>
           </div>
-        </fieldset>
+        </div>
 
-        <fieldset class="group">
-          <legend class="eyebrow">Todo</legend>
+        <div v-show="tab === 'todo'" class="tab-panel" role="tabpanel">
 
           <label class="field">
             <span>Powiązany projekt w Todo – jego otwarte zadania widać na liście</span>
@@ -257,80 +334,7 @@
               <ListChecks /> Otwórz w Todo
             </a>
           </template>
-        </fieldset>
-
-        <label class="field">
-          <span>Notatki</span>
-          <textarea v-model="form.notes" class="input" rows="3" />
-        </label>
-
-        <fieldset v-if="project" class="group report">
-          <legend class="eyebrow">Raport strony</legend>
-
-          <p class="muted report__state">
-            <template v-if="project.reportedAt">
-              Ostatni: <strong class="mono">{{ formatDateTime(project.reportedAt) }}</strong> <span class="faint">{{ ago(project.reportedAt) }}</span>
-            </template>
-
-            <template v-else>Strona jeszcze nic nie wysłała.</template>
-          </p>
-
-          <dl v-if="siteReport?.users || siteReport?.plugins" class="site">
-            <template v-if="siteReport.users">
-              <dt>Użytkownicy</dt>
-
-              <dd>
-                <strong class="mono">{{ siteReport.users.total }}</strong>
-                <span v-if="siteReport.users.online !== null" class="site__online"><span class="dot" /> {{ siteReport.users.online }} online</span>
-                <span v-for="role in siteReport.users.roles" :key="role.role" class="chip chip--soft">{{ role.name }} <span class="mono">{{ role.count }}</span></span>
-              </dd>
-            </template>
-
-            <template v-if="siteReport.plugins">
-              <dt>Wtyczki</dt>
-
-              <dd>
-                <strong class="mono">{{ siteReport.plugins.length }}</strong>
-                <span class="faint">{{ activePlugins }} aktywnych</span>
-                <span v-if="pluginUpdates.length > 0" class="chip chip--warn">{{ pluginUpdates.length }} do aktualizacji</span>
-                <span v-else class="site__ok">aktualne</span>
-              </dd>
-
-              <dd class="site__plugins">
-                <details :open="pluginUpdates.length > 0">
-                  <summary class="faint">Lista wtyczek</summary>
-
-                  <ul class="plugins">
-                    <li v-for="plugin in sortedPlugins" :key="plugin.file" class="plugin" :class="{ 'plugin--off': !plugin.active }">
-                      <span class="plugin__name">{{ plugin.name }}</span>
-                      <span v-if="plugin.mu" class="faint">MU</span>
-                      <span v-else-if="!plugin.active" class="faint">nieaktywna</span>
-
-                      <span class="plugin__version mono">
-                        {{ plugin.version }}<template v-if="plugin.update"> → <strong>{{ plugin.update }}</strong></template>
-                      </span>
-                    </li>
-                  </ul>
-                </details>
-              </dd>
-            </template>
-          </dl>
-
-          <template v-if="project.token">
-            <p class="muted">W <code>.env</code> strony (moduł <code>report</code> MK Core):</p>
-            <pre class="env mono">{{ envLines }}</pre>
-          </template>
-
-          <div class="report__actions">
-            <button v-if="project.token" class="btn btn--sm btn--outline" type="button" @click="copyEnv">
-              <Copy /> Kopiuj
-            </button>
-
-            <button class="btn btn--sm" :disabled="busy" type="button" @click="newToken">
-              <KeyRound /> {{ project.token ? 'Nowy token' : 'Utwórz token' }}
-            </button>
-          </div>
-        </fieldset>
+        </div>
       </div>
     </div>
 
@@ -370,15 +374,16 @@
 
 <script lang="ts" setup>
   import type { Flag, Project, ProjectInput, ReportPlugin, SiteReport, Status, TodoTask } from '@/types'
-  import { AlertTriangle, ArrowUpRight, Copy, Eye, EyeOff, KeyRound, ListChecks, Plus, X } from 'lucide-vue-next'
-  import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
+  import { Activity, AlertTriangle, ArrowUpRight, Copy, Cpu, Eye, EyeOff, KeyRound, ListChecks, PenLine, Plus, Server, X } from 'lucide-vue-next'
+  import { type Component, computed, nextTick, ref, useTemplateRef, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
+  import StatusSelect from '@/components/StatusSelect.vue'
   import BaseDialog from '@/components/ui/BaseDialog.vue'
   import { config, TODO_TAB } from '@/config'
   import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
-  import { ago, bareDomain, formatDateTime, formatDay, STATUS_LABELS } from '@/utils/projects'
+  import { ago, bareDomain, formatDateTime, formatDay } from '@/utils/projects'
 
   const projects = useProjectsStore()
   const notify = useNotifyStore()
@@ -398,6 +403,28 @@
     'server', 'serverUrl', 'serverAccount', 'php', 'engine', 'version', 'theme', 'repo', 'notes',
     'adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login',
   ] as const
+
+  type Tab = 'report' | 'server' | 'tech' | 'access' | 'todo'
+
+  /** the right column's tabs; `fields` – what a change there marks the tab with */
+  const TABS: Array<{ key: Tab, label: string, icon: Component, fields: string[] }> = [
+    { key: 'report', label: 'Raport strony', icon: Activity, fields: [] },
+    { key: 'server', label: 'Serwer', icon: Server, fields: ['server', 'serverUrl', 'serverAccount'] },
+    { key: 'tech', label: 'Technologia', icon: Cpu, fields: ['engine', 'version', 'theme', 'php'] },
+    { key: 'access', label: 'Dostęp', icon: KeyRound, fields: ['adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login'] },
+    { key: 'todo', label: 'Todo', icon: ListChecks, fields: ['todoProject'] },
+  ]
+
+  const tab = ref<Tab>('report')
+
+  /** a tab with unsaved changes in its fields (the password counts for "Dostęp") */
+  function tabChanged (key: Tab): boolean {
+    const before = JSON.parse(initial.value || '{}') as Record<string, unknown>
+    const fields = TABS.find(item => item.key === key)?.fields ?? []
+    const changed = fields.some(field => JSON.stringify((form.value as Record<string, unknown>)[field]) !== JSON.stringify(before[field]))
+
+    return changed || (key === 'access' && password.value !== savedPassword.value)
+  }
 
   /** the addresses under "Dostęp" – each with a button that opens it */
   const ACCESS_LINKS: Array<{ field: 'adminUrl' | 'stagingUrl' | 'stagingAdminUrl' | 'localUrl' | 'localAdminUrl', label: string, placeholder: string, wide?: boolean }> = [
@@ -465,6 +492,8 @@
     nameError.value = ''
     confirmDelete.value = false
     showPassword.value = false
+    // a new project has no report yet – it starts on the server
+    tab.value = editing === 'new' ? 'server' : 'report'
 
     if (editing === 'new') {
       password.value = savedPassword.value = ''
@@ -745,6 +774,61 @@
   display: grid;
   gap: 16px;
   min-width: 0;
+}
+
+/* the right column's tabs – an icon and a name each; a pen when something in the tab was changed and not saved */
+.tabs {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--line);
+  scrollbar-width: none;
+}
+
+.tabs__tab {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: -1px;
+  padding: 8px 9px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 13px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tabs__tab svg {
+  width: 15px;
+  height: 15px;
+}
+
+.tabs__tab:hover {
+  color: var(--text);
+}
+
+.tabs__tab[aria-selected='true'] {
+  border-bottom-color: var(--accent);
+  color: var(--text);
+}
+
+.tabs__tab .tabs__changed {
+  width: 13px;
+  height: 13px;
+  color: var(--warn);
+}
+
+.tab-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.tab-panel > p {
+  margin: 0;
 }
 
 .check {

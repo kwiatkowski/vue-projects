@@ -19,10 +19,11 @@ strony ─────── POST /wp-json/projects/v1/report (token) ─► PHP
   status, silnik, wersja i motyw.
 - **Właściciel** (zalogowany administrator) widzi wszystkie projekty i kolumny jak w arkuszu – serwer, konto, PHP,
   repozytorium, Deploy, DEV, Bedrock, Security, Local, Stage (menu: otwórz stronę, panel, kopiuj adres), ACF, MI Modal, ostatni raport strony, Todo – i edytuje
-  projekt po kliknięciu w wiersz (nazwę – ołówkiem w miejscu). Okno projektu (dwie kolumny): domeny (kilka, pierwsza główna),
-  serwer, technologia, kod, konfiguracja (Deploy, DEV, Bedrock …), dostęp – panele produkcji, stagingu i wersji
-  lokalnej, login i hasło (ukryte, z podglądem i kopiowaniem; zapisane zaszyfrowane), Todo, notatki i token raportu
-  (gotowe linie do `.env` strony).
+  projekt po kliknięciu w wiersz (nazwę – ołówkiem w miejscu). Okno projektu: po lewej stale domeny, status (lista
+  w kolorach statusów), kategoria, repozytorium, konfiguracja (Deploy, DEV, Bedrock …) i notatki; po prawej zakładki
+  z ikonami – Raport strony (użytkownicy, wtyczki, token do `.env`), Serwer, Technologia, Dostęp (panele produkcji,
+  stagingu i wersji lokalnej, login, hasło ukryte z podglądem i kopiowaniem, zapisane zaszyfrowane) i Todo; zakładka
+  z niezapisanymi zmianami ma ołówek.
 - **Kategorie i kolejność**: projekty są pogrupowane w kategorie (nagłówki w tabeli). Właściciel przeciąga projekty
   (w kategorii i do innej) i całe kategorie (za uchwyt przy nagłówku); menu kategorii: zmiana nazwy, w górę / w dół
   (też na telefonie), usunięcie. Przeciąganie działa bez filtra i wyszukiwania. Kliknięcie w nagłówek kolumny sortuje

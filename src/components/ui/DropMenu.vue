@@ -13,7 +13,7 @@
       <slot name="trigger"><Ellipsis /></slot>
     </button>
 
-    <Teleport to="body">
+    <Teleport :to="layer">
       <div
         v-if="open"
         ref="panel"
@@ -46,6 +46,8 @@
 
   const open = ref(false)
   const position = ref<Record<string, string>>({})
+  /** where the panel goes: <body>, or the open <dialog> the trigger is in – a modal dialog covers everything in <body> */
+  const layer = ref<string | HTMLElement>('body')
   const trigger = useTemplateRef<HTMLButtonElement>('trigger')
   const panel = useTemplateRef<HTMLDivElement>('panel')
 
@@ -56,6 +58,7 @@
       return
     }
 
+    layer.value = trigger.value?.closest('dialog') ?? 'body'
     open.value = true
     await nextTick()
     place()
