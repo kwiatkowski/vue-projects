@@ -32,7 +32,7 @@ strony ─────── POST /wp-json/projects/v1/report (token) ─► PHP
   najechaniu – ile po terminie, na dziś, w najbliższych 7 dniach i bez terminu; okno projektu – spis otwartych zadań.
   Linki do Todo otwierają się w jednej nazwanej karcie: kolejne kliknięcie ładuje adres w już otwartej i na nią przełącza
   (karty Todo otwartej ręcznie przeglądarka nie znajdzie – wtedy otworzy nową).
-- **Statusy**: online (zielony, pulsuje), w budowie (niebieski), offline (czerwony), zawieszona (pusta kulka w kolorze tła, wiersz
+- **Statusy**: online (zielony, pulsuje), w budowie (niebieski), offline (czerwony), zawieszona (szara kulka, wiersz
   wyszarzony) – w filtrach zawsze wszystkie. Podpowiedzi (raport, Todo) w stylu aplikacji, nie przeglądarki.
 
 W bundlu nie ma adresów, tokenów ani haseł – konfigurację wstrzykuje WordPress w chwili otwarcia strony.
@@ -91,7 +91,7 @@ zmienia się razem z nazwą kategorii). Filtr (status, „Bez strony”) i wyszu
 (`/projects/meden?status=online&q=hostido`), sortowanie po kliknięciu w nagłówek kolumny. Lista odświeża się sama, bez wskaźnika wczytywania
 (tylko w widocznej karcie): co 3 s sprawdza znacznik zmian (`GET /changed`) i pobiera listę, gdy się ruszył – raport
 strony widać od razu – a całą listę i tak co minutę. Zmieniony wiersz przez 3 s ma kolor jak po najechaniu
-i wyszarzony tekst, a zmienione pola są rozmyte pod kręcącym się wskaźnikiem. PHP starsze niż 8.1 jest wyróżnione, daty jako RRRR.MM.DD. Raport strony to kulka: zielona (pulsuje) – raportuje, czerwona – skonfigurowany (token), ale brak raportu od 2 dni, pusta, w kolorze tła – nieskonfigurowany; data i godzina ostatniego w podpowiedzi.
+i wyszarzony tekst, a zmienione pola są rozmyte pod kręcącym się wskaźnikiem. PHP starsze niż 8.1 jest wyróżnione, daty jako RRRR.MM.DD. Raport strony to kulka: zielona (pulsuje) – raportuje, czerwona – skonfigurowany (token), ale brak raportu od 2 dni, szara – nieskonfigurowany; data i godzina ostatniego w podpowiedzi.
 
 ## Wersje
 
