@@ -64,9 +64,14 @@ export interface Project extends Record<Flag, boolean> {
   theme: string | null
   repo: string | null
   localUrl: string | null
+  /** access: the WordPress panels of production, staging and the local copy, staging's address, the login */
+  adminUrl: string | null
+  stagingUrl: string | null
+  stagingAdminUrl: string | null
+  localAdminUrl: string | null
+  login: string | null
   /** RRRR-MM-DD */
   dbSync: string | null
-  listed: boolean
   /** id of the linked Todo project */
   todoProject: number | null
   todo?: TodoSummary | null
@@ -74,6 +79,8 @@ export interface Project extends Record<Flag, boolean> {
   /** ISO 8601 – the last report the site sent about itself */
   reportedAt: string | null
   token: string | null
+  /** whether a panel password is kept – the password itself only through projectsApi.password() */
+  hasPassword?: boolean
   updatedAt: string | null
 }
 
@@ -102,6 +109,6 @@ export interface SiteReport {
 }
 
 /** What the API takes: any field, null clears it. */
-export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'updatedAt'>>
+export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'updatedAt'>>
 
 export type SortKey = 'name' | 'status' | 'server' | 'php' | 'version' | 'theme' | 'dbSync' | 'reportedAt'

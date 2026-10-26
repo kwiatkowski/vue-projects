@@ -219,6 +219,20 @@ export const useProjectsStore = defineStore('projects', () => {
     }
   }
 
+  /** The panel password, saved apart from the other fields (encrypted on the server). */
+  async function setPassword (id: number, password: string | null): Promise<Project | null> {
+    try {
+      const project = await projectsApi.setPassword(id, password)
+      replace(project)
+
+      return project
+    } catch (error) {
+      notify.error(error)
+
+      return null
+    }
+  }
+
   async function regenerateToken (id: number): Promise<Project | null> {
     try {
       const project = await projectsApi.token(id)
@@ -354,6 +368,7 @@ export const useProjectsStore = defineStore('projects', () => {
     update,
     remove,
     regenerateToken,
+    setPassword,
     moveProject,
     addCategory,
     renameCategory,

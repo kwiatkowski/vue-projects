@@ -96,7 +96,7 @@
         <fieldset class="group">
           <legend class="eyebrow">Technologia <span class="group__hint">– uzupełnia też raport strony</span></legend>
 
-          <div class="grid grid--4">
+          <div class="grid grid--3">
             <label class="field">
               <span>Silnik</span>
               <input v-model.trim="form.engine" class="input" list="engines" type="text">
@@ -108,13 +108,15 @@
             </label>
 
             <label class="field">
-              <span>PHP</span>
-              <input v-model.trim="form.php" class="input mono" type="text">
-            </label>
-
-            <label class="field">
               <span>Motyw</span>
               <input v-model.trim="form.theme" class="input" type="text">
+            </label>
+          </div>
+
+          <div class="grid grid--3">
+            <label class="field">
+              <span>PHP</span>
+              <input v-model.trim="form.php" class="input mono" type="text">
             </label>
           </div>
 
@@ -129,14 +131,9 @@
           <legend class="eyebrow">Kod</legend>
 
           <div class="grid grid--3">
-            <label class="field">
+            <label class="field field--2">
               <span>Repozytorium</span>
               <input v-model.trim="form.repo" class="input" placeholder="https://github.com/…" type="url">
-            </label>
-
-            <label class="field">
-              <span>Wersja lokalna</span>
-              <input v-model.trim="form.localUrl" class="input" placeholder="https://….local/" type="url">
             </label>
 
             <label class="field">
@@ -144,6 +141,10 @@
               <input v-model="form.dbSync" class="input" type="date">
             </label>
           </div>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend class="eyebrow">Konfiguracja</legend>
 
           <div class="checks checks--column">
             <label v-for="flag in FLAGS" :key="flag" class="check">
@@ -155,13 +156,77 @@
 
       <div class="col">
         <fieldset class="group">
-          <legend class="eyebrow">Widoczność</legend>
+          <legend class="eyebrow">Dostęp</legend>
 
-          <div class="checks">
-            <label class="check">
-              <input v-model="form.listed" type="checkbox"> Na publicznej liście <span class="faint">(z domeną)</span>
+          <div class="grid">
+            <label v-for="link in ACCESS_LINKS" :key="link.field" class="field" :class="{ 'field--2': link.wide }">
+              <span>{{ link.label }}</span>
+
+              <span class="input-row">
+                <input v-model.trim="form[link.field]" class="input" :placeholder="link.placeholder" type="url">
+
+                <a
+                  v-if="form[link.field]"
+                  :aria-label="`Otwórz: ${link.label}`"
+                  class="btn btn--icon btn--sm"
+                  :href="form[link.field] ?? undefined"
+                  rel="noopener"
+                  target="_blank"
+                  :title="`Otwórz: ${link.label}`"
+                ><ArrowUpRight /></a>
+              </span>
             </label>
 
+            <label class="field">
+              <span>Login</span>
+
+              <span class="input-row">
+                <input v-model.trim="form.login" autocomplete="off" class="input mono" type="text">
+
+                <button
+                  aria-label="Kopiuj login"
+                  class="btn btn--icon btn--sm"
+                  :disabled="!form.login"
+                  title="Kopiuj login"
+                  type="button"
+                  @click="copy(form.login, 'Login')"
+                ><Copy /></button>
+              </span>
+            </label>
+
+            <label class="field">
+              <span>Hasło</span>
+
+              <span class="input-row">
+                <input
+                  v-model="password"
+                  autocomplete="new-password"
+                  class="input mono"
+                  :placeholder="passwordLoading ? 'Wczytuję…' : ''"
+                  :type="showPassword ? 'text' : 'password'"
+                >
+
+                <button
+                  :aria-label="showPassword ? 'Ukryj hasło' : 'Pokaż hasło'"
+                  class="btn btn--icon btn--sm"
+                  :title="showPassword ? 'Ukryj hasło' : 'Pokaż hasło'"
+                  type="button"
+                  @click="showPassword = !showPassword"
+                >
+                  <EyeOff v-if="showPassword" />
+                  <Eye v-else />
+                </button>
+
+                <button
+                  aria-label="Kopiuj hasło"
+                  class="btn btn--icon btn--sm"
+                  :disabled="!password"
+                  title="Kopiuj hasło"
+                  type="button"
+                  @click="copy(password, 'Hasło')"
+                ><Copy /></button>
+              </span>
+            </label>
           </div>
         </fieldset>
 
@@ -301,7 +366,7 @@
 
 <script lang="ts" setup>
   import type { Flag, Project, ProjectInput, ReportPlugin, SiteReport, Status, TodoTask } from '@/types'
-  import { Copy, KeyRound, ListChecks, Plus, X } from 'lucide-vue-next'
+  import { ArrowUpRight, Copy, Eye, EyeOff, KeyRound, ListChecks, Plus, X } from 'lucide-vue-next'
   import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
   import BaseDialog from '@/components/ui/BaseDialog.vue'
@@ -325,7 +390,19 @@
 
   type Form = Required<Omit<ProjectInput, 'status'>> & { status: Status | null }
 
-  const TEXT_FIELDS = ['server', 'serverUrl', 'serverAccount', 'php', 'engine', 'version', 'theme', 'repo', 'localUrl', 'dbSync', 'notes'] as const
+  const TEXT_FIELDS = [
+    'server', 'serverUrl', 'serverAccount', 'php', 'engine', 'version', 'theme', 'repo', 'dbSync', 'notes',
+    'adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login',
+  ] as const
+
+  /** the addresses under "Dostęp" – each with a button that opens it */
+  const ACCESS_LINKS: Array<{ field: 'adminUrl' | 'stagingUrl' | 'stagingAdminUrl' | 'localUrl' | 'localAdminUrl', label: string, placeholder: string, wide?: boolean }> = [
+    { field: 'adminUrl', label: 'Panel – produkcja', placeholder: 'https://…/wp/wp-login.php', wide: true },
+    { field: 'stagingUrl', label: 'Staging – adres', placeholder: 'https://….medendev.eu/' },
+    { field: 'stagingAdminUrl', label: 'Staging – panel', placeholder: 'https://…/wp/wp-login.php' },
+    { field: 'localUrl', label: 'Lokalnie – adres', placeholder: 'https://….local/' },
+    { field: 'localAdminUrl', label: 'Lokalnie – panel', placeholder: 'https://….local/wp/wp-login.php' },
+  ]
 
   function blank (): Form {
     return {
@@ -334,7 +411,6 @@
       status: null,
       categoryId: null,
       todoProject: null,
-      listed: true,
       ...Object.fromEntries(TEXT_FIELDS.map(field => [field, ''])),
       ...Object.fromEntries(FLAGS.map(flag => [flag, false])),
     } as Form
@@ -383,14 +459,48 @@
     initial.value = JSON.stringify(form.value)
     nameError.value = ''
     confirmDelete.value = false
+    showPassword.value = false
 
     if (editing === 'new') {
+      password.value = savedPassword.value = ''
       void nextTick(() => nameInput.value?.focus())
     } else {
       void loadTasks(editing)
       void loadReport(editing)
+      void loadPassword(editing)
     }
   })
+
+  /** the panel password – apart from the form: kept encrypted, fetched only when the dialog opens, saved on its own */
+  const password = ref('')
+  const savedPassword = ref('')
+  const passwordLoading = ref(false)
+  const showPassword = ref(false)
+
+  async function loadPassword (project: Project): Promise<void> {
+    password.value = savedPassword.value = ''
+
+    if (!project.hasPassword) {
+      return
+    }
+
+    passwordLoading.value = true
+    password.value = savedPassword.value = (await projectsApi.password(project.id).catch(() => null))?.password ?? ''
+    passwordLoading.value = false
+  }
+
+  async function copy (text: string | null | undefined, what: string): Promise<void> {
+    if (!text) {
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(text)
+      notify.show(`${what} skopiowane do schowka.`)
+    } catch {
+      notify.show('Nie udało się skopiować.', { tone: 'error' })
+    }
+  }
 
   const siteReport = ref<SiteReport | null>(null)
 
@@ -432,7 +542,7 @@
 
   /** unsaved changes – ask before they are thrown away */
   function canClose (): boolean {
-    return JSON.stringify(form.value) === initial.value || window.confirm('Odrzucić niezapisane zmiany?')
+    return (JSON.stringify(form.value) === initial.value && password.value === savedPassword.value) || window.confirm('Odrzucić niezapisane zmiany?')
   }
 
   /** a domain is kept bare (no https://, no path); the main one names a new project, until a name is typed */
@@ -473,7 +583,13 @@
     }
 
     busy.value = true
-    const saved = project.value ? await projects.update(project.value.id, payload()) : await projects.add(payload())
+    let saved = project.value ? await projects.update(project.value.id, payload()) : await projects.add(payload())
+
+    if (saved && password.value !== savedPassword.value) {
+      saved = await projects.setPassword(saved.id, password.value || null)
+      savedPassword.value = saved ? password.value : savedPassword.value
+    }
+
     busy.value = false
 
     if (saved) {
@@ -497,7 +613,8 @@
     busy.value = false
   }
 
-  const envLines = computed(() => `PROJECTS_REPORT_URL=${new URL(config.reportUrl, window.location.origin).href}\nPROJECTS_REPORT_TOKEN=${project.value?.token ?? ''}`)
+  // the path only – MK Core sends it to the list's site (kwiatkowski.co)
+  const envLines = computed(() => `PROJECTS_REPORT_URL=${config.reportUrl}\nPROJECTS_REPORT_TOKEN=${project.value?.token ?? ''}`)
 
   async function copyEnv (): Promise<void> {
     try {
@@ -571,6 +688,23 @@
 .checks--column {
   flex-direction: column;
   align-items: flex-start;
+}
+
+/* a field over two of the grid's columns */
+.field--2 {
+  grid-column: span 2;
+}
+
+/* an input with small buttons after it (open, show, copy) */
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.input-row .input {
+  flex: 1;
+  min-width: 0;
 }
 
 .cols {
@@ -799,6 +933,10 @@ code {
   .grid--3,
   .grid--4 {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .field--2 {
+    grid-column: auto;
   }
 }
 </style>

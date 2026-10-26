@@ -10,6 +10,10 @@ export const projectsApi = {
   remove: (id: number) => request<{ deleted: boolean }>('DELETE', `projects/${id}`),
   /** these projects (one category) in this order; answers with all projects */
   reorder: (ids: number[]) => request<Project[]>('POST', 'projects/order', { ids }),
+  /** the panel password (kept encrypted, sent only on request) */
+  password: (id: number) => request<{ password: string | null }>('GET', `projects/${id}/password`),
+  /** sets the panel password; empty or null removes it; answers with the project */
+  setPassword: (id: number, password: string | null) => request<Project>('POST', `projects/${id}/password`, { password }),
   /** a new reporter token – the old one stops working at once */
   token: (id: number) => request<Project>('POST', `projects/${id}/token`),
   /** open tasks of the linked Todo project */

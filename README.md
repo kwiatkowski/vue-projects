@@ -15,11 +15,14 @@ przeglądarka ── /projects/ ──────────────► Wo
 strony ─────── POST /wp-json/projects/v1/report (token) ─► PHP, WordPress, motyw, wtyczki
 ```
 
-- **Niezalogowany** widzi publiczną listę: projekty oznaczone „Na publicznej liście”, z domeną: nazwa (link do głównej domeny),
+- **Niezalogowany** widzi publiczną listę: wszystkie projekty z domeną: nazwa (link do głównej domeny),
   status, silnik, wersja i motyw.
 - **Właściciel** (zalogowany administrator) widzi wszystkie projekty i kolumny jak w arkuszu – serwer, konto, PHP,
   repozytorium, Deploy, DEV, Bedrock, Security, Local, ACF, MI Modal, DB sync, ostatni raport strony, Todo – i edytuje
-  projekt po kliknięciu w wiersz (nazwę – ołówkiem w miejscu). W oknie projektu są domeny (kilka, pierwsza główna) i token raportu (gotowe linie do `.env` strony).
+  projekt po kliknięciu w wiersz (nazwę – ołówkiem w miejscu). Okno projektu (dwie kolumny): domeny (kilka, pierwsza główna),
+  serwer, technologia, kod, konfiguracja (Deploy, DEV, Bedrock …), dostęp – panele produkcji, stagingu i wersji
+  lokalnej, login i hasło (ukryte, z podglądem i kopiowaniem; zapisane zaszyfrowane), Todo, notatki i token raportu
+  (gotowe linie do `.env` strony).
 - **Kategorie i kolejność**: projekty są pogrupowane w kategorie (nagłówki w tabeli). Właściciel przeciąga projekty
   (w kategorii i do innej) i całe kategorie (za uchwyt przy nagłówku); menu kategorii: zmiana nazwy, w górę / w dół
   (też na telefonie), usunięcie. Przeciąganie działa bez filtra i wyszukiwania. Kliknięcie w nagłówek kolumny sortuje
