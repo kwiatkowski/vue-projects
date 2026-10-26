@@ -19,7 +19,7 @@ export interface AppConfig {
   publicFields: string[]
   /** the newest WordPress release – sites running it are marked; null when unknown */
   latestWordpress: string | null
-  /** WordPress releases of about the last five years, newest first (the newest of each branch) – the version list */
+  /** every WordPress release since 5.0, newest first – the version list (with a search) */
   wordpressVersions: string[]
   siteName: string
   homeUrl: string
