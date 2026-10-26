@@ -6,7 +6,6 @@
       :href="todo.url"
       @click.stop
     >
-      <span class="todo-chip__dot" :style="{ background: todo.color }" />
       <span class="mono" :class="`todo-chip__count--${urgency}`">{{ todo.open }}</span>
     </a>
 
