@@ -798,7 +798,8 @@
 
 .cols {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* the fixed part a third, the tabs two thirds */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
   gap: 16px 32px;
   align-items: start;
 }
@@ -825,7 +826,9 @@
 
 .tabs__tab {
   display: inline-flex;
-  flex: none;
+  /* the tabs share the whole width */
+  flex: 1 0 auto;
+  justify-content: center;
   align-items: center;
   gap: 6px;
   margin-bottom: -1px;

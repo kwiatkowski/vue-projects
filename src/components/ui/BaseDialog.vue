@@ -4,6 +4,7 @@
     :aria-labelledby="titleId"
     class="dialog"
     :style="{ '--width': `${width}px` }"
+    tabindex="-1"
     @cancel.prevent="requestClose"
     @click="onBackdrop"
     @pointerdown="onPointerDown"
@@ -50,6 +51,9 @@
   function sync (value: boolean): void {
     if (value && !dialog.value?.open) {
       dialog.value?.showModal()
+      // showModal() focuses the first control – the × in the head, ringed; the dialog itself instead (a form's own
+      // field takes the focus right after, e.g. a new project's name)
+      dialog.value?.focus()
     } else if (!value && dialog.value?.open) {
       dialog.value.close()
     }

@@ -273,15 +273,13 @@ a {
   opacity: .9;
 }
 
-/* the yellow alternative to the green one – an action to think twice about (a new token) */
+/* the yellow alternative to the green one, without a background – an action to think twice about (a new token) */
 .btn--warn {
-  background: var(--warn);
-  color: var(--bg);
+  color: var(--warn);
 }
 
 .btn--warn:hover {
-  background: var(--warn);
-  opacity: .9;
+  background: var(--warn-soft);
 }
 
 /* locked: the same green, faded – hover doesn't brighten it */
