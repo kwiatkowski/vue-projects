@@ -2,6 +2,7 @@
   <span
     ref="anchor"
     class="tip-anchor"
+    :class="anchorClass"
     @click="hide"
     @focusin="onFocus"
     @focusout="hide"
@@ -11,7 +12,7 @@
     <slot />
   </span>
 
-  <Teleport to="body">
+  <Teleport :to="layer">
     <div
       v-if="open"
       ref="tip"
@@ -35,7 +36,7 @@
    * there's no room above (under the top bar and the sticky header).
    * Rendered in <body>, so the table's own scrolling doesn't clip it.
    */
-  defineProps<{ text?: string }>()
+  defineProps<{ text?: string, anchorClass?: string }>()
 
   /** room kept from the screen's edges, the gap to the anchor (the triangle sits in it) */
   const EDGE = 8
@@ -48,7 +49,11 @@
   // measured first while invisible, then placed
   const position = ref<Record<string, string>>({ visibility: 'hidden' })
 
+  /** <body>, or the open <dialog> the anchor is in – a modal dialog covers everything in <body> */
+  const layer = ref<string | HTMLElement>('body')
+
   async function show (): Promise<void> {
+    layer.value = anchor.value?.closest('dialog') ?? 'body'
     position.value = { visibility: 'hidden', left: '0px', top: '0px' }
     open.value = true
     window.addEventListener('scroll', hide, { capture: true, passive: true })

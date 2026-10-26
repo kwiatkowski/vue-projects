@@ -74,14 +74,14 @@
           <span class="input-row input-row--inside">
             <input v-model.trim="form.repo" class="input" placeholder="https://github.com/…" type="url">
 
-            <button
-              v-if="form.repo"
-              aria-label="Kopiuj adres repozytorium"
-              class="btn btn--icon btn--sm input-copy"
-              title="Kopiuj adres repozytorium"
-              type="button"
-              @click="copy(form.repo, 'Adres repozytorium')"
-            ><Copy /></button>
+            <HoverTip v-if="form.repo" anchor-class="field-icon" text="Kopiuj adres repozytorium">
+              <button
+                aria-label="Kopiuj adres repozytorium"
+                class="btn btn--icon btn--sm input-copy"
+                type="button"
+                @click="copy(form.repo, 'Adres repozytorium')"
+              ><Copy /></button>
+            </HoverTip>
           </span>
         </label>
 
@@ -266,24 +266,26 @@
               <span class="input-row input-row--inside input-row--two">
                 <input v-model.trim="form[link.field]" class="input" :placeholder="link.placeholder" type="url">
 
-                <a
-                  v-if="form[link.field]"
-                  :aria-label="`Otwórz: ${link.label}`"
-                  class="btn btn--icon btn--sm input-copy input-open"
-                  :href="form[link.field] ?? undefined"
-                  rel="noopener"
-                  target="_blank"
-                  :title="`Otwórz: ${link.label}`"
-                ><ArrowUpRight /></a>
+                <template v-if="form[link.field]">
+                  <HoverTip anchor-class="field-icon field-icon--second" text="Otwórz w nowej karcie">
+                    <a
+                      :aria-label="`Otwórz: ${link.label}`"
+                      class="btn btn--icon btn--sm input-copy"
+                      :href="form[link.field] ?? undefined"
+                      rel="noopener"
+                      target="_blank"
+                    ><ArrowUpRight /></a>
+                  </HoverTip>
 
-                <button
-                  v-if="form[link.field]"
-                  :aria-label="`Kopiuj: ${link.label}`"
-                  class="btn btn--icon btn--sm input-copy"
-                  :title="`Kopiuj: ${link.label}`"
-                  type="button"
-                  @click="copy(form[link.field], link.label)"
-                ><Copy /></button>
+                  <HoverTip anchor-class="field-icon" text="Kopiuj adres">
+                    <button
+                      :aria-label="`Kopiuj: ${link.label}`"
+                      class="btn btn--icon btn--sm input-copy"
+                      type="button"
+                      @click="copy(form[link.field], link.label)"
+                    ><Copy /></button>
+                  </HoverTip>
+                </template>
               </span>
             </label>
 
@@ -293,14 +295,14 @@
               <span class="input-row input-row--inside">
                 <input v-model.trim="form.login" autocomplete="off" class="input mono" type="text">
 
-                <button
-                  v-if="form.login"
-                  aria-label="Kopiuj login"
-                  class="btn btn--icon btn--sm input-copy"
-                  title="Kopiuj login"
-                  type="button"
-                  @click="copy(form.login, 'Login')"
-                ><Copy /></button>
+                <HoverTip v-if="form.login" anchor-class="field-icon" text="Kopiuj login">
+                  <button
+                    aria-label="Kopiuj login"
+                    class="btn btn--icon btn--sm input-copy"
+                    type="button"
+                    @click="copy(form.login, 'Login')"
+                  ><Copy /></button>
+                </HoverTip>
               </span>
             </label>
 
@@ -316,25 +318,27 @@
                   :type="showPassword ? 'text' : 'password'"
                 >
 
-                <button
-                  :aria-label="showPassword ? 'Ukryj hasło' : 'Pokaż hasło'"
-                  class="btn btn--icon btn--sm"
-                  :title="showPassword ? 'Ukryj hasło' : 'Pokaż hasło'"
-                  type="button"
-                  @click="showPassword = !showPassword"
-                >
-                  <EyeOff v-if="showPassword" />
-                  <Eye v-else />
-                </button>
+                <!-- the eye – left of copy, or in copy's place when there is no password to copy -->
+                <HoverTip :anchor-class="password ? 'field-icon field-icon--second' : 'field-icon'" :text="showPassword ? 'Ukryj hasło' : 'Pokaż hasło'">
+                  <button
+                    :aria-label="showPassword ? 'Ukryj hasło' : 'Pokaż hasło'"
+                    class="btn btn--icon btn--sm"
+                    type="button"
+                    @click="showPassword = !showPassword"
+                  >
+                    <EyeOff v-if="showPassword" />
+                    <Eye v-else />
+                  </button>
+                </HoverTip>
 
-                <button
-                  v-if="password"
-                  aria-label="Kopiuj hasło"
-                  class="btn btn--icon btn--sm input-copy"
-                  title="Kopiuj hasło"
-                  type="button"
-                  @click="copy(password, 'Hasło')"
-                ><Copy /></button>
+                <HoverTip v-if="password" anchor-class="field-icon" text="Kopiuj hasło">
+                  <button
+                    aria-label="Kopiuj hasło"
+                    class="btn btn--icon btn--sm input-copy"
+                    type="button"
+                    @click="copy(password, 'Hasło')"
+                  ><Copy /></button>
+                </HoverTip>
               </span>
             </label>
           </div>
@@ -431,6 +435,7 @@
   import { projectsApi } from '@/api/projects'
   import StatusChip from '@/components/StatusChip.vue'
   import BaseDialog from '@/components/ui/BaseDialog.vue'
+  import HoverTip from '@/components/ui/HoverTip.vue'
   import SelectField from '@/components/ui/SelectField.vue'
   import { config, TODO_TAB } from '@/config'
   import { useNotifyStore } from '@/stores/notify'
@@ -961,11 +966,20 @@
   padding-right: 40px;
 }
 
-/* small grey icons like the × in a select: 22px, square-ish, a soft patch and the text colour on hover */
-.input-row--inside .btn {
+/* small grey icons like the × in a select: 22px, a soft patch and the text colour on hover; the tooltip's anchor
+   (.field-icon – HoverTip's own element, hence :deep) is what sits in the field's right end */
+.input-row--inside > :deep(.field-icon) {
   position: absolute;
   top: 50%;
   right: 7px;
+  translate: 0 -50%;
+}
+
+.input-row--inside > :deep(.field-icon--second) {
+  right: 32px;
+}
+
+.input-row--inside .btn {
   width: 22px;
   height: 22px;
   padding: 0;
@@ -973,7 +987,6 @@
   border-radius: var(--radius-sm);
   background: var(--panel);
   color: var(--text-3);
-  translate: 0 -50%;
 }
 
 .input-row--inside .btn svg {
@@ -985,13 +998,6 @@
 .input-row--inside .btn:hover {
   background: linear-gradient(var(--hover), var(--hover)), var(--panel);
   color: var(--text);
-}
-
-/* the second button, left of copy – the password's eye, an address's "open"; the eye takes copy's place when the
-   field is empty (no copy then) */
-.input-row--two:has(.input-copy:not(.input-open)) .btn:not(.input-copy),
-.input-row--two .input-open {
-  right: 32px;
 }
 
 .input-copy {
