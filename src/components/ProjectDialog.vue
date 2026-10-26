@@ -895,13 +895,6 @@
   cursor: pointer;
 }
 
-.check input {
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  accent-color: var(--accent);
-}
-
 .report__state strong {
   color: var(--text);
 }

@@ -71,7 +71,7 @@
     place()
     panel.value?.querySelector<HTMLElement>('button')?.focus()
     document.addEventListener('pointerdown', outside, true)
-    window.addEventListener('scroll', close, true)
+    window.addEventListener('scroll', onScroll, true)
     window.addEventListener('resize', close)
   }
 
@@ -116,8 +116,15 @@
   function close (): void {
     open.value = false
     document.removeEventListener('pointerdown', outside, true)
-    window.removeEventListener('scroll', close, true)
+    window.removeEventListener('scroll', onScroll, true)
     window.removeEventListener('resize', close)
+  }
+
+  /** the page (or the dialog) scrolling moves the trigger away – close; scrolling the panel's own list doesn't */
+  function onScroll (event: Event): void {
+    if (!panel.value?.contains(event.target as Node)) {
+      close()
+    }
   }
 
   function outside (event: PointerEvent): void {
