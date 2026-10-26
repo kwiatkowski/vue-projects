@@ -33,7 +33,7 @@ strony ─────── POST /wp-json/projects/v1/report (token) ─► PHP
   najechaniu – ile po terminie, na dziś, w najbliższych 7 dniach i bez terminu; okno projektu – spis otwartych zadań.
   Linki do Todo otwierają się w jednej nazwanej karcie: kolejne kliknięcie ładuje adres w już otwartej i na nią przełącza
   (karty Todo otwartej ręcznie przeglądarka nie znajdzie – wtedy otworzy nową).
-- **Statusy**: online (zielony, pulsuje), w budowie (niebieski), offline (czerwony), zawieszona (szara kulka, wiersz
+- **Statusy**: online (zielony, pulsuje), offline (czerwony, pulsuje), w budowie (niebieski), zawieszony (szara kulka, wiersz
   wyszarzony) – w filtrach zawsze wszystkie. Podpowiedzi (raport, Todo) w stylu aplikacji, nie przeglądarki.
 
 W bundlu nie ma adresów, tokenów ani haseł – konfigurację wstrzykuje WordPress w chwili otwarcia strony.

@@ -57,33 +57,22 @@
 
         <div class="field">
           <span>Status</span>
-          <StatusSelect v-model="form.status" />
+
+          <SelectField v-model="form.status" label="Status" :options="statusOptions">
+            <template #option="{ option }"><StatusChip :status="option.value" /></template>
+          </SelectField>
         </div>
 
-        <label class="field">
+        <div class="field">
           <span>Kategoria</span>
-
-          <select v-model="form.categoryId" class="input">
-            <option :value="null">— bez kategorii —</option>
-            <option v-for="category in projects.sortedCategories" :key="category.id" :value="category.id">{{ category.name }}</option>
-          </select>
-        </label>
+          <SelectField v-model="form.categoryId" label="Kategoria" :options="categoryOptions" />
+        </div>
 
         <label class="field">
           <span>Repozytorium</span>
 
           <span class="input-row">
             <input v-model.trim="form.repo" class="input" placeholder="https://github.com/…" type="url">
-
-            <a
-              v-if="form.repo"
-              aria-label="Otwórz repozytorium"
-              class="btn btn--icon btn--sm"
-              :href="form.repo"
-              rel="noopener"
-              target="_blank"
-              title="Otwórz repozytorium"
-            ><ArrowUpRight /></a>
 
             <button
               aria-label="Kopiuj adres repozytorium"
@@ -177,14 +166,22 @@
 
             <template v-if="project.token">
               <p class="muted">W <code>.env</code> strony (moduł <code>report</code> MK Core):</p>
-              <pre class="env mono">{{ envLines }}</pre>
+
+              <!-- the copy button sits in the block, top right, and shows on hover -->
+              <div class="env">
+                <pre class="env__lines mono">{{ envLines }}</pre>
+
+                <button
+                  aria-label="Kopiuj linie do .env"
+                  class="btn btn--icon btn--sm env__copy"
+                  title="Kopiuj"
+                  type="button"
+                  @click="copyEnv"
+                ><Copy /></button>
+              </div>
             </template>
 
             <div class="report__actions">
-              <button v-if="project.token" class="btn btn--sm" type="button" @click="copyEnv">
-                <Copy /> Kopiuj
-              </button>
-
               <button class="btn btn--sm btn--warn" :disabled="busy" type="button" @click="newToken">
                 <KeyRound /> {{ project.token ? 'Nowy token' : 'Utwórz token' }}
               </button>
@@ -196,7 +193,7 @@
 
         <div v-show="tab === 'server'" class="tab-panel" role="tabpanel">
 
-          <div class="grid grid--3">
+          <div class="stack">
             <label class="field">
               <span>Hosting</span>
               <input v-model.trim="form.server" class="input" placeholder="hostido.pl" type="text">
@@ -217,35 +214,33 @@
         <div v-show="tab === 'tech'" class="tab-panel" role="tabpanel">
           <p class="faint">Uzupełnia też raport strony.</p>
 
-          <div class="grid grid--3">
-            <label class="field">
+          <div class="stack">
+            <div class="field">
               <span>Silnik</span>
-              <input v-model.trim="form.engine" class="input" list="engines" type="text">
-            </label>
+              <SelectField label="Silnik" :model-value="form.engine || null" :options="engineOptions" @update:model-value="form.engine = $event ?? ''" />
+            </div>
 
-            <label class="field">
+            <div class="field">
               <span>Wersja</span>
-              <input v-model.trim="form.version" class="input mono" type="text">
-            </label>
+
+              <SelectField label="Wersja" :model-value="form.version || null" :options="versionOptions" @update:model-value="form.version = $event ?? ''">
+                <template #option="{ option }"><span class="mono">{{ option.label }}</span></template>
+              </SelectField>
+            </div>
 
             <label class="field">
               <span>Motyw</span>
               <input v-model.trim="form.theme" class="input" type="text">
             </label>
-          </div>
 
-          <div class="grid grid--3">
-            <label class="field">
+            <div class="field">
               <span>PHP</span>
-              <input v-model.trim="form.php" class="input mono" type="text">
-            </label>
-          </div>
 
-          <datalist id="engines">
-            <option value="wordpress" />
-            <option value="vue" />
-            <option value="static" />
-          </datalist>
+              <SelectField label="PHP" :model-value="form.php || null" :options="phpOptions" @update:model-value="form.php = $event ?? ''">
+                <template #option="{ option }"><span class="mono">{{ option.label }}</span></template>
+              </SelectField>
+            </div>
+          </div>
         </div>
 
         <div v-show="tab === 'access'" class="tab-panel" role="tabpanel">
@@ -410,13 +405,14 @@
   import { Activity, AlertTriangle, ArrowUpRight, Check, Copy, Cpu, Eye, EyeOff, KeyRound, ListChecks, PenLine, Plus, Server, Trash2, X } from 'lucide-vue-next'
   import { type Component, computed, nextTick, ref, useTemplateRef, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
-  import StatusSelect from '@/components/StatusSelect.vue'
+  import StatusChip from '@/components/StatusChip.vue'
   import BaseDialog from '@/components/ui/BaseDialog.vue'
+  import SelectField from '@/components/ui/SelectField.vue'
   import { config, TODO_TAB } from '@/config'
   import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
-  import { ago, bareDomain, formatDateTime, formatDay } from '@/utils/projects'
+  import { ago, bareDomain, formatDateTime, formatDay, STATUS_LABELS } from '@/utils/projects'
 
   const projects = useProjectsStore()
   const notify = useNotifyStore()
@@ -436,6 +432,22 @@
     'server', 'serverUrl', 'serverAccount', 'php', 'engine', 'version', 'theme', 'repo', 'notes',
     'adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login',
   ] as const
+
+  // ---- the dropdowns' options
+
+  const statusOptions = (Object.keys(STATUS_LABELS) as Status[]).map(value => ({ value, label: STATUS_LABELS[value] }))
+  const categoryOptions = computed(() => projects.sortedCategories.map(category => ({ value: category.id, label: category.name })))
+
+  /** what's known, newest first – with the project's own value, even an unusual one, so it isn't lost */
+  function versions (...values: Array<string | null | undefined>): Array<{ value: string, label: string }> {
+    return [...new Set(values.filter((value): value is string => typeof value === 'string' && value !== ''))]
+      .toSorted((a, b) => b.localeCompare(a, undefined, { numeric: true }))
+      .map(value => ({ value, label: value }))
+  }
+
+  const engineOptions = computed(() => versions('wordpress', form.value.engine).toSorted((a, b) => a.value === 'wordpress' ? -1 : (b.value === 'wordpress' ? 1 : 0)))
+  const versionOptions = computed(() => versions(config.latestWordpress, form.value.version, ...projects.items.map(item => item.version)))
+  const phpOptions = computed(() => versions('7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5', form.value.php, ...projects.items.map(item => item.php)))
 
   type Tab = 'report' | 'server' | 'tech' | 'access' | 'todo'
 
@@ -891,13 +903,37 @@
 }
 
 .env {
+  position: relative;
+}
+
+.env__lines {
   margin: 0;
-  padding: 10px 12px;
+  padding: 10px 44px 10px 12px;
   overflow-x: auto;
   border-radius: var(--radius);
   background: var(--panel);
   font-size: 12px;
   white-space: pre;
+}
+
+/* the copy button – in the block's top right corner, when the pointer is over it (or the keyboard on the button) */
+.env__copy {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  opacity: 0;
+  transition: opacity .12s;
+}
+
+.env:hover .env__copy,
+.env__copy:focus-visible {
+  opacity: 1;
+}
+
+/* fields one under the other */
+.stack {
+  display: grid;
+  gap: 12px;
 }
 
 code {

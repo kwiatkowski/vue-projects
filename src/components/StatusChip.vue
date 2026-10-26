@@ -1,5 +1,5 @@
 <template>
-  <span v-if="status" class="chip" :class="`chip--${STATUS_TONES[status]}`">
+  <span v-if="status" class="chip" :class="[`chip--${STATUS_TONES[status]}`, { 'chip--still': !PULSING.has(status) }]">
     <span class="dot" />
     {{ STATUS_LABELS[status] }}
   </span>
@@ -10,6 +10,9 @@
   import { STATUS_LABELS, STATUS_TONES } from '@/utils/projects'
 
   defineProps<{ status: Status | null | undefined }>()
+
+  /** only a site that is up or down pulses – one in progress or suspended doesn't */
+  const PULSING = new Set<Status>(['online', 'offline'])
 </script>
 
 <style scoped>
@@ -34,7 +37,7 @@
   box-shadow: 0 0 0 1px var(--line-strong);
 }
 
-.chip--off .dot::after {
+.chip--still .dot::after {
   display: none;
 }
 
