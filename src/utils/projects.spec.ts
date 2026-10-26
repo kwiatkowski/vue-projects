@@ -1,6 +1,6 @@
 import type { Project } from '@/types'
 import { describe, expect, it } from 'vitest'
-import { ago, formatDay, matches, repoHost, reportStale, siteUrl, sortProjects } from './projects'
+import { ago, formatDay, latestWordpress, matches, repoHost, reportStale, siteUrl, sortProjects } from './projects'
 
 const p = (name: string, extra: Partial<Project> = {}): Partial<Project> => ({ name, domain: name, status: 'online', ...extra })
 
@@ -43,6 +43,13 @@ describe('helpers', () => {
     expect(repoHost('https://github.com/medeninmed/ckmed')).toBe('GH')
     expect(repoHost('https://bitbucket.org/kwiatkowski/www-kwiatkowski')).toBe('BB')
     expect(repoHost(null)).toBeNull()
+  })
+
+  it('marks WordPress sites on the newest release', () => {
+    expect(latestWordpress(p('a', { engine: 'wordpress', version: '7.1.3' }), '7.1.3')).toBe(true)
+    expect(latestWordpress(p('a', { engine: 'wordpress', version: '7.1.2' }), '7.1.3')).toBe(false)
+    expect(latestWordpress(p('a', { engine: 'vue', version: '7.1.3' }), '7.1.3')).toBe(false)
+    expect(latestWordpress(p('a', { engine: 'wordpress', version: '7.1.3' }), null)).toBe(false)
   })
 
   it('formats days and links', () => {

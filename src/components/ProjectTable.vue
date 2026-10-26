@@ -66,7 +66,7 @@
           </template>
 
           <td><span v-if="project.engine" class="chip chip--soft">{{ project.engine }}</span></td>
-          <td class="mono">{{ project.version }}</td>
+          <td class="mono" :class="{ latest: isLatest(project) }" :title="isLatest(project) ? latestTitle : undefined">{{ project.version }}</td>
           <td class="cell-theme">{{ project.theme }}</td>
 
           <template v-if="full">
@@ -151,7 +151,7 @@
       </div>
 
       <div v-if="project.engine || project.theme" class="card__line muted">
-        <span v-if="project.engine">{{ project.engine }} <span class="mono">{{ project.version }}</span></span>
+        <span v-if="project.engine">{{ project.engine }} <span class="mono" :class="{ latest: isLatest(project) }">{{ project.version }}</span></span>
         <span v-if="project.theme">{{ project.theme }}</span>
       </div>
 
@@ -174,8 +174,12 @@
   import { ArrowUpRight, Check, ChevronDown, Laptop, ListChecks } from 'lucide-vue-next'
   import { computed } from 'vue'
   import StatusChip from '@/components/StatusChip.vue'
+  import { config } from '@/config'
   import { FLAGS } from '@/types'
-  import { ago, formatDay, repoHost, reportStale, siteUrl } from '@/utils/projects'
+  import { ago, formatDay, latestWordpress, repoHost, reportStale, siteUrl } from '@/utils/projects'
+
+  const isLatest = (project: Project) => latestWordpress(project, config.latestWordpress)
+  const latestTitle = config.latestWordpress ? `Najnowszy WordPress (${config.latestWordpress})` : undefined
 
   const props = defineProps<{
     projects: Project[]
@@ -386,6 +390,12 @@ tbody tr:last-child td {
 
 .warn {
   color: var(--warn);
+  font-weight: 600;
+}
+
+/* the newest WordPress */
+.latest {
+  color: var(--accent);
   font-weight: 600;
 }
 

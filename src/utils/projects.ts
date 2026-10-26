@@ -81,6 +81,11 @@ export function repoHost (url: string | null | undefined): string | null {
   return url.includes('gitlab') ? 'GL' : 'git'
 }
 
+/** A WordPress site on the newest release. */
+export function latestWordpress (project: Partial<Project>, latest: string | null): boolean {
+  return Boolean(latest) && project.engine === 'wordpress' && project.version === latest
+}
+
 /** https:// in front of a bare domain. */
 export function siteUrl (domain: string): string {
   return /^https?:\/\//.test(domain) ? domain : `https://${domain}/`

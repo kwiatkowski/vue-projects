@@ -17,6 +17,8 @@ export interface AppConfig {
   reportUrl: string
   todoUrl: string | null
   publicFields: string[]
+  /** the newest WordPress release – sites running it are marked; null when unknown */
+  latestWordpress: string | null
   siteName: string
   homeUrl: string
   version: string | null
@@ -43,6 +45,7 @@ export const config: AppConfig = {
   reportUrl: injected.reportUrl ?? '/wp-json/projects/v1/report',
   todoUrl: injected.todoUrl ?? null,
   publicFields: injected.publicFields ?? ['domain', 'status', 'engine', 'version', 'theme'],
+  latestWordpress: injected.latestWordpress ?? null,
   siteName: injected.siteName ?? 'kwiatkowski.co',
   homeUrl: injected.homeUrl ?? '/',
   version: injected.version ?? null,
