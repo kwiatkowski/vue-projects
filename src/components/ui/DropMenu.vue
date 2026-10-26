@@ -229,7 +229,7 @@
 /* a select's list: just under it, as wide, items edge to edge, edged like a plain field */
 .menu__panel--attached {
   min-width: 0;
-  padding: 0;
+  padding: 4px;
   border-color: var(--line-strong);
   box-shadow: var(--shadow);
   animation: none;
@@ -240,6 +240,10 @@
 .menu__panel--attached .menu__item {
   border-radius: 4px;
   padding: 0 12px;
+}
+
+.menu__panel--attached .menu__item + .menu__item {
+  margin-top: 1px;
 }
 
 /* the chosen option – like one under the pointer */
