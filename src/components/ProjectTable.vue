@@ -469,12 +469,17 @@ td {
   vertical-align: middle;
 }
 
+/* the column headers – taller and set apart from the rows: a shade lifted from the panel, a stronger line under them
+   (a shadow, not the border: the collapsed border doesn't stick with the header) */
 th {
   position: sticky;
   z-index: 2;
   top: 0;
-  background: var(--panel);
-  color: var(--text-3);
+  padding-top: 13px;
+  padding-bottom: 13px;
+  background: color-mix(in srgb, var(--panel) 90%, var(--text));
+  box-shadow: inset 0 -1px 0 var(--line-strong);
+  color: var(--text-2);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: .06em;

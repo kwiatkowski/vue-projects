@@ -104,7 +104,7 @@
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
   background: var(--tip-bg);
-  box-shadow: var(--shadow-pop);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 12%), 0 6px 16px rgb(0 0 0 / 14%);
   color: var(--text);
   font-size: 12px;
   line-height: 1.45;
