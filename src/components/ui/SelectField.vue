@@ -71,6 +71,12 @@
   text-align: left;
 }
 
+/* focused – or its list open – looks like a focused text field */
+.select-field__trigger[aria-expanded='true'] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
 .select-field__value {
   min-width: 0;
   overflow: hidden;

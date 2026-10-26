@@ -14,18 +14,20 @@
     </button>
 
     <Teleport :to="layer">
-      <div
-        v-if="open"
-        ref="panel"
-        class="menu__panel"
-        :class="matchWidth && `menu__panel--attached menu__panel--${attachedBelow ? 'below' : 'above'}`"
-        role="menu"
-        :style="position"
-        @click="open = false"
-        @keydown.esc="close"
-      >
-        <slot />
-      </div>
+      <Transition name="menu-pop">
+        <div
+          v-if="open"
+          ref="panel"
+          class="menu__panel"
+          :class="matchWidth && `menu__panel--attached menu__panel--${attachedBelow ? 'below' : 'above'}`"
+          role="menu"
+          :style="position"
+          @click="pick"
+          @keydown.esc.prevent.stop="pick"
+        >
+          <slot />
+        </div>
+      </Transition>
     </Teleport>
   </div>
 </template>
@@ -51,7 +53,7 @@
   const position = ref<Record<string, string>>({})
   /** where the panel goes: <body>, or the open <dialog> the trigger is in – a modal dialog covers everything in <body> */
   const layer = ref<string | HTMLElement>('body')
-  /** matchWidth: the panel hangs under the trigger (or sits on it, flipped) – the trigger's corners on that side go square */
+  /** matchWidth: the panel hangs under the trigger, or sits on top of it when there's no room below */
   const attachedBelow = ref(true)
   const trigger = useTemplateRef<HTMLButtonElement>('trigger')
   const panel = useTemplateRef<HTMLDivElement>('panel')
@@ -86,14 +88,15 @@
     const top = `${below ? anchor.bottom + 4 : anchor.top - 4 - height}px`
 
     if (props.matchWidth) {
-      // glued to the trigger: the shared edge drawn once (the panel's border over the trigger's)
+      // glued to the trigger, inset by its corner radius – the list hangs from inside the rounded corners
+      const inset = Number.parseFloat(getComputedStyle(trigger.value as Element).borderTopLeftRadius) || 0
+
       attachedBelow.value = below
       position.value = {
         top: `${below ? anchor.bottom - 1 : anchor.top + 1 - height}px`,
-        left: `${anchor.left}px`,
-        width: `${anchor.width}px`,
+        left: `${anchor.left + inset}px`,
+        width: `${anchor.width - 2 * inset}px`,
       }
-      trigger.value?.classList.add(`menu__trigger--open-${below ? 'below' : 'above'}`)
 
       return
     }
@@ -103,9 +106,17 @@
       : { top, right: `${Math.max(window.innerWidth - anchor.right, 8)}px` }
   }
 
+  /** an item chosen (or Esc) – closed, and a select-like trigger gets the focus back, as a native select does */
+  function pick (): void {
+    close()
+
+    if (props.matchWidth) {
+      trigger.value?.focus({ preventScroll: true })
+    }
+  }
+
   function close (): void {
     open.value = false
-    trigger.value?.classList.remove('menu__trigger--open-below', 'menu__trigger--open-above')
     document.removeEventListener('pointerdown', outside, true)
     window.removeEventListener('scroll', close, true)
     window.removeEventListener('resize', close)
@@ -217,7 +228,7 @@
   overflow-y: auto;
 }
 
-/* a select's list glued to it: square corners where they meet, the same border */
+/* a select's list glued to it, inside its rounded corners: square where they meet, rounded at the far end */
 .menu__panel--attached {
   min-width: 0;
   border-color: var(--line-strong);
@@ -235,25 +246,36 @@
   border-bottom-right-radius: 0;
 }
 
-.menu__trigger--open-below {
-  border-bottom-left-radius: 0 !important;
-  border-bottom-right-radius: 0 !important;
-}
-
-.menu__trigger--open-above {
-  border-top-left-radius: 0 !important;
-  border-top-right-radius: 0 !important;
-}
-
-/* the chosen option – in the table header's green */
+/* the chosen option – like one under the pointer */
 .menu__panel--attached .menu__item[aria-checked='true'] {
-  background: var(--accent);
-  color: var(--bg);
+  background: var(--hover);
 }
 
-.menu__panel--attached .menu__item[aria-checked='true'] svg,
-.menu__panel--attached .menu__item[aria-checked='true'] .chip {
-  color: inherit;
+/* it unrolls from the select and rolls back into it */
+.menu__panel--attached.menu-pop-enter-active,
+.menu__panel--attached.menu-pop-leave-active {
+  transition: clip-path .18s ease, opacity .18s ease;
+}
+
+.menu__panel--below.menu-pop-enter-from,
+.menu__panel--below.menu-pop-leave-to {
+  clip-path: inset(0 0 100% 0);
+  opacity: .4;
+}
+
+.menu__panel--above.menu-pop-enter-from,
+.menu__panel--above.menu-pop-leave-to {
+  clip-path: inset(100% 0 0 0);
+  opacity: .4;
+}
+
+/* the other menus fade out as they faded in */
+.menu-pop-leave-active:not(.menu__panel--attached) {
+  transition: opacity .1s ease;
+}
+
+.menu-pop-leave-to:not(.menu__panel--attached) {
+  opacity: 0;
 }
 
 .menu__sep {
