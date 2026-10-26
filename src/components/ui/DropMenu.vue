@@ -231,7 +231,7 @@
   min-width: 0;
   padding: 4px 0;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow);
+  box-shadow: var(--focus-ring), var(--shadow);
   animation: none;
   scrollbar-width: thin;
   scrollbar-color: var(--line-strong) transparent;

@@ -33,6 +33,8 @@
 
   /* the positive case – online, the newest WordPress, a checkmark, a fresh report; the same green in both themes (as in Todo) */
   --positive: #7a9a3a;
+  /* the glow around a focused field (and an open select's list) – thin and faint */
+  --focus-ring: 0 0 0 2px color-mix(in srgb, var(--accent) 18%, transparent);
   /* "nothing going on" – a suspended site, an unset report: a grey dot (the dark theme's strong line) */
   --off: #403e38;
 
@@ -366,7 +368,7 @@ label.field > span:first-child {
 
 .input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  box-shadow: var(--focus-ring);
 }
 
 /* locked: dashed edge and faint text – clearly not a field to type in */
