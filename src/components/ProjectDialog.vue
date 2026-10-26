@@ -249,18 +249,27 @@
             <label v-for="link in ACCESS_LINKS" :key="link.field" class="field" :class="{ 'field--2': link.wide }">
               <span>{{ link.label }}</span>
 
-              <span class="input-row">
+              <span class="input-row input-row--inside input-row--two">
                 <input v-model.trim="form[link.field]" class="input" :placeholder="link.placeholder" type="url">
 
                 <a
                   v-if="form[link.field]"
                   :aria-label="`Otwórz: ${link.label}`"
-                  class="btn btn--icon btn--sm"
+                  class="btn btn--icon btn--sm input-copy input-open"
                   :href="form[link.field] ?? undefined"
                   rel="noopener"
                   target="_blank"
                   :title="`Otwórz: ${link.label}`"
                 ><ArrowUpRight /></a>
+
+                <button
+                  :aria-label="`Kopiuj: ${link.label}`"
+                  class="btn btn--icon btn--sm input-copy"
+                  :disabled="!form[link.field]"
+                  :title="`Kopiuj: ${link.label}`"
+                  type="button"
+                  @click="copy(form[link.field], link.label)"
+                ><Copy /></button>
               </span>
             </label>
 
@@ -945,8 +954,9 @@
   translate: 0 -50%;
 }
 
-/* the password's eye, left of copy */
-.input-row--two .btn:not(.input-copy) {
+/* the second button, left of copy – the password's eye, an address's "open" */
+.input-row--two .btn:not(.input-copy),
+.input-row--two .input-open {
   right: 36px;
 }
 

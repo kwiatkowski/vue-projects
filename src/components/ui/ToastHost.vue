@@ -1,5 +1,5 @@
 <template>
-  <div aria-live="polite" class="toasts">
+  <div ref="host" aria-live="polite" class="toasts" popover="manual">
     <Transition name="toast">
       <div v-if="notify.current" :key="notify.current.id" class="toast" :class="{ 'toast--error': notify.current.tone === 'error' }">
         <span class="toast__text">{{ notify.current.text }}</span>
@@ -18,10 +18,26 @@
 
 <script lang="ts" setup>
   import { X } from 'lucide-vue-next'
-  import { watch } from 'vue'
+  import { onMounted, useTemplateRef, watch } from 'vue'
   import { useNotifyStore } from '@/stores/notify'
 
   const notify = useNotifyStore()
+
+  /**
+   * A popover is in the top layer – above an open modal dialog (no z-index gets there); shown again for each message,
+   * so it lands on top of a dialog opened in the meantime.
+   */
+  const host = useTemplateRef<HTMLElement>('host')
+
+  function raise (): void {
+    if (host.value?.matches(':popover-open')) {
+      host.value.hidePopover()
+    }
+
+    host.value?.showPopover?.()
+  }
+
+  onMounted(raise)
 
   let timer: ReturnType<typeof setTimeout> | undefined
 
@@ -30,6 +46,7 @@
     clearTimeout(timer)
 
     if (id !== undefined) {
+      raise()
       timer = setTimeout(() => notify.current?.id === id && notify.dismiss(), 5000)
     }
   })
@@ -45,6 +62,14 @@
 .toasts {
   position: fixed;
   z-index: 60;
+  /* the popover's own (UA) box – gone: no frame, no background, not centred on the screen */
+  inset: auto;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: none;
+  color: inherit;
   bottom: max(20px, env(safe-area-inset-bottom));
   left: 50%;
   translate: -50% 0;
