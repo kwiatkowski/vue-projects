@@ -1,0 +1,17 @@
+# /projects/ – built assets are served straight from web/, the source files are not reachable,
+# every other path (/projects/, /projects/whatever …) goes to WordPress, where wp-plugin-projects
+# serves the app shell.
+
+RewriteEngine On
+RewriteBase /projects/
+
+# the shell is only useful with the config WordPress injects
+RewriteRule ^web/index\.html$ - [F]
+
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^web/ - [L]
+
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [F]
+
+RewriteRule ^ /index.php [L]
