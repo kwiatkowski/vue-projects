@@ -469,17 +469,16 @@ td {
   vertical-align: middle;
 }
 
-/* the column headers – taller and set apart from the rows: a shade lifted from the panel, a stronger line under them
-   (a shadow, not the border: the collapsed border doesn't stick with the header) */
+/* the column headers – taller and set apart from the rows: the accent green, the text in the page's background colour */
 th {
   position: sticky;
   z-index: 2;
   top: 0;
   padding-top: 13px;
   padding-bottom: 13px;
-  background: color-mix(in srgb, var(--panel) 90%, var(--text));
-  box-shadow: inset 0 -1px 0 var(--line-strong);
-  color: var(--text-2);
+  border-bottom: 0;
+  background: var(--accent);
+  color: var(--bg);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: .06em;
@@ -707,9 +706,13 @@ tr:hover .row-grip {
   cursor: pointer;
 }
 
-.th-sort:hover,
+/* on the green header: a darker patch under the pointer, the sorted column in bold */
+.th-sort:hover {
+  background: rgb(0 0 0 / 12%);
+}
+
 .th-sort[aria-sort] {
-  color: var(--text);
+  font-weight: 750;
 }
 
 .th-sort__icon {
