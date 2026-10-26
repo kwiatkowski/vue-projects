@@ -65,53 +65,13 @@
             'row--drop-after': projectDrop?.target?.id === project.id && projectDrop.target.after,
           }"
           :data-project-id="project.id"
-          :draggable="canDrag && editingId !== project.id ? 'true' : undefined"
-          @click="full && editingId !== project.id && emit('open', project)"
+          :draggable="canDrag ? 'true' : undefined"
+          @click="full && emit('open', project)"
           @dragend="endDrag"
           @dragstart="startProject($event, project.id)"
         >
-          <td v-if="editingId === project.id" class="cell-name" @click.stop>
-            <form class="inline-edit" @keydown.esc.prevent="editingId = null" @submit.prevent="saveInline(project)">
-              <input
-                ref="nameInput"
-                v-model.trim="inlineName"
-                aria-label="Nazwa projektu"
-                class="input inline-edit__input"
-                placeholder="Nazwa projektu"
-                type="text"
-              >
-
-              <span class="inline-edit__actions">
-                <button
-                  aria-label="Zapisz"
-                  class="btn btn--icon btn--sm"
-                  :disabled="inlineBusy"
-                  title="Zapisz (Enter)"
-                  type="submit"
-                ><Check /></button>
-
-                <button
-                  aria-label="Anuluj"
-                  class="btn btn--icon btn--sm"
-                  title="Anuluj (Esc)"
-                  type="button"
-                  @click="editingId = null"
-                ><X /></button>
-              </span>
-            </form>
-          </td>
-
-          <td v-else class="cell-name">
+          <td class="cell-name">
             <GripVertical v-if="canDrag" aria-hidden="true" class="row-grip" />
-
-            <button
-              v-if="full"
-              aria-label="Zmień nazwę"
-              class="rename"
-              title="Zmień nazwę"
-              type="button"
-              @click.stop="startInline(project)"
-            ><Pencil /></button>
 
             <a
               v-if="project.domains[0]"
@@ -266,8 +226,8 @@
 <script lang="ts" setup>
   import type { Category, Flag, Project, SortKey } from '@/types'
   import type { Group } from '@/utils/projects'
-  import { ArrowUpRight, Check, ChevronDown, GripVertical, Laptop, Pencil, X } from 'lucide-vue-next'
-  import { computed, nextTick, ref, useTemplateRef } from 'vue'
+  import { ArrowUpRight, Check, ChevronDown, GripVertical, Laptop } from 'lucide-vue-next'
+  import { computed, ref } from 'vue'
   import CategoryMenu from '@/components/CategoryMenu.vue'
   import StatusChip from '@/components/StatusChip.vue'
   import TodoChip from '@/components/TodoChip.vue'
@@ -292,42 +252,6 @@
   const emit = defineEmits<{ open: [Project], sort: [SortKey] }>()
 
   const projects = useProjectsStore()
-
-  // ---- the name edited in place: the pencil after it, Enter saves, Esc cancels (domains – in the dialog)
-
-  const editingId = ref<number | null>(null)
-  const inlineName = ref('')
-  const inlineBusy = ref(false)
-  const nameInput = useTemplateRef<HTMLInputElement[]>('nameInput')
-
-  async function startInline (project: Project): Promise<void> {
-    editingId.value = project.id
-    inlineName.value = project.name
-    await nextTick()
-    nameInput.value?.[0]?.select()
-  }
-
-  async function saveInline (project: Project): Promise<void> {
-    const name = inlineName.value
-
-    if (!name) {
-      return
-    }
-
-    if (name === project.name) {
-      editingId.value = null
-
-      return
-    }
-
-    inlineBusy.value = true
-
-    if (await projects.update(project.id, { name })) {
-      editingId.value = null
-    }
-
-    inlineBusy.value = false
-  }
 
   const FLAG_LABELS: Record<Flag, string> = {
     deploy: 'Deploy',
@@ -608,56 +532,6 @@ tbody:first-of-type .group-row td {
 
 tr:hover .row-grip {
   opacity: 1;
-}
-
-.rename {
-  display: inline-grid;
-  float: right;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  margin: -2px -6px 0 6px;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: none;
-  color: var(--text-3);
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity .12s;
-}
-
-.rename svg {
-  width: 14px;
-  height: 14px;
-}
-
-tr:hover .rename,
-.rename:focus-visible {
-  opacity: 1;
-}
-
-.rename:hover {
-  background: var(--press);
-  color: var(--text);
-}
-
-.inline-edit {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 240px;
-}
-
-.inline-edit__input {
-  min-height: 30px;
-  padding: 4px 8px;
-  font-size: 13px;
-}
-
-.inline-edit__actions {
-  display: flex;
-  flex: none;
 }
 
 .center {
