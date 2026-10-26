@@ -9,6 +9,8 @@ export type Flag = typeof FLAGS[number]
 export interface Category {
   id: number
   name: string
+  /** the address of the category's own list – /projects/{slug} */
+  slug: string
   position: number | null
 }
 
@@ -70,6 +72,30 @@ export interface Project extends Record<Flag, boolean> {
   reportedAt: string | null
   token: string | null
   updatedAt: string | null
+}
+
+/** A plugin of a reported site; update – the version waiting for it, null when up to date. */
+export interface ReportPlugin {
+  name: string
+  version: string
+  file: string
+  active: boolean
+  update: string | null
+  mu?: boolean
+}
+
+/** What a site last sent about itself (MK Core's `report` module) – older reports lack users and update info. */
+export interface SiteReport {
+  users?: {
+    total: number
+    /** null – the site doesn't track activity */
+    online: number | null
+    roles: Array<{ role: string, name: string, count: number }>
+  }
+  plugins?: ReportPlugin[]
+  pluginUpdates?: number
+  environment?: string
+  reporter?: string
 }
 
 /** What the API takes: any field, null clears it. */

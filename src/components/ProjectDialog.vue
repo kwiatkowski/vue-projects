@@ -211,8 +211,49 @@
         <template v-else>Strona jeszcze nic nie wysłała.</template>
       </p>
 
+      <dl v-if="siteReport?.users || siteReport?.plugins" class="site">
+        <template v-if="siteReport.users">
+          <dt>Użytkownicy</dt>
+
+          <dd>
+            <strong class="mono">{{ siteReport.users.total }}</strong>
+            <span v-if="siteReport.users.online !== null" class="site__online"><span class="dot" /> {{ siteReport.users.online }} online</span>
+            <span v-for="role in siteReport.users.roles" :key="role.role" class="chip chip--soft">{{ role.name }} <span class="mono">{{ role.count }}</span></span>
+          </dd>
+        </template>
+
+        <template v-if="siteReport.plugins">
+          <dt>Wtyczki</dt>
+
+          <dd>
+            <strong class="mono">{{ siteReport.plugins.length }}</strong>
+            <span class="faint">{{ activePlugins }} aktywnych</span>
+            <span v-if="pluginUpdates.length > 0" class="chip chip--warn">{{ pluginUpdates.length }} do aktualizacji</span>
+            <span v-else class="site__ok">aktualne</span>
+          </dd>
+
+          <dd class="site__plugins">
+            <details :open="pluginUpdates.length > 0">
+              <summary class="faint">Lista wtyczek</summary>
+
+              <ul class="plugins">
+                <li v-for="plugin in sortedPlugins" :key="plugin.file" class="plugin" :class="{ 'plugin--off': !plugin.active }">
+                  <span class="plugin__name">{{ plugin.name }}</span>
+                  <span v-if="plugin.mu" class="faint">MU</span>
+                  <span v-else-if="!plugin.active" class="faint">nieaktywna</span>
+
+                  <span class="plugin__version mono">
+                    {{ plugin.version }}<template v-if="plugin.update"> → <strong>{{ plugin.update }}</strong></template>
+                  </span>
+                </li>
+              </ul>
+            </details>
+          </dd>
+        </template>
+      </dl>
+
       <template v-if="project.token">
-        <p class="muted">W <code>.env</code> strony (wtyczka <code>reporter/</code> z wp-plugin-projects):</p>
+        <p class="muted">W <code>.env</code> strony (moduł <code>report</code> MK Core):</p>
         <pre class="env mono">{{ envLines }}</pre>
       </template>
 
@@ -252,7 +293,7 @@
 </template>
 
 <script lang="ts" setup>
-  import type { Flag, Project, ProjectInput, Status, TodoTask } from '@/types'
+  import type { Flag, Project, ProjectInput, ReportPlugin, SiteReport, Status, TodoTask } from '@/types'
   import { Copy, KeyRound, ListChecks, Plus, X } from 'lucide-vue-next'
   import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
@@ -340,7 +381,29 @@
       void nextTick(() => nameInput.value?.focus())
     } else {
       void loadTasks(editing)
+      void loadReport(editing)
     }
+  })
+
+  const siteReport = ref<SiteReport | null>(null)
+
+  /** users and plugins from the site's last report – fetched when the dialog opens */
+  async function loadReport (project: Project): Promise<void> {
+    siteReport.value = null
+
+    if (project.reportedAt) {
+      siteReport.value = (await projectsApi.report(project.id).catch(() => null))?.report ?? null
+    }
+  }
+
+  const activePlugins = computed(() => siteReport.value?.plugins?.filter(plugin => plugin.active).length ?? 0)
+  const pluginUpdates = computed(() => siteReport.value?.plugins?.filter(plugin => plugin.update) ?? [])
+
+  /** waiting for an update first, then the active ones, the inactive last – by name within each */
+  const sortedPlugins = computed(() => {
+    const rank = (plugin: ReportPlugin) => plugin.update ? 0 : (plugin.active ? 1 : 2)
+
+    return (siteReport.value?.plugins ?? []).toSorted((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name, 'pl'))
   })
 
   const tasks = ref<TodoTask[]>([])
@@ -533,6 +596,97 @@ code {
 .report__actions {
   display: flex;
   gap: 6px;
+}
+
+/* users and plugins of the site's last report */
+.site {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px 14px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.site dt {
+  color: var(--text-2);
+}
+
+.site dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 0;
+}
+
+.site__online,
+.site__ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--positive);
+}
+
+.site__online .dot {
+  width: 6px;
+  height: 6px;
+}
+
+.site__plugins {
+  grid-column: 1 / -1;
+}
+
+.site__plugins details {
+  width: 100%;
+}
+
+.site__plugins summary {
+  cursor: pointer;
+}
+
+.plugins {
+  display: grid;
+  max-height: 260px;
+  margin: 6px 0 0;
+  padding: 0;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  list-style: none;
+}
+
+.plugin {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.plugin:last-child {
+  border-bottom: 0;
+}
+
+.plugin--off .plugin__name {
+  color: var(--text-3);
+}
+
+.plugin__name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plugin__version {
+  flex: none;
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.plugin__version strong {
+  color: var(--warn);
 }
 
 .domains {

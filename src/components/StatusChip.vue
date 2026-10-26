@@ -1,5 +1,5 @@
 <template>
-  <span v-if="status" class="chip" :class="TONES[status]">
+  <span v-if="status" class="chip" :class="`chip--${STATUS_TONES[status]}`">
     <span class="dot" />
     {{ STATUS_LABELS[status] }}
   </span>
@@ -7,21 +7,51 @@
 
 <script lang="ts" setup>
   import type { Status } from '@/types'
-  import { STATUS_LABELS } from '@/utils/projects'
+  import { STATUS_LABELS, STATUS_TONES } from '@/utils/projects'
 
   defineProps<{ status: Status | null | undefined }>()
-
-  const TONES: Record<Status, string> = {
-    online: 'chip--accent',
-    dev: 'chip--info',
-    suspended: 'chip--danger',
-    offline: 'chip--warn',
-  }
 </script>
 
 <style scoped>
+/* just the coloured dot and label – no tinted background */
+.chip {
+  gap: 6px;
+  padding: 0;
+  background: none;
+}
+
+.chip--accent {
+  color: var(--positive);
+}
+
+/* the size of the dots in Todo */
 .dot {
-  width: 6px;
-  height: 6px;
+  position: relative;
+}
+
+/* a pulsing ring around the dot, in the dot's colour */
+.dot::after {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: currentcolor;
+  opacity: .75;
+  animation: ping 1s cubic-bezier(0, 0, .2, 1) infinite;
+  content: '';
+}
+
+@keyframes ping {
+  75%,
+  100% {
+    opacity: 0;
+    transform: scale(2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot::after {
+    animation: none;
+    opacity: 0;
+  }
 }
 </style>

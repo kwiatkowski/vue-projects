@@ -40,8 +40,8 @@ describe('sortProjects', () => {
 })
 
 describe('manual order', () => {
-  const a = { id: 1, name: 'A', position: 1 }
-  const b = { id: 2, name: 'B', position: 0 }
+  const a = { id: 1, name: 'A', slug: 'a', position: 1 }
+  const b = { id: 2, name: 'B', slug: 'b', position: 0 }
 
   it('groups projects under their categories, the uncategorized last', () => {
     const list = [

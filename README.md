@@ -71,15 +71,17 @@ src/
 ├── api/          klient fetch (nonce, odświeżanie nonce, błędy) i endpointy projects/v1
 ├── stores/       Pinia: projects (lista, kategorie, kolejność, projekty Todo, edycja, token), notify
 ├── utils/        czyste funkcje: filtr, wyszukiwanie, sortowanie, grupy kategorii, kolejność, daty – pokryte testami; drag (przeciąganie)
-├── components/   pasek górny, tabela z kategoriami (karty na telefonie), status, Todo, okna projektu i kategorii, ui/ (dialog, menu, toast)
-├── composables/  motyw jasny/ciemny
+├── components/   pasek górny (nowy projekt, nowa kategoria, motyw, logowanie), tabela z kategoriami (karty na telefonie), status, Todo, okna projektu i kategorii, ui/ (dialog, menu, toast)
+├── composables/  motyw ciemny (domyślnie) / jasny
 ├── pages/        lista projektów
 ├── styles/       app.css – tokeny kolorów (jasne i ciemne), typografia, przyciski, pola, chipy (jak w vue-todo)
 └── config.ts     konfiguracja z window.__PROJECTS__ (prod) lub wartości domyślne (dev)
 ```
 
-Filtr (status, „Bez strony”) i wyszukiwanie są w adresie (`?status=online&q=hostido`), sortowanie po kliknięciu
-w nagłówek kolumny. PHP starsze niż 8.1 jest wyróżnione, raport starszy niż 2 dni – na pomarańczowo.
+Kategoria to ścieżka – `/projects/meden` pokazuje tylko projekty kategorii „Meden” (wybór w pasku nad tabelą – po zalogowaniu, slug
+zmienia się razem z nazwą kategorii). Filtr (status, „Bez strony”) i wyszukiwanie są w adresie
+(`/projects/meden?status=online&q=hostido`), sortowanie po kliknięciu w nagłówek kolumny. Lista odświeża się sama co minutę (tylko w widocznej karcie, bez wskaźnika wczytywania) – wiersz, który się zmienił,
+przez chwilę ma kolor jak po najechaniu i mały wskaźnik przy nazwie. PHP starsze niż 8.1 jest wyróżnione, raport starszy niż 2 dni – na pomarańczowo.
 
 ## Wersje
 

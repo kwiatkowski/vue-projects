@@ -26,6 +26,10 @@ export const useProjectsStore = defineStore('projects', () => {
 
   const sortedCategories = computed(() => categories.value.toSorted(compareManual))
 
+  /** projects the last refresh found changed (or new) – the table flashes them for a moment */
+  const changed = ref<Set<number>>(new Set())
+  let changedTimer: ReturnType<typeof setTimeout> | undefined
+
   async function load (): Promise<void> {
     status.value = 'loading'
 
@@ -41,6 +45,51 @@ export const useProjectsStore = defineStore('projects', () => {
       // without them the list still works – only linking to Todo doesn't
       todoProjects.value = await todoApi.projects().catch(() => [])
     }
+  }
+
+  /**
+   * Fetches the list again without any loading state; only what really changed is replaced (and flashed). Skipped
+   * when the list isn't loaded yet, and dropped when the user changed something while it was on the way.
+   */
+  async function refresh (): Promise<void> {
+    if (status.value !== 'ready') {
+      return
+    }
+
+    const itemsBefore = items.value
+    const categoriesBefore = categories.value
+    let fresh: [Project[], Category[]]
+
+    try {
+      fresh = await Promise.all([projectsApi.list(), categoriesApi.list()])
+    } catch {
+      // the next minute tries again – no toast for a background check
+      return
+    }
+
+    if (items.value !== itemsBefore || categories.value !== categoriesBefore) {
+      return
+    }
+
+    const [freshItems, freshCategories] = fresh
+
+    if (JSON.stringify(freshCategories) !== JSON.stringify(categoriesBefore)) {
+      categories.value = freshCategories
+    }
+
+    const known = new Map(itemsBefore.map(item => [item.id, JSON.stringify(item)]))
+    const ids = freshItems.filter(item => known.get(item.id) !== JSON.stringify(item)).map(item => item.id)
+
+    if (ids.length === 0 && freshItems.length === itemsBefore.length) {
+      return
+    }
+
+    items.value = freshItems
+    changed.value = new Set(ids)
+    clearTimeout(changedTimer)
+    changedTimer = setTimeout(() => {
+      changed.value = new Set()
+    }, 3000)
   }
 
   function replace (project: Project): void {
@@ -213,12 +262,14 @@ export const useProjectsStore = defineStore('projects', () => {
     items,
     categories,
     sortedCategories,
+    changed,
     todoProjects,
     status,
     loadError,
     editing,
     editingCategory,
     load,
+    refresh,
     add,
     update,
     remove,

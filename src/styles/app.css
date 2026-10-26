@@ -3,7 +3,7 @@
  * one cactus-green accent (the site's #88a24c, darkened for contrast). Geist for text, Geist Mono for
  * everything that is a number – dates, times, counters.
  *
- * Light and dark follow the system; `data-theme` on <html> pins one.
+ * Dark by default (index.html sets `data-theme` on <html> before the first paint), light when the user picks it.
  */
 
 :root {
@@ -28,6 +28,8 @@
   --accent-ink: #fffefb;
   --accent-soft: #e6edd5;
   --accent-text: #45601a;
+  /* the positive case – online, the newest WordPress, a checkmark, a fresh report; the same green in both themes (as in Todo) */
+  --positive: #7a9a3a;
 
   --danger: #c2412d;
   --danger-soft: #f7e2dd;

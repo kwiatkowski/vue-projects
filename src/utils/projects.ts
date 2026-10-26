@@ -7,6 +7,14 @@ export const STATUS_LABELS: Record<Status, string> = {
   offline: 'nie działa',
 }
 
+/** The colour of a status – chip--{tone} in the table, the same in the filter. */
+export const STATUS_TONES: Record<Status, 'accent' | 'info' | 'danger' | 'warn'> = {
+  online: 'accent',
+  dev: 'info',
+  suspended: 'danger',
+  offline: 'warn',
+}
+
 /** A filter of the list: by status, or the projects that are no site at all (no domain). */
 export type Filter = 'all' | Status | 'other'
 

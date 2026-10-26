@@ -1,4 +1,4 @@
-import type { Category, Project, ProjectInput, TodoProject, TodoSummary, TodoTask } from '@/types'
+import type { Category, Project, ProjectInput, SiteReport, TodoProject, TodoSummary, TodoTask } from '@/types'
 import { request } from './client'
 
 export const projectsApi = {
@@ -12,6 +12,8 @@ export const projectsApi = {
   token: (id: number) => request<Project>('POST', `projects/${id}/token`),
   /** open tasks of the linked Todo project */
   tasks: (id: number) => request<{ todo: TodoSummary | null, tasks: TodoTask[] }>('GET', `projects/${id}/tasks`),
+  /** the last report of the site, as it came */
+  report: (id: number) => request<{ reportedAt: string | null, report: SiteReport | null }>('GET', `projects/${id}/report`),
 }
 
 export const categoriesApi = {

@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#f6f5f1">
+    <meta name="theme-color" content="#151513">
     <meta name="description" content="Strony i aplikacje, którymi się opiekuję.">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <title>Projekty</title>
-    <!-- the saved theme before the first paint – no flash of the wrong one -->
-    <script>try{var t=localStorage.getItem('projects:theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
+    <!-- the saved theme (dark by default) before the first paint – no flash of the wrong one -->
+    <script>var t='dark';try{t=localStorage.getItem('projects:theme')==='light'?'light':'dark'}catch(e){}document.documentElement.dataset.theme=t;if(t==='light')document.querySelector('meta[name="theme-color"]').setAttribute('content','#f6f5f1')</script>
   </head>
   <body>
     <div id="app"></div>

@@ -1,55 +1,56 @@
 <template>
   <div class="page">
     <header class="head">
-      <div class="head__titles">
-        <div class="eyebrow">{{ config.canManage ? 'Wszystkie projekty' : 'Strony i aplikacje' }}</div>
-        <h1 class="head__title">Projekty</h1>
-        <p v-if="projects.status === 'ready'" class="head__sub">{{ summary }}</p>
-      </div>
+      <h1 class="visually-hidden">{{ category?.name ?? 'Projekty' }}</h1>
 
-      <div v-if="config.canManage" class="head__actions">
-        <button class="btn btn--outline" type="button" @click="projects.editingCategory = 'new'">
-          <FolderPlus /> Nowa kategoria
+      <div class="toolbar">
+        <label class="search">
+          <Search />
+
+          <input
+            v-model="query"
+            aria-label="Szukaj"
+            class="input"
+            placeholder="Szukaj: domena, motyw, serwer…"
+            type="search"
+          >
+        </label>
+
+        <select
+          v-if="projects.categories.length > 0"
+          aria-label="Kategoria"
+          class="input toolbar__category"
+          :disabled="!config.canManage"
+          :title="config.canManage ? undefined : 'Wybór kategorii po zalogowaniu'"
+          :value="category?.slug ?? ''"
+          @change="setCategory(($event.target as HTMLSelectElement).value)"
+        >
+          <option value="">Wszystkie kategorie</option>
+          <option v-for="item in projects.sortedCategories" :key="item.id" :value="item.slug">{{ item.name }}</option>
+        </select>
+
+        <div aria-label="Status" class="seg toolbar__filters" role="radiogroup">
+          <button
+            v-for="option in filters"
+            :key="option.value"
+            :aria-checked="filter === option.value"
+            :class="option.tone && `status status--${option.tone}`"
+            role="radio"
+            type="button"
+            @click="filter = option.value"
+          >
+            <span v-if="option.tone" class="dot" />
+            {{ option.label }} <span class="mono faint">{{ option.count }}</span>
+          </button>
+        </div>
+
+        <button v-if="sort" class="btn btn--sm toolbar__order" type="button" @click="sort = null">
+          <ListOrdered /> Własna kolejność
         </button>
 
-        <button class="btn btn--accent" type="button" @click="projects.editing = 'new'">
-          <Plus /> Nowy projekt
-        </button>
+        <span v-else-if="config.canManage && !canDrag" class="faint toolbar__hint">Przeciąganie – bez filtra i wyszukiwania</span>
       </div>
     </header>
-
-    <div class="toolbar">
-      <label class="search">
-        <Search />
-
-        <input
-          v-model="query"
-          aria-label="Szukaj"
-          class="input"
-          placeholder="Szukaj: domena, motyw, serwer…"
-          type="search"
-        >
-      </label>
-
-      <div aria-label="Status" class="seg toolbar__filters" role="radiogroup">
-        <button
-          v-for="option in filters"
-          :key="option.value"
-          :aria-checked="filter === option.value"
-          role="radio"
-          type="button"
-          @click="filter = option.value"
-        >
-          {{ option.label }} <span class="mono faint">{{ option.count }}</span>
-        </button>
-      </div>
-
-      <button v-if="sort" class="btn btn--sm toolbar__order" type="button" @click="sort = null">
-        <ListOrdered /> Własna kolejność
-      </button>
-
-      <span v-else-if="config.canManage && !canDrag" class="faint toolbar__hint">Przeciąganie – bez filtra i wyszukiwania</span>
-    </div>
 
     <template v-if="projects.status === 'ready'">
       <ProjectTable
@@ -83,15 +84,15 @@
 </template>
 
 <script lang="ts" setup>
-  import type { Project, SortKey } from '@/types'
+  import type { Category, Project, SortKey } from '@/types'
   import type { Filter, Group } from '@/utils/projects'
-  import { FolderPlus, ListOrdered, Plus, Search, SearchX } from 'lucide-vue-next'
+  import { ListOrdered, Search, SearchX } from 'lucide-vue-next'
   import { computed, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import ProjectTable from '@/components/ProjectTable.vue'
   import { config } from '@/config'
   import { useProjectsStore } from '@/stores/projects'
-  import { groupProjects, matches, sortProjects, STATUS_LABELS } from '@/utils/projects'
+  import { groupProjects, matches, sortProjects, STATUS_LABELS, STATUS_TONES } from '@/utils/projects'
 
   const projects = useProjectsStore()
   const route = useRoute()
@@ -105,6 +106,38 @@
     void router.replace({ query: { ...(status === 'all' ? {} : { status }), ...(q ? { q } : {}) } })
   })
 
+  // the category is the path – /projects/meden lists only the projects of "Meden"
+  const categorySlug = computed(() => typeof route.params.category === 'string' ? route.params.category : '')
+  const category = computed<Category | null>(() => projects.categories.find(item => item.slug === categorySlug.value) ?? null)
+
+  function setCategory (slug: string): void {
+    void router.push({ name: 'projects', params: slug ? { category: slug } : {}, query: route.query })
+  }
+
+  // a renamed category gets a new slug – follow it; one that is gone (or never was) – back to all
+  let shownId: number | null = null
+
+  watch([categorySlug, () => projects.categories, () => projects.status], () => {
+    if (!categorySlug.value || projects.status !== 'ready') {
+      shownId = null
+
+      return
+    }
+
+    if (category.value) {
+      shownId = category.value.id
+
+      return
+    }
+
+    const renamed = projects.categories.find(item => item.id === shownId)
+
+    void router.replace({ name: 'projects', params: renamed ? { category: renamed.slug } : {}, query: route.query })
+  }, { immediate: true })
+
+  /** the projects of the chosen category – or all of them */
+  const scoped = computed(() => category.value ? projects.items.filter(project => project.categoryId === category.value?.id) : projects.items)
+
   /** null – the user's own order, grouped by category; a column – a flat list sorted by it */
   const sort = ref<SortKey | null>(null)
   const descending = ref(false)
@@ -114,18 +147,16 @@
     sort.value = key
   }
 
-  const filtered = computed(() => filter.value !== 'all' || query.value.trim() !== '')
+  const filtered = computed(() => category.value !== null || filter.value !== 'all' || query.value.trim() !== '')
 
   /** dragging changes the order of whole categories – only when all of them are shown */
   const canDrag = computed(() => config.canManage && sort.value === null && !filtered.value)
 
-  const sites = computed(() => projects.items.filter(project => project.domains.length > 0))
-
   const filters = computed(() => {
-    const count = (status: Filter) => projects.items.filter(project => matches(project, status, '')).length
-    const options: Array<{ value: Filter, label: string, count: number }> = [
-      { value: 'all', label: 'Wszystkie', count: projects.items.length },
-      ...(['online', 'dev', 'suspended', 'offline'] as const).map(status => ({ value: status, label: STATUS_LABELS[status], count: count(status) })),
+    const count = (status: Filter) => scoped.value.filter(project => matches(project, status, '')).length
+    const options: Array<{ value: Filter, label: string, count: number, tone?: string }> = [
+      { value: 'all', label: 'Wszystkie', count: scoped.value.length },
+      ...(['online', 'dev', 'suspended', 'offline'] as const).map(status => ({ value: status, label: STATUS_LABELS[status], count: count(status), tone: STATUS_TONES[status] })),
       { value: 'other', label: 'Bez strony', count: count('other') },
     ]
 
@@ -134,34 +165,20 @@
   })
 
   const groups = computed<Array<Group<Project>>>(() => {
-    const visible = projects.items.filter(project => matches(project, filter.value, query.value))
+    const visible = scoped.value.filter(project => matches(project, filter.value, query.value))
 
     if (sort.value) {
       return [{ category: null, projects: sortProjects(visible, sort.value, descending.value) }]
     }
 
-    // the owner sees empty categories too (to drop projects into them), unless a filter hides things anyway
+    // one category – its group, even empty (for the owner); otherwise empty categories too (to drop projects into
+    // them), unless a filter hides things anyway
+    if (category.value) {
+      return groupProjects(visible, [category.value], config.canManage)
+    }
+
     return groupProjects(visible, projects.categories, config.canManage && !filtered.value)
   })
-
-  const summary = computed(() => {
-    const online = sites.value.filter(project => project.status === 'online').length
-    const parts = [`${sites.value.length} ${plural(sites.value.length, 'strona', 'strony', 'stron')}`, `${online} online`]
-
-    if (config.canManage && projects.items.length > sites.value.length) {
-      parts.push(`${projects.items.length - sites.value.length} bez strony`)
-    }
-
-    return parts.join(' · ')
-  })
-
-  function plural (count: number, one: string, few: string, many: string): string {
-    if (count === 1) {
-      return one
-    }
-
-    return count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20) ? few : many
-  }
 </script>
 
 <style scoped>
@@ -170,38 +187,17 @@
   align-items: flex-end;
   flex-wrap: wrap;
   gap: 12px 16px;
-  padding: 28px 0 20px;
+  padding: 20px 0 16px;
 }
 
-.head__titles {
-  flex: 1 1 260px;
-  min-width: 0;
-}
-
-.head__title {
-  font-size: 30px;
-  font-weight: 650;
-  line-height: 1.2;
-  letter-spacing: -.025em;
-}
-
-.head__sub {
-  margin-top: 4px;
-  color: var(--text-2);
-}
-
-.head__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
+/* search and category on the left, the statuses on the right; on a narrow screen they wrap */
 .toolbar {
   display: flex;
+  flex: 1 1 auto;
   flex-wrap: wrap;
   align-items: center;
   gap: 10px 12px;
-  margin-bottom: 16px;
+  min-width: 0;
 }
 
 .search {
@@ -234,8 +230,53 @@
   scrollbar-width: none;
 }
 
+.toolbar__filters {
+  margin-left: auto;
+}
+
 .toolbar__filters button {
   flex: none;
+}
+
+/* a status in its colour – as the chip in the table */
+.status {
+  color: var(--tone);
+}
+
+.status .dot {
+  width: 6px;
+  height: 6px;
+}
+
+.seg .status[aria-checked='true'] {
+  background: var(--tone-soft);
+  color: var(--tone);
+}
+
+.status--accent {
+  --tone: var(--positive);
+  --tone-soft: var(--accent-soft);
+}
+
+.status--info {
+  --tone: var(--info);
+  --tone-soft: var(--info-soft);
+}
+
+.status--danger {
+  --tone: var(--danger);
+  --tone-soft: var(--danger-soft);
+}
+
+.status--warn {
+  --tone: var(--warn);
+  --tone-soft: var(--warn-soft);
+}
+
+.toolbar__category {
+  flex: 0 1 220px;
+  width: auto;
+  min-width: 0;
 }
 
 .toolbar__hint {
@@ -244,11 +285,7 @@
 
 @media (max-width: 900px) {
   .head {
-    padding-top: 18px;
-  }
-
-  .head__title {
-    font-size: 24px;
+    padding-top: 14px;
   }
 
   .toolbar__hint {

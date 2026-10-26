@@ -59,6 +59,7 @@
           :key="project.id"
           :class="{
             'row--gone': project.status === 'suspended',
+            'row--changed': projects.changed.has(project.id),
             'row--open': full,
             'row--dragging': draggingProject === project.id,
             'row--drop-before': projectDrop?.target?.id === project.id && !projectDrop.target.after,
@@ -87,6 +88,7 @@
             </a>
 
             <span v-else class="site site--plain">{{ project.name }}</span>
+            <span v-if="projects.changed.has(project.id)" aria-label="Zaktualizowano" class="refreshing" role="status" />
           </td>
 
           <td><StatusChip :status="project.status" /></td>
@@ -181,7 +183,7 @@
           v-for="project in group.projects"
           :key="project.id"
           class="card"
-          :class="{ 'row--gone': project.status === 'suspended' }"
+          :class="{ 'row--gone': project.status === 'suspended', 'row--changed': projects.changed.has(project.id) }"
           @click="full && emit('open', project)"
         >
           <div class="card__head">
@@ -198,6 +200,7 @@
             </a>
 
             <span v-else class="site site--plain">{{ project.name }}</span>
+            <span v-if="projects.changed.has(project.id)" aria-label="Zaktualizowano" class="refreshing" role="status" />
             <StatusChip :status="project.status" />
           </div>
 
@@ -507,6 +510,54 @@ tbody:first-of-type .group-row td {
   opacity: .5;
 }
 
+/* changed by the minute's refresh – the hover colour for a moment, fading out, with a small spinner */
+.row--changed td,
+.card.row--changed {
+  animation: row-changed 3s ease-out;
+}
+
+@keyframes row-changed {
+  0%,
+  60% {
+    background: var(--hover);
+  }
+}
+
+.refreshing {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  margin-left: 8px;
+  border: 1.5px solid var(--line-strong);
+  border-top-color: var(--positive);
+  border-radius: 50%;
+  vertical-align: middle;
+  animation: refreshing .8s linear infinite, refreshing-out 3s ease-out forwards;
+}
+
+@keyframes refreshing {
+  to {
+    rotate: 1turn;
+  }
+}
+
+@keyframes refreshing-out {
+  0%,
+  70% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .refreshing {
+    animation: refreshing-out 3s ease-out forwards;
+  }
+}
+
 .row--dragging {
   opacity: .35;
 }
@@ -634,14 +685,14 @@ tr:hover .row-grip {
 
 /* the newest WordPress */
 .latest {
-  color: var(--accent);
+  color: var(--positive);
   font-weight: 600;
 }
 
 .yes {
   width: 16px;
   height: 16px;
-  color: var(--accent);
+  color: var(--positive);
   vertical-align: middle;
   stroke-width: 2.5;
 }
@@ -676,7 +727,7 @@ tr:hover .row-grip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--accent-text);
+  color: var(--positive);
 }
 
 .report--stale {
@@ -736,6 +787,11 @@ tr:hover .row-grip {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+}
+
+/* the yes/no fields on a card – the positive green, as the checkmarks in the table */
+.card__flags .chip--accent {
+  color: var(--positive);
 }
 
 @media (max-width: 900px) {

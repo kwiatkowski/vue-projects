@@ -10,9 +10,15 @@
 
     <span class="top__space" />
 
-    <a v-if="config.todoUrl" class="btn btn--sm" :href="config.todoUrl">
-      <ListChecks /> <span class="top__label">Todo</span>
-    </a>
+    <template v-if="config.canManage">
+      <button class="btn btn--sm btn--outline" title="Nowa kategoria" type="button" @click="projects.editingCategory = 'new'">
+        <FolderPlus /> <span class="top__label">Nowa kategoria</span>
+      </button>
+
+      <button class="btn btn--sm btn--accent" title="Nowy projekt" type="button" @click="projects.editing = 'new'">
+        <Plus /> <span class="top__label">Nowy projekt</span>
+      </button>
+    </template>
 
     <button
       :aria-label="dark ? 'Jasny motyw' : 'Ciemny motyw'"
@@ -48,10 +54,12 @@
 </template>
 
 <script lang="ts" setup>
-  import { LayoutGrid, ListChecks, LogIn, LogOut, Moon, Sun } from 'lucide-vue-next'
+  import { FolderPlus, LayoutGrid, LogIn, LogOut, Moon, Plus, Sun } from 'lucide-vue-next'
   import { useTheme } from '@/composables/theme'
   import { config } from '@/config'
+  import { useProjectsStore } from '@/stores/projects'
 
+  const projects = useProjectsStore()
   const { dark, toggleTheme } = useTheme()
 
   // the site's domain – its WordPress title can be a whole sentence
