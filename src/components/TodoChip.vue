@@ -4,6 +4,7 @@
       :aria-label="`Todo: ${todo.name} – ${todo.open} otwartych${todo.overdue ? `, ${todo.overdue} po terminie` : ''}`"
       class="todo-chip"
       :href="todo.url"
+      :target="TODO_TAB"
       @click.stop
     >
       <span class="mono" :class="`todo-chip__count--${urgency}`">{{ todo.open }}</span>
@@ -35,6 +36,7 @@
   import type { TodoSummary } from '@/types'
   import { computed } from 'vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
+  import { TODO_TAB } from '@/config'
 
   /** The linked Todo project: how many open tasks, a link to it in the Todo app; the breakdown on hover. */
   const props = defineProps<{ todo: TodoSummary }>()

@@ -24,6 +24,12 @@ export interface AppConfig {
   version: string | null
 }
 
+/**
+ * The named tab Todo links open in: the first click opens it, every next one loads its address there and switches to
+ * it (Chrome, Edge; Firefox by its settings) – instead of a new tab each time. A Todo tab opened by hand is not found.
+ */
+export const TODO_TAB = 'mk-todo'
+
 declare global {
   interface Window {
     __PROJECTS__?: Partial<AppConfig>

@@ -189,7 +189,7 @@
           </li>
         </ul>
 
-        <a class="btn btn--sm btn--outline tasks__open" :href="project.todo.url" target="_blank">
+        <a class="btn btn--sm btn--outline tasks__open" :href="project.todo.url" :target="TODO_TAB">
           <ListChecks /> Otwórz w Todo
         </a>
       </template>
@@ -298,7 +298,7 @@
   import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
   import BaseDialog from '@/components/ui/BaseDialog.vue'
-  import { config } from '@/config'
+  import { config, TODO_TAB } from '@/config'
   import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
