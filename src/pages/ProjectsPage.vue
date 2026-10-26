@@ -1,6 +1,6 @@
 <template>
-  <div class="page">
-    <header class="head">
+  <div class="page" :style="{ '--head': `${headHeight}px` }">
+    <header ref="head" class="head">
       <h1 class="visually-hidden">{{ category?.name ?? 'Projekty' }}</h1>
 
       <div class="toolbar">
@@ -87,7 +87,7 @@
   import type { Category, Project, SortKey } from '@/types'
   import type { Filter, Group } from '@/utils/projects'
   import { ListOrdered, Search, SearchX } from 'lucide-vue-next'
-  import { computed, ref, watch } from 'vue'
+  import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import ProjectTable from '@/components/ProjectTable.vue'
   import { config } from '@/config'
@@ -97,6 +97,17 @@
   const projects = useProjectsStore()
   const route = useRoute()
   const router = useRouter()
+
+  // the header (search, category, statuses) sticks under the top bar; the table below fits the rest of the screen,
+  // scrolls inside and keeps its column headers – the header wraps on narrow screens, so its height is measured
+  const head = useTemplateRef<HTMLElement>('head')
+  const headHeight = ref(0)
+  const headObserver = new ResizeObserver(([entry]) => {
+    headHeight.value = entry?.borderBoxSize[0]?.blockSize ?? 0
+  })
+
+  onMounted(() => head.value && headObserver.observe(head.value))
+  onBeforeUnmount(() => headObserver.disconnect())
 
   // filter and search in the address – a filtered list can be linked and survives a reload
   const filter = ref<Filter>((route.query.status as Filter) || 'all')
@@ -182,12 +193,21 @@
 </script>
 
 <style scoped>
+.page {
+  /* the table fills the screen and scrolls itself – the page doesn't scroll under the sticky header */
+  padding-bottom: 16px;
+}
+
 .head {
+  position: sticky;
+  z-index: 10;
+  top: var(--topbar);
   display: flex;
   align-items: flex-end;
   flex-wrap: wrap;
   gap: 12px 16px;
   padding: 20px 0 16px;
+  background: var(--bg);
 }
 
 /* search and category on the left, the statuses on the right; on a narrow screen they wrap */

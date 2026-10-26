@@ -28,6 +28,9 @@
   --accent-ink: #fffefb;
   --accent-soft: #e6edd5;
   --accent-text: #45601a;
+  /* the sticky top bar – the list's header sticks right under it */
+  --topbar: 52px;
+
   /* the positive case – online, the newest WordPress, a checkmark, a fresh report; the same green in both themes (as in Todo) */
   --positive: #7a9a3a;
 

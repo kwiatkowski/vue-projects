@@ -60,6 +60,7 @@
           :class="{
             'row--gone': project.status === 'suspended',
             'row--changed': projects.changed.has(project.id),
+            'row--fading': projects.fading.has(project.id),
             'row--open': full,
             'row--dragging': draggingProject === project.id,
             'row--drop-before': projectDrop?.target?.id === project.id && !projectDrop.target.after,
@@ -88,7 +89,14 @@
             </a>
 
             <span v-else class="site site--plain">{{ project.name }}</span>
-            <span v-if="projects.changed.has(project.id)" aria-label="Zaktualizowano" class="refreshing" role="status" />
+
+            <span
+              v-if="projects.changed.has(project.id)"
+              aria-label="Zaktualizowano"
+              class="refreshing"
+              role="status"
+              title="Dane zaktualizowane"
+            />
           </td>
 
           <td><StatusChip :status="project.status" /></td>
@@ -183,7 +191,7 @@
           v-for="project in group.projects"
           :key="project.id"
           class="card"
-          :class="{ 'row--gone': project.status === 'suspended', 'row--changed': projects.changed.has(project.id) }"
+          :class="{ 'row--gone': project.status === 'suspended', 'row--changed': projects.changed.has(project.id), 'row--fading': projects.fading.has(project.id) }"
           @click="full && emit('open', project)"
         >
           <div class="card__head">
@@ -200,7 +208,15 @@
             </a>
 
             <span v-else class="site site--plain">{{ project.name }}</span>
-            <span v-if="projects.changed.has(project.id)" aria-label="Zaktualizowano" class="refreshing" role="status" />
+
+            <span
+              v-if="projects.changed.has(project.id)"
+              aria-label="Zaktualizowano"
+              class="refreshing"
+              role="status"
+              title="Dane zaktualizowane"
+            />
+
             <StatusChip :status="project.status" />
           </div>
 
@@ -394,7 +410,13 @@
 
 <style scoped>
 .table-wrap {
-  overflow-x: auto;
+  /* the rest of the screen under the top bar and the page header (--head, measured there); scrolls both ways and
+     keeps the column headers on top */
+  max-height: calc(100dvh - var(--topbar) - var(--head, 0px) - 16px);
+  overflow: auto;
+  /* thin, in the line colour – no arrows */
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--surface);
@@ -416,6 +438,7 @@ td {
 
 th {
   position: sticky;
+  z-index: 2;
   top: 0;
   background: var(--panel);
   color: var(--text-3);
@@ -510,29 +533,36 @@ tbody:first-of-type .group-row td {
   opacity: .5;
 }
 
-/* changed by the minute's refresh – the hover colour for a moment, fading out, with a small spinner */
+/*
+ * changed by the minute's refresh – the hover colour and a small spinner until the user has seen it (the store keeps
+ * it a few seconds once the window has focus), then the colour fades out
+ */
 .row--changed td,
 .card.row--changed {
-  animation: row-changed 3s ease-out;
+  background: var(--hover);
 }
 
-@keyframes row-changed {
-  0%,
-  60% {
+.row--fading td,
+.card.row--fading {
+  animation: row-fading 1s ease-out;
+}
+
+@keyframes row-fading {
+  from {
     background: var(--hover);
   }
 }
 
 .refreshing {
   display: inline-block;
-  width: 11px;
-  height: 11px;
+  width: 12px;
+  height: 12px;
   margin-left: 8px;
-  border: 1.5px solid var(--line-strong);
+  border: 2px solid var(--line-strong);
   border-top-color: var(--positive);
   border-radius: 50%;
   vertical-align: middle;
-  animation: refreshing .8s linear infinite, refreshing-out 3s ease-out forwards;
+  animation: refreshing .8s linear infinite;
 }
 
 @keyframes refreshing {
@@ -541,20 +571,9 @@ tbody:first-of-type .group-row td {
   }
 }
 
-@keyframes refreshing-out {
-  0%,
-  70% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .refreshing {
-    animation: refreshing-out 3s ease-out forwards;
+    animation: none;
   }
 }
 

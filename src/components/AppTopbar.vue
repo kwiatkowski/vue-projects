@@ -1,12 +1,9 @@
 <template>
   <header class="top">
-    <a class="top__brand" :href="config.homeUrl">
-      <span aria-hidden="true" class="top__logo"><LayoutGrid /></span>
-      <span class="top__site" :title="config.siteName">{{ host }}</span>
-    </a>
-
-    <span aria-hidden="true" class="top__slash">/</span>
-    <span class="top__app">Projekty</span>
+    <RouterLink class="top__brand" :to="{ name: 'projects' }">
+      <span aria-hidden="true" class="top__logo"><Layers /></span>
+      <span class="top__site">Lista projektów</span>
+    </RouterLink>
 
     <span class="top__space" />
 
@@ -54,16 +51,13 @@
 </template>
 
 <script lang="ts" setup>
-  import { FolderPlus, LayoutGrid, LogIn, LogOut, Moon, Plus, Sun } from 'lucide-vue-next'
+  import { FolderPlus, Layers, LogIn, LogOut, Moon, Plus, Sun } from 'lucide-vue-next'
   import { useTheme } from '@/composables/theme'
   import { config } from '@/config'
   import { useProjectsStore } from '@/stores/projects'
 
   const projects = useProjectsStore()
   const { dark, toggleTheme } = useTheme()
-
-  // the site's domain – its WordPress title can be a whole sentence
-  const host = new URL(config.homeUrl, window.location.origin).host
 </script>
 
 <style scoped>
@@ -74,7 +68,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  height: 52px;
+  height: var(--topbar);
   padding: 0 var(--edge);
   border-bottom: 1px solid var(--line);
   background: color-mix(in srgb, var(--bg) 88%, transparent);
@@ -111,15 +105,6 @@
   white-space: nowrap;
 }
 
-.top__slash {
-  color: var(--text-3);
-}
-
-.top__app {
-  color: var(--text-2);
-  white-space: nowrap;
-}
-
 .top__space {
   flex: 1;
 }
@@ -132,8 +117,7 @@
 }
 
 @media (max-width: 560px) {
-  .top__label,
-  .top__site {
+  .top__label {
     display: none;
   }
 }

@@ -26,9 +26,37 @@ export const useProjectsStore = defineStore('projects', () => {
 
   const sortedCategories = computed(() => categories.value.toSorted(compareManual))
 
-  /** projects the last refresh found changed (or new) – the table flashes them for a moment */
+  /**
+   * Projects a refresh found changed (or new): highlighted with a spinner until the user has seen them – a few seconds
+   * once the window has focus (a refresh in a window behind the terminal waits) – then `fading` for the fade-out.
+   */
   const changed = ref<Set<number>>(new Set())
+  const fading = ref<Set<number>>(new Set())
   let changedTimer: ReturnType<typeof setTimeout> | undefined
+  let fadingTimer: ReturnType<typeof setTimeout> | undefined
+
+  const SHOW_MS = 4000
+  const FADE_MS = 1000
+
+  function settleWhenSeen (): void {
+    clearTimeout(changedTimer)
+    window.removeEventListener('focus', settleWhenSeen)
+
+    if (!document.hasFocus()) {
+      window.addEventListener('focus', settleWhenSeen, { once: true })
+
+      return
+    }
+
+    changedTimer = setTimeout(() => {
+      fading.value = changed.value
+      changed.value = new Set()
+      clearTimeout(fadingTimer)
+      fadingTimer = setTimeout(() => {
+        fading.value = new Set()
+      }, FADE_MS)
+    }, SHOW_MS)
+  }
 
   async function load (): Promise<void> {
     status.value = 'loading'
@@ -85,11 +113,12 @@ export const useProjectsStore = defineStore('projects', () => {
     }
 
     items.value = freshItems
-    changed.value = new Set(ids)
-    clearTimeout(changedTimer)
-    changedTimer = setTimeout(() => {
-      changed.value = new Set()
-    }, 3000)
+
+    if (ids.length > 0) {
+      // still unseen ones from an earlier refresh stay highlighted too
+      changed.value = new Set([...changed.value, ...ids])
+      settleWhenSeen()
+    }
   }
 
   function replace (project: Project): void {
@@ -263,6 +292,7 @@ export const useProjectsStore = defineStore('projects', () => {
     categories,
     sortedCategories,
     changed,
+    fading,
     todoProjects,
     status,
     loadError,
