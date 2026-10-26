@@ -352,7 +352,7 @@ label.field > span:first-child {
   min-height: 36px;
   padding: 7px 10px;
   border: 1px solid var(--line-strong);
-  border-radius: var(--radius);
+  border-radius: 6px;
   background: var(--panel);
   outline: none;
   transition: border-color .12s, box-shadow .12s;
