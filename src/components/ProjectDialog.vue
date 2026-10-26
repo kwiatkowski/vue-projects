@@ -223,7 +223,14 @@
             <label class="field">
               <span>Wersja</span>
 
-              <SelectField label="Wersja" :model-value="form.version || null" :options="versionOptions" @update:model-value="form.version = $event ?? ''">
+              <SelectField
+                custom
+                label="Wersja"
+                :model-value="form.version || null"
+                :options="versionOptions"
+                searchable
+                @update:model-value="form.version = $event ?? ''"
+              >
                 <template #option="{ option }"><span class="mono">{{ option.label }}</span></template>
               </SelectField>
             </label>
@@ -236,7 +243,14 @@
             <label class="field">
               <span>PHP</span>
 
-              <SelectField label="PHP" :model-value="form.php || null" :options="phpOptions" @update:model-value="form.php = $event ?? ''">
+              <SelectField
+                custom
+                label="PHP"
+                :model-value="form.php || null"
+                :options="phpOptions"
+                searchable
+                @update:model-value="form.php = $event ?? ''"
+              >
                 <template #option="{ option }"><span class="mono">{{ option.label }}</span></template>
               </SelectField>
             </label>

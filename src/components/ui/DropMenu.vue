@@ -69,7 +69,8 @@
     open.value = true
     await nextTick()
     place()
-    panel.value?.querySelector<HTMLElement>('button')?.focus()
+    // a search field first, if the list has one; else the first item
+    panel.value?.querySelector<HTMLElement>('input, button')?.focus()
     document.addEventListener('pointerdown', outside, true)
     window.addEventListener('scroll', onScroll, true)
     window.addEventListener('resize', close)
