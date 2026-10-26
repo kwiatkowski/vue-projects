@@ -80,8 +80,10 @@ src/
 
 Kategoria to ścieżka – `/projects/meden` pokazuje tylko projekty kategorii „Meden” (wybór w pasku nad tabelą – po zalogowaniu, slug
 zmienia się razem z nazwą kategorii). Filtr (status, „Bez strony”) i wyszukiwanie są w adresie
-(`/projects/meden?status=online&q=hostido`), sortowanie po kliknięciu w nagłówek kolumny. Lista odświeża się sama co minutę (tylko w widocznej karcie, bez wskaźnika wczytywania) – wiersz, który się zmienił,
-przez chwilę ma kolor jak po najechaniu i mały wskaźnik przy nazwie. PHP starsze niż 8.1 jest wyróżnione, raport starszy niż 2 dni – na pomarańczowo.
+(`/projects/meden?status=online&q=hostido`), sortowanie po kliknięciu w nagłówek kolumny. Lista odświeża się sama, bez wskaźnika wczytywania
+(tylko w widocznej karcie): co 3 s sprawdza znacznik zmian (`GET /changed`) i pobiera listę, gdy się ruszył – raport
+strony widać od razu – a całą listę i tak co minutę. Zmieniony wiersz przez 3 s ma kolor jak po najechaniu
+i wyszarzony tekst, a zmienione pola są rozmyte pod kręcącym się wskaźnikiem. PHP starsze niż 8.1 jest wyróżnione, raport starszy niż 2 dni – na pomarańczowo.
 
 ## Wersje
 

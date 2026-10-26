@@ -28,7 +28,7 @@ export const useProjectsStore = defineStore('projects', () => {
 
   /**
    * Projects a refresh found changed (or new) → the fields that changed ('*' – a new project). The table highlights
-   * the row and blurs those cells under a spinner for 10 s – counted while the tab is visible (a change that came in a
+   * the row and blurs those cells under a spinner for 3 s – counted while the tab is visible (a change that came in a
    * background tab waits for it) – then the row is `fading` for the fade-out.
    */
   const changed = ref<Map<number, Set<string>>>(new Map())
@@ -36,7 +36,7 @@ export const useProjectsStore = defineStore('projects', () => {
   let changedTimer: ReturnType<typeof setTimeout> | undefined
   let fadingTimer: ReturnType<typeof setTimeout> | undefined
 
-  const SHOW_MS = 10_000
+  const SHOW_MS = 3000
   const FADE_MS = 1000
 
   function settleWhenSeen (): void {

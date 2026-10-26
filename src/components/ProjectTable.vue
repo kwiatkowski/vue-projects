@@ -543,7 +543,7 @@ tbody:first-of-type .group-row td {
 }
 
 /*
- * changed by the minute's refresh – for 10 s once the window has focus (the store) the row has the hover colour and
+ * changed by a refresh – for 3 s while the tab is visible (the store) the row has the hover colour and
  * its text a bit greyed out; the cells that changed are blurred under a spinner. Then the colour fades out.
  */
 .row--changed td,

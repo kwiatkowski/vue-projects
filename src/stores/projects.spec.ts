@@ -62,7 +62,7 @@ describe('refresh', () => {
     expect(store.changed.size).toBe(0)
   })
 
-  it('highlights the changed row and its changed fields for 10 s, then fades it out', async () => {
+  it('highlights the changed row and its changed fields for 3 s, then fades it out', async () => {
     const store = useProjectsStore()
     await store.load()
     api.projects[1]!.php = '8.4'
@@ -73,7 +73,7 @@ describe('refresh', () => {
     expect([...store.changed.keys()]).toEqual([2])
     expect([...store.changed.get(2)!]).toEqual(['php'])
 
-    vi.advanceTimersByTime(9999)
+    vi.advanceTimersByTime(2999)
     expect(store.changed.size).toBe(1)
 
     vi.advanceTimersByTime(1)
@@ -95,7 +95,7 @@ describe('refresh', () => {
     expect([...store.changed.keys()]).toEqual([1])
 
     showTab()
-    vi.advanceTimersByTime(10_000)
+    vi.advanceTimersByTime(3000)
     expect(store.changed.size).toBe(0)
   })
 
