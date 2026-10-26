@@ -18,6 +18,7 @@
         v-if="open"
         ref="panel"
         class="menu__panel"
+        :class="matchWidth && `menu__panel--attached menu__panel--${attachedBelow ? 'below' : 'above'}`"
         role="menu"
         :style="position"
         @click="open = false"
@@ -50,6 +51,8 @@
   const position = ref<Record<string, string>>({})
   /** where the panel goes: <body>, or the open <dialog> the trigger is in – a modal dialog covers everything in <body> */
   const layer = ref<string | HTMLElement>('body')
+  /** matchWidth: the panel hangs under the trigger (or sits on it, flipped) – the trigger's corners on that side go square */
+  const attachedBelow = ref(true)
   const trigger = useTemplateRef<HTMLButtonElement>('trigger')
   const panel = useTemplateRef<HTMLDivElement>('panel')
 
@@ -83,7 +86,14 @@
     const top = `${below ? anchor.bottom + 4 : anchor.top - 4 - height}px`
 
     if (props.matchWidth) {
-      position.value = { top, left: `${anchor.left}px`, minWidth: `${anchor.width}px` }
+      // glued to the trigger: the shared edge drawn once (the panel's border over the trigger's)
+      attachedBelow.value = below
+      position.value = {
+        top: `${below ? anchor.bottom - 1 : anchor.top + 1 - height}px`,
+        left: `${anchor.left}px`,
+        width: `${anchor.width}px`,
+      }
+      trigger.value?.classList.add(`menu__trigger--open-${below ? 'below' : 'above'}`)
 
       return
     }
@@ -95,6 +105,7 @@
 
   function close (): void {
     open.value = false
+    trigger.value?.classList.remove('menu__trigger--open-below', 'menu__trigger--open-above')
     document.removeEventListener('pointerdown', outside, true)
     window.removeEventListener('scroll', close, true)
     window.removeEventListener('resize', close)
@@ -204,6 +215,45 @@
 .menu__panel {
   max-height: min(420px, 70vh);
   overflow-y: auto;
+}
+
+/* a select's list glued to it: square corners where they meet, the same border */
+.menu__panel--attached {
+  min-width: 0;
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow);
+  animation: none;
+}
+
+.menu__panel--below {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.menu__panel--above {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.menu__trigger--open-below {
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+.menu__trigger--open-above {
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}
+
+/* the chosen option – in the table header's green */
+.menu__panel--attached .menu__item[aria-checked='true'] {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.menu__panel--attached .menu__item[aria-checked='true'] svg,
+.menu__panel--attached .menu__item[aria-checked='true'] .chip {
+  color: inherit;
 }
 
 .menu__sep {
