@@ -7,21 +7,24 @@
     :width="1100"
     @submit="save"
   >
-    <input
-      ref="nameInput"
-      v-model.trim="form.name"
-      :aria-invalid="nameError ? 'true' : undefined"
-      aria-label="Nazwa"
-      class="input input--title"
-      placeholder="Nazwa projektu"
-      type="text"
-    >
-
-    <span v-if="nameError" class="error-text">{{ nameError }}</span>
-
-    <!-- two columns: what defines the project on the left, always in view; the details on the right, in tabs -->
+    <!-- two columns: the name and what defines the project on the left, always in view; the details on the right, in
+         tabs that start level with the name -->
     <div class="cols">
       <div class="col">
+        <div class="name">
+          <input
+            ref="nameInput"
+            v-model.trim="form.name"
+            :aria-invalid="nameError ? 'true' : undefined"
+            aria-label="Nazwa"
+            class="input input--title"
+            placeholder="Nazwa projektu"
+            type="text"
+          >
+
+          <span v-if="nameError" class="error-text">{{ nameError }}</span>
+        </div>
+
         <div class="field">
           <span>Domeny <span class="faint">– pierwsza jest główna (link na liście)</span></span>
 
@@ -68,7 +71,29 @@
 
         <label class="field">
           <span>Repozytorium</span>
-          <input v-model.trim="form.repo" class="input" placeholder="https://github.com/…" type="url">
+
+          <span class="input-row">
+            <input v-model.trim="form.repo" class="input" placeholder="https://github.com/…" type="url">
+
+            <a
+              v-if="form.repo"
+              aria-label="Otwórz repozytorium"
+              class="btn btn--icon btn--sm"
+              :href="form.repo"
+              rel="noopener"
+              target="_blank"
+              title="Otwórz repozytorium"
+            ><ArrowUpRight /></a>
+
+            <button
+              aria-label="Kopiuj adres repozytorium"
+              class="btn btn--icon btn--sm"
+              :disabled="!form.repo"
+              title="Kopiuj adres repozytorium"
+              type="button"
+              @click="copy(form.repo, 'Adres repozytorium')"
+            ><Copy /></button>
+          </span>
         </label>
 
         <fieldset class="group">
@@ -80,11 +105,6 @@
             </label>
           </div>
         </fieldset>
-
-        <label class="field">
-          <span>Notatki</span>
-          <textarea v-model="form.notes" class="input" rows="3" />
-        </label>
       </div>
 
       <div class="col">
@@ -161,11 +181,11 @@
             </template>
 
             <div class="report__actions">
-              <button v-if="project.token" class="btn btn--sm btn--outline" type="button" @click="copyEnv">
+              <button v-if="project.token" class="btn btn--sm" type="button" @click="copyEnv">
                 <Copy /> Kopiuj
               </button>
 
-              <button class="btn btn--sm" :disabled="busy" type="button" @click="newToken">
+              <button class="btn btn--sm btn--warn" :disabled="busy" type="button" @click="newToken">
                 <KeyRound /> {{ project.token ? 'Nowy token' : 'Utwórz token' }}
               </button>
             </div>
@@ -348,12 +368,17 @@
         <span class="unsaved"><AlertTriangle /> Niezapisane zmiany</span>
         <span style="flex: 1" />
         <button class="btn btn--danger btn--sm" type="button" @click="open = false">Zamknij bez zapisywania</button>
-        <button class="btn btn--accent btn--sm" :disabled="!canSave" type="submit">{{ project ? 'Zapisz' : 'Utwórz' }}</button>
+
+        <button class="btn btn--accent btn--sm" :disabled="!canSave" type="submit">
+          <component :is="project ? Check : Plus" /> {{ project ? 'Zapisz' : 'Utwórz' }}
+        </button>
       </template>
 
       <template v-else>
         <template v-if="project">
-          <button v-if="!confirmDelete" class="btn btn--danger btn--sm" type="button" @click="confirmDelete = true">Usuń</button>
+          <button v-if="!confirmDelete" class="btn btn--danger btn--sm" type="button" @click="confirmDelete = true">
+            <Trash2 /> Usuń
+          </button>
 
           <button
             v-else
@@ -361,12 +386,20 @@
             :disabled="busy"
             type="button"
             @click="remove"
-          >Tak, usuń</button>
+          >
+            <Trash2 /> Tak, usuń
+          </button>
         </template>
 
         <span style="flex: 1" />
-        <button class="btn btn--sm" type="button" @click="dialog?.requestClose()">Anuluj</button>
-        <button class="btn btn--accent btn--sm" :disabled="!canSave" type="submit">{{ project ? 'Zapisz' : 'Utwórz' }}</button>
+
+        <button class="btn btn--sm" type="button" @click="dialog?.requestClose()">
+          <X /> Anuluj
+        </button>
+
+        <button class="btn btn--accent btn--sm" :disabled="!canSave" type="submit">
+          <component :is="project ? Check : Plus" /> {{ project ? 'Zapisz' : 'Utwórz' }}
+        </button>
       </template>
     </template>
   </BaseDialog>
@@ -374,7 +407,7 @@
 
 <script lang="ts" setup>
   import type { Flag, Project, ProjectInput, ReportPlugin, SiteReport, Status, TodoTask } from '@/types'
-  import { Activity, AlertTriangle, ArrowUpRight, Copy, Cpu, Eye, EyeOff, KeyRound, ListChecks, PenLine, Plus, Server, X } from 'lucide-vue-next'
+  import { Activity, AlertTriangle, ArrowUpRight, Check, Copy, Cpu, Eye, EyeOff, KeyRound, ListChecks, PenLine, Plus, Server, Trash2, X } from 'lucide-vue-next'
   import { type Component, computed, nextTick, ref, useTemplateRef, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
   import StatusSelect from '@/components/StatusSelect.vue'
@@ -774,6 +807,11 @@
   display: grid;
   gap: 16px;
   min-width: 0;
+}
+
+.name {
+  display: grid;
+  gap: 4px;
 }
 
 /* the right column's tabs – an icon and a name each; a pen when something in the tab was changed and not saved */

@@ -20,7 +20,7 @@ strony ─────── POST /wp-json/projects/v1/report (token) ─► PHP
 - **Właściciel** (zalogowany administrator) widzi wszystkie projekty i kolumny jak w arkuszu – serwer, konto, PHP,
   repozytorium, Deploy, DEV, Bedrock, Security, Local, Stage (menu: otwórz stronę, panel, kopiuj adres), ACF, MI Modal, ostatni raport strony, Todo – i edytuje
   projekt po kliknięciu w wiersz (nazwę – ołówkiem w miejscu). Okno projektu: po lewej stale domeny, status (lista
-  w kolorach statusów), kategoria, repozytorium, konfiguracja (Deploy, DEV, Bedrock …) i notatki; po prawej zakładki
+  w kolorach statusów), kategoria, repozytorium, (z otwarciem i kopiowaniem) i konfiguracja (Deploy, DEV, Bedrock …); po prawej zakładki
   z ikonami – Raport strony (użytkownicy, wtyczki, token do `.env`), Serwer, Technologia, Dostęp (panele produkcji,
   stagingu i wersji lokalnej, login, hasło ukryte z podglądem i kopiowaniem, zapisane zaszyfrowane) i Todo; zakładka
   z niezapisanymi zmianami ma ołówek.
