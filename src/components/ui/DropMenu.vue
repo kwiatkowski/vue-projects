@@ -88,14 +88,12 @@
     const top = `${below ? anchor.bottom + 4 : anchor.top - 4 - height}px`
 
     if (props.matchWidth) {
-      // glued to the trigger, inset by its corner radius – the list hangs from inside the rounded corners
-      const inset = Number.parseFloat(getComputedStyle(trigger.value as Element).borderTopLeftRadius) || 0
-
+      // just under the trigger's focus ring (3px), as wide as the trigger
       attachedBelow.value = below
       position.value = {
-        top: `${below ? anchor.bottom - 1 : anchor.top + 1 - height}px`,
-        left: `${anchor.left + inset}px`,
-        width: `${anchor.width - 2 * inset}px`,
+        top: `${below ? anchor.bottom + 3 : anchor.top - 3 - height}px`,
+        left: `${anchor.left}px`,
+        width: `${anchor.width}px`,
       }
 
       return
@@ -228,22 +226,20 @@
   overflow-y: auto;
 }
 
-/* a select's list glued to it, inside its rounded corners: square where they meet, rounded at the far end */
+/* a select's list: just under it, as wide, items edge to edge, in the focus ring's green */
 .menu__panel--attached {
   min-width: 0;
-  border-color: var(--line-strong);
-  box-shadow: var(--shadow);
+  padding: 4px 0;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow);
   animation: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
 }
 
-.menu__panel--below {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-}
-
-.menu__panel--above {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
+.menu__panel--attached .menu__item {
+  border-radius: 0;
+  padding: 0 12px;
 }
 
 /* the chosen option – like one under the pointer */

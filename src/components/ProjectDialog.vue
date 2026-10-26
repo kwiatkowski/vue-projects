@@ -71,12 +71,12 @@
         <label class="field">
           <span>Repozytorium</span>
 
-          <span class="input-row">
+          <span class="input-row input-row--inside">
             <input v-model.trim="form.repo" class="input" placeholder="https://github.com/…" type="url">
 
             <button
               aria-label="Kopiuj adres repozytorium"
-              class="btn btn--icon btn--sm"
+              class="btn btn--icon btn--sm input-copy"
               :disabled="!form.repo"
               title="Kopiuj adres repozytorium"
               type="button"
@@ -267,12 +267,12 @@
             <label class="field">
               <span>Login</span>
 
-              <span class="input-row">
+              <span class="input-row input-row--inside">
                 <input v-model.trim="form.login" autocomplete="off" class="input mono" type="text">
 
                 <button
                   aria-label="Kopiuj login"
-                  class="btn btn--icon btn--sm"
+                  class="btn btn--icon btn--sm input-copy"
                   :disabled="!form.login"
                   title="Kopiuj login"
                   type="button"
@@ -284,7 +284,7 @@
             <label class="field">
               <span>Hasło</span>
 
-              <span class="input-row">
+              <span class="input-row input-row--inside input-row--two">
                 <input
                   v-model="password"
                   autocomplete="new-password"
@@ -306,7 +306,7 @@
 
                 <button
                   aria-label="Kopiuj hasło"
-                  class="btn btn--icon btn--sm"
+                  class="btn btn--icon btn--sm input-copy"
                   :disabled="!password"
                   title="Kopiuj hasło"
                   type="button"
@@ -322,10 +322,11 @@
           <label class="field">
             <span>Powiązany projekt w Todo – jego otwarte zadania widać na liście</span>
 
-            <select v-model="form.todoProject" class="input">
-              <option :value="null">— brak —</option>
-              <option v-for="todo in projects.todoProjects" :key="todo.id" :value="todo.id">{{ todo.name }}</option>
-            </select>
+            <SelectField v-model="form.todoProject" label="Projekt w Todo" :options="todoOptions">
+              <template #option="{ option }">
+                <span class="todo-option"><span class="todo-option__dot" :style="{ background: todoColor(option.value) }" />{{ option.label }}</span>
+              </template>
+            </SelectField>
           </label>
 
           <p v-if="form.todoProject && form.todoProject !== project?.todoProject" class="faint">Zadania pokażą się po zapisaniu.</p>
@@ -437,6 +438,8 @@
 
   const statusOptions = (Object.keys(STATUS_LABELS) as Status[]).map(value => ({ value, label: STATUS_LABELS[value] }))
   const categoryOptions = computed(() => projects.sortedCategories.map(category => ({ value: category.id, label: category.name })))
+  const todoOptions = computed(() => projects.todoProjects.map(todo => ({ value: todo.id, label: todo.name })))
+  const todoColor = (id: number) => projects.todoProjects.find(todo => todo.id === id)?.color ?? 'transparent'
 
   /** what's known, newest first – with the project's own value, even an unusual one, so it isn't lost */
   function versions (...values: Array<string | null | undefined>): Array<{ value: string, label: string }> {
@@ -928,6 +931,61 @@
 .env:hover .env__copy,
 .env__copy:focus-visible {
   opacity: 1;
+}
+
+/* the buttons inside the field, on its right: copy shows on hover (or focus); on touch screens always */
+.input-row--inside {
+  position: relative;
+  display: block;
+}
+
+.input-row--inside .input {
+  padding-right: 40px;
+}
+
+.input-row--two .input {
+  padding-right: 72px;
+}
+
+.input-row--inside .btn {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  translate: 0 -50%;
+}
+
+/* the password's eye, left of copy */
+.input-row--two .btn:not(.input-copy) {
+  right: 36px;
+}
+
+.input-copy {
+  opacity: 0;
+  transition: opacity .12s;
+}
+
+.input-row--inside:hover .input-copy,
+.input-row--inside:focus-within .input-copy {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .input-copy {
+    opacity: 1;
+  }
+}
+
+.todo-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.todo-option__dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
 }
 
 /* fields one under the other */
