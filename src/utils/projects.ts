@@ -1,4 +1,4 @@
-import type { Project, SortKey, Status } from '@/types'
+import type { Category, Project, SortKey, Status } from '@/types'
 
 export const STATUS_LABELS: Record<Status, string> = {
   online: 'online',
@@ -62,6 +62,44 @@ export function sortProjects<T extends Partial<Project>> (projects: T[], key: So
 
     return collator.compare(a.name ?? '', b.name ?? '')
   })
+}
+
+/** The user's order: placed items by position, never placed ones after them, by name. */
+export function compareManual (a: { position?: number | null, name?: string }, b: { position?: number | null, name?: string }): number {
+  return (a.position ?? Number.MAX_SAFE_INTEGER) - (b.position ?? Number.MAX_SAFE_INTEGER) || collator.compare(a.name ?? '', b.name ?? '')
+}
+
+export interface Group<T> {
+  /** null – projects without a category (or the whole list when it is not grouped) */
+  category: Category | null
+  projects: T[]
+}
+
+/**
+ * Projects under their categories in the user's order, the uncategorized last. Empty categories only with `keepEmpty`
+ * (the owner wants to drop projects into a new one); a category that no longer exists counts as none.
+ */
+export function groupProjects<T extends Partial<Project>> (projects: T[], categories: Category[], keepEmpty = false): Array<Group<T>> {
+  const known = new Set(categories.map(category => category.id))
+  const groups: Array<Group<T>> = categories.toSorted(compareManual).map(category => ({
+    category,
+    projects: projects.filter(project => project.categoryId === category.id).toSorted(compareManual),
+  }))
+  const loose = projects.filter(project => !project.categoryId || !known.has(project.categoryId)).toSorted(compareManual)
+
+  groups.push({ category: null, projects: loose })
+
+  return groups.filter(group => group.projects.length > 0 || (keepEmpty && group.category !== null))
+}
+
+/** `ids` with `id` moved next to `targetId` (before, or after with `after`); without a target – at the end. */
+export function moveId (ids: number[], id: number, targetId: number | null, after = false): number[] {
+  const rest = ids.filter(item => item !== id)
+  const index = targetId === null ? -1 : rest.indexOf(targetId)
+
+  rest.splice(index === -1 ? rest.length : index + (after ? 1 : 0), 0, id)
+
+  return rest
 }
 
 /** "GH" / "BB" – where the repository lives, as in the spreadsheet. */

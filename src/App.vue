@@ -6,7 +6,11 @@
       <RouterView />
     </main>
 
-    <ProjectDialog v-if="config.canManage" />
+    <template v-if="config.canManage">
+      <ProjectDialog />
+      <CategoryDialog />
+    </template>
+
     <ToastHost />
   </div>
 </template>
@@ -14,6 +18,7 @@
 <script lang="ts" setup>
   import { onMounted } from 'vue'
   import AppTopbar from '@/components/AppTopbar.vue'
+  import CategoryDialog from '@/components/CategoryDialog.vue'
   import ProjectDialog from '@/components/ProjectDialog.vue'
   import ToastHost from '@/components/ui/ToastHost.vue'
   import { config } from '@/config'

@@ -1,6 +1,6 @@
 import type { Project } from '@/types'
 import { describe, expect, it } from 'vitest'
-import { ago, formatDay, latestWordpress, matches, repoHost, reportStale, siteUrl, sortProjects } from './projects'
+import { ago, compareManual, formatDay, groupProjects, latestWordpress, matches, moveId, repoHost, reportStale, siteUrl, sortProjects } from './projects'
 
 const p = (name: string, extra: Partial<Project> = {}): Partial<Project> => ({ name, domain: name, status: 'online', ...extra })
 
@@ -35,6 +35,37 @@ describe('sortProjects', () => {
     const list = [p('a', { status: 'suspended' }), p('b', { status: null }), p('c', { status: 'online' }), p('d', { status: 'dev' })]
 
     expect(sortProjects(list, 'status').map(x => x.name)).toEqual(['c', 'd', 'a', 'b'])
+  })
+})
+
+describe('manual order', () => {
+  const a = { id: 1, name: 'A', position: 1 }
+  const b = { id: 2, name: 'B', position: 0 }
+
+  it('groups projects under their categories, the uncategorized last', () => {
+    const list = [
+      p('x.pl', { id: 1, categoryId: 2, position: 1 }),
+      p('y.pl', { id: 2, categoryId: 2, position: 0 }),
+      p('z.pl', { id: 3, categoryId: null }),
+      p('w.pl', { id: 4, categoryId: 99 }),
+    ]
+    const groups = groupProjects(list, [a, b])
+
+    expect(groups.map(group => group.category?.name ?? '-')).toEqual(['B', '-'])
+    expect(groups[0]!.projects.map(x => x.name)).toEqual(['y.pl', 'x.pl'])
+    expect(groups[1]!.projects.map(x => x.name)).toEqual(['w.pl', 'z.pl'])
+    expect(groupProjects(list, [a, b], true).map(group => group.category?.name ?? '-')).toEqual(['B', 'A', '-'])
+  })
+
+  it('puts never placed items last, by name', () => {
+    expect([{ name: 'b', position: null }, { name: 'a', position: null }, { name: 'c', position: 3 }].toSorted(compareManual).map(x => x.name))
+      .toEqual(['c', 'a', 'b'])
+  })
+
+  it('moves an id next to another', () => {
+    expect(moveId([1, 2, 3, 4], 4, 2)).toEqual([1, 4, 2, 3])
+    expect(moveId([1, 2, 3, 4], 1, 3, true)).toEqual([2, 3, 1, 4])
+    expect(moveId([1, 2, 3], 5, null)).toEqual([1, 2, 3, 5])
   })
 })
 

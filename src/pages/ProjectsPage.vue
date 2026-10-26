@@ -7,8 +7,12 @@
         <p v-if="projects.status === 'ready'" class="head__sub">{{ summary }}</p>
       </div>
 
-      <div class="head__actions">
-        <button v-if="config.canManage" class="btn btn--accent" type="button" @click="projects.editing = 'new'">
+      <div v-if="config.canManage" class="head__actions">
+        <button class="btn btn--outline" type="button" @click="projects.editingCategory = 'new'">
+          <FolderPlus /> Nowa kategoria
+        </button>
+
+        <button class="btn btn--accent" type="button" @click="projects.editing = 'new'">
           <Plus /> Nowy projekt
         </button>
       </div>
@@ -39,14 +43,22 @@
           {{ option.label }} <span class="mono faint">{{ option.count }}</span>
         </button>
       </div>
+
+      <button v-if="sort" class="btn btn--sm toolbar__order" type="button" @click="sort = null">
+        <ListOrdered /> Własna kolejność
+      </button>
+
+      <span v-else-if="config.canManage && !canDrag" class="faint toolbar__hint">Przeciąganie – bez filtra i wyszukiwania</span>
     </div>
 
     <template v-if="projects.status === 'ready'">
       <ProjectTable
-        v-if="visible.length > 0"
+        v-if="groups.some(group => group.projects.length > 0) || (config.canManage && groups.length > 0)"
+        :can-drag="canDrag"
         :descending="descending"
         :full="config.canManage"
-        :projects="visible"
+        :grouped="sort === null"
+        :groups="groups"
         :sort="sort"
         @open="project => projects.editing = project"
         @sort="setSort"
@@ -72,14 +84,14 @@
 
 <script lang="ts" setup>
   import type { Project, SortKey } from '@/types'
-  import type { Filter } from '@/utils/projects'
-  import { Plus, Search, SearchX } from 'lucide-vue-next'
+  import type { Filter, Group } from '@/utils/projects'
+  import { FolderPlus, ListOrdered, Plus, Search, SearchX } from 'lucide-vue-next'
   import { computed, ref, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import ProjectTable from '@/components/ProjectTable.vue'
   import { config } from '@/config'
   import { useProjectsStore } from '@/stores/projects'
-  import { matches, sortProjects, STATUS_LABELS } from '@/utils/projects'
+  import { groupProjects, matches, sortProjects, STATUS_LABELS } from '@/utils/projects'
 
   const projects = useProjectsStore()
   const route = useRoute()
@@ -93,13 +105,19 @@
     void router.replace({ query: { ...(status === 'all' ? {} : { status }), ...(q ? { q } : {}) } })
   })
 
-  const sort = ref<SortKey>('name')
+  /** null – the user's own order, grouped by category; a column – a flat list sorted by it */
+  const sort = ref<SortKey | null>(null)
   const descending = ref(false)
 
   function setSort (key: SortKey): void {
     descending.value = sort.value === key ? !descending.value : false
     sort.value = key
   }
+
+  const filtered = computed(() => filter.value !== 'all' || query.value.trim() !== '')
+
+  /** dragging changes the order of whole categories – only when all of them are shown */
+  const canDrag = computed(() => config.canManage && sort.value === null && !filtered.value)
 
   const sites = computed(() => projects.items.filter(project => project.domain))
 
@@ -115,11 +133,16 @@
     return options.filter(option => option.value === 'all' || option.count > 0 || option.value === filter.value)
   })
 
-  const visible = computed<Project[]>(() => sortProjects(
-    projects.items.filter(project => matches(project, filter.value, query.value)),
-    sort.value,
-    descending.value,
-  ))
+  const groups = computed<Array<Group<Project>>>(() => {
+    const visible = projects.items.filter(project => matches(project, filter.value, query.value))
+
+    if (sort.value) {
+      return [{ category: null, projects: sortProjects(visible, sort.value, descending.value) }]
+    }
+
+    // the owner sees empty categories too (to drop projects into them), unless a filter hides things anyway
+    return groupProjects(visible, projects.categories, config.canManage && !filtered.value)
+  })
 
   const summary = computed(() => {
     const online = sites.value.filter(project => project.status === 'online').length
@@ -169,6 +192,7 @@
 
 .head__actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
 }
 
@@ -214,6 +238,10 @@
   flex: none;
 }
 
+.toolbar__hint {
+  font-size: 12px;
+}
+
 @media (max-width: 900px) {
   .head {
     padding-top: 18px;
@@ -221,6 +249,10 @@
 
   .head__title {
     font-size: 24px;
+  }
+
+  .toolbar__hint {
+    display: none;
   }
 }
 </style>

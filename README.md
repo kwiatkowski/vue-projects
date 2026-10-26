@@ -20,8 +20,12 @@ strony ─────── POST /wp-json/projects/v1/report (token) ─► PHP
 - **Właściciel** (zalogowany administrator) widzi wszystkie projekty i kolumny jak w arkuszu – serwer, konto, PHP,
   repozytorium, Deploy, DEV, Bedrock, Security, Local, ACF, MI Modal, DB sync, ostatni raport strony, Todo – i edytuje
   projekt po kliknięciu w wiersz. W oknie projektu jest też token raportu (gotowe linie do `.env` strony).
-
-Projekty są te same co w Todo – „Pokaż w Todo” decyduje, czy projekt jest w panelu bocznym aplikacji Todo.
+- **Kategorie i kolejność**: projekty są pogrupowane w kategorie (nagłówki w tabeli). Właściciel przeciąga projekty
+  (w kategorii i do innej) i całe kategorie (za uchwyt przy nagłówku); menu kategorii: zmiana nazwy, w górę / w dół
+  (też na telefonie), usunięcie. Przeciąganie działa bez filtra i wyszukiwania. Kliknięcie w nagłówek kolumny sortuje
+  płaską listę, „Własna kolejność” wraca do kategorii.
+- **Todo**: projekt można powiązać z projektem w Todo (okno projektu → Todo). Kolumna Todo pokazuje liczbę otwartych
+  zadań i tych po terminie (link do projektu w Todo), okno projektu – spis otwartych zadań.
 
 W bundlu nie ma adresów, tokenów ani haseł – konfigurację wstrzykuje WordPress w chwili otwarcia strony.
 
@@ -65,9 +69,9 @@ Potem `npm run dev` i `http://localhost:3001/projects/web/`.
 ```
 src/
 ├── api/          klient fetch (nonce, odświeżanie nonce, błędy) i endpointy projects/v1
-├── stores/       Pinia: projects (lista, edycja, token), notify
-├── utils/        czyste funkcje: filtr, wyszukiwanie, sortowanie, daty – pokryte testami
-├── components/   pasek górny, tabela (karty na telefonie), status, okno projektu, ui/ (dialog, toast)
+├── stores/       Pinia: projects (lista, kategorie, kolejność, projekty Todo, edycja, token), notify
+├── utils/        czyste funkcje: filtr, wyszukiwanie, sortowanie, grupy kategorii, kolejność, daty – pokryte testami; drag (przeciąganie)
+├── components/   pasek górny, tabela z kategoriami (karty na telefonie), status, Todo, okna projektu i kategorii, ui/ (dialog, menu, toast)
 ├── composables/  motyw jasny/ciemny
 ├── pages/        lista projektów
 ├── styles/       app.css – tokeny kolorów (jasne i ciemne), typografia, przyciski, pola, chipy (jak w vue-todo)
