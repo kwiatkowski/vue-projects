@@ -449,7 +449,8 @@
   }
 
   const engineOptions = computed(() => versions('wordpress', form.value.engine).toSorted((a, b) => a.value === 'wordpress' ? -1 : (b.value === 'wordpress' ? 1 : 0)))
-  const versionOptions = computed(() => versions(config.latestWordpress, form.value.version, ...projects.items.map(item => item.version)))
+  // WordPress of the last five years, plus what the projects run (an older one isn't lost)
+  const versionOptions = computed(() => versions(config.latestWordpress, ...config.wordpressVersions, form.value.version, ...projects.items.map(item => item.version)))
   const phpOptions = computed(() => versions('7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5', form.value.php, ...projects.items.map(item => item.php)))
 
   type Tab = 'report' | 'server' | 'tech' | 'access' | 'todo'

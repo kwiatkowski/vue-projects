@@ -19,6 +19,8 @@ export interface AppConfig {
   publicFields: string[]
   /** the newest WordPress release – sites running it are marked; null when unknown */
   latestWordpress: string | null
+  /** WordPress releases of about the last five years, newest first (the newest of each branch) – the version list */
+  wordpressVersions: string[]
   siteName: string
   homeUrl: string
   version: string | null
@@ -52,6 +54,7 @@ export const config: AppConfig = {
   todoUrl: injected.todoUrl ?? null,
   publicFields: injected.publicFields ?? ['domains', 'status', 'engine', 'version', 'theme'],
   latestWordpress: injected.latestWordpress ?? null,
+  wordpressVersions: injected.wordpressVersions ?? [],
   siteName: injected.siteName ?? 'kwiatkowski.co',
   homeUrl: injected.homeUrl ?? '/',
   version: injected.version ?? null,
