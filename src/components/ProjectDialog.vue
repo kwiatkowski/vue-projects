@@ -1,5 +1,6 @@
 <template>
   <BaseDialog
+    ref="dialog"
     v-model="open"
     :can-close="canClose"
     :title="project ? 'Edycja projektu' : 'Nowy projekt'"
@@ -345,28 +346,38 @@
     </div>
 
     <template #actions>
-      <template v-if="project">
-        <button v-if="!confirmDelete" class="btn btn--danger btn--sm" type="button" @click="confirmDelete = true">Usuń</button>
-
-        <button
-          v-else
-          class="btn btn--danger-solid btn--sm"
-          :disabled="busy"
-          type="button"
-          @click="remove"
-        >Tak, usuń</button>
+      <!-- as in Todo: with changes made the only ways out are saving or dropping them -->
+      <template v-if="dirty">
+        <span class="unsaved"><AlertTriangle /> Niezapisane zmiany</span>
+        <span style="flex: 1" />
+        <button class="btn btn--danger btn--sm" type="button" @click="open = false">Zamknij bez zapisywania</button>
+        <button class="btn btn--accent btn--sm" :disabled="!canSave" type="submit">{{ project ? 'Zapisz' : 'Utwórz' }}</button>
       </template>
 
-      <span style="flex: 1" />
-      <button class="btn btn--sm" type="button" @click="open = false">Anuluj</button>
-      <button class="btn btn--primary btn--sm" :disabled="busy" type="submit">{{ project ? 'Zapisz' : 'Utwórz' }}</button>
+      <template v-else>
+        <template v-if="project">
+          <button v-if="!confirmDelete" class="btn btn--danger btn--sm" type="button" @click="confirmDelete = true">Usuń</button>
+
+          <button
+            v-else
+            class="btn btn--danger-solid btn--sm"
+            :disabled="busy"
+            type="button"
+            @click="remove"
+          >Tak, usuń</button>
+        </template>
+
+        <span style="flex: 1" />
+        <button class="btn btn--sm" type="button" @click="dialog?.requestClose()">Anuluj</button>
+        <button class="btn btn--accent btn--sm" :disabled="!canSave" type="submit">{{ project ? 'Zapisz' : 'Utwórz' }}</button>
+      </template>
     </template>
   </BaseDialog>
 </template>
 
 <script lang="ts" setup>
   import type { Flag, Project, ProjectInput, ReportPlugin, SiteReport, Status, TodoTask } from '@/types'
-  import { ArrowUpRight, Copy, Eye, EyeOff, KeyRound, ListChecks, Plus, X } from 'lucide-vue-next'
+  import { AlertTriangle, ArrowUpRight, Copy, Eye, EyeOff, KeyRound, ListChecks, Plus, X } from 'lucide-vue-next'
   import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
   import BaseDialog from '@/components/ui/BaseDialog.vue'
@@ -398,7 +409,7 @@
   /** the addresses under "Dostęp" – each with a button that opens it */
   const ACCESS_LINKS: Array<{ field: 'adminUrl' | 'stagingUrl' | 'stagingAdminUrl' | 'localUrl' | 'localAdminUrl', label: string, placeholder: string, wide?: boolean }> = [
     { field: 'adminUrl', label: 'Panel – produkcja', placeholder: 'https://…/wp/wp-login.php', wide: true },
-    { field: 'stagingUrl', label: 'Staging – adres', placeholder: 'https://….medendev.eu/' },
+    { field: 'stagingUrl', label: 'Staging – adres', placeholder: 'https://…/' },
     { field: 'stagingAdminUrl', label: 'Staging – panel', placeholder: 'https://…/wp/wp-login.php' },
     { field: 'localUrl', label: 'Lokalnie – adres', placeholder: 'https://….local/' },
     { field: 'localAdminUrl', label: 'Lokalnie – panel', placeholder: 'https://….local/wp/wp-login.php' },
@@ -446,6 +457,7 @@
   const confirmDelete = ref(false)
   const busy = ref(false)
   const nameInput = useTemplateRef<HTMLInputElement>('nameInput')
+  const dialog = useTemplateRef<InstanceType<typeof BaseDialog>>('dialog')
 
   // a different project (or a new one) fills the form – a fresh token for the same one doesn't touch it
   watch(() => projects.editing === 'new' ? 'new' : projects.editing?.id ?? null, () => {
@@ -541,8 +553,15 @@
   }
 
   /** unsaved changes – ask before they are thrown away */
+  /** something typed since it opened (or since the last save) – the password too */
+  const dirty = computed(() => JSON.stringify(form.value) !== initial.value || password.value !== savedPassword.value)
+
+  /** "Zapisz" only with changes to save */
+  const canSave = computed(() => dirty.value && !busy.value)
+
+  /** as in Todo: ×, Esc and the backdrop close only an untouched form – changes are saved or dropped in the footer */
   function canClose (): boolean {
-    return (JSON.stringify(form.value) === initial.value && password.value === savedPassword.value) || window.confirm('Odrzucić niezapisane zmiany?')
+    return !dirty.value
   }
 
   /** a domain is kept bare (no https://, no path); the main one names a new project, until a name is typed */
@@ -685,6 +704,21 @@
 }
 
 /* one under the other – Deploy, DEV, Bedrock, Wordfence, ACF, MI Modal */
+.unsaved {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--warn);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.unsaved svg {
+  width: 16px;
+  height: 16px;
+}
+
 .checks--column {
   flex-direction: column;
   align-items: flex-start;

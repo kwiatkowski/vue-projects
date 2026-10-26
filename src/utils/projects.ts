@@ -1,10 +1,11 @@
 import type { Category, Project, SortKey, Status } from '@/types'
 
+/** in this order in the filters and the status select: online, offline, in progress, suspended */
 export const STATUS_LABELS: Record<Status, string> = {
   online: 'online',
+  offline: 'offline',
   dev: 'w budowie',
   suspended: 'zawieszona',
-  offline: 'offline',
 }
 
 /** The colour of a status – chip--{tone} in the table, the same in the filter; suspended – the dark dot, like an unset report. */

@@ -97,6 +97,11 @@
   box-shadow: var(--shadow-pop);
 }
 
+/* Esc on a form that can't close yet leaves the focus on the dialog itself – no ring around the whole card */
+.dialog:focus-visible {
+  outline: none;
+}
+
 .dialog[open] {
   animation: pop .14s ease-out;
 }
