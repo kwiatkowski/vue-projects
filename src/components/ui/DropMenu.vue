@@ -226,12 +226,12 @@
   overflow-y: auto;
 }
 
-/* a select's list: just under it, as wide, items edge to edge, in the focus ring's green */
+/* a select's list: just under it, as wide, items edge to edge, edged like a plain field */
 .menu__panel--attached {
   min-width: 0;
   padding: 4px 0;
-  border-color: var(--accent);
-  box-shadow: var(--focus-ring), var(--shadow);
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow);
   animation: none;
   scrollbar-width: thin;
   scrollbar-color: var(--line-strong) transparent;
