@@ -7,8 +7,7 @@
       @click.stop
     >
       <span class="todo-chip__dot" :style="{ background: todo.color }" />
-      <span class="mono">{{ todo.open }}</span>
-      <span v-if="todo.overdue" class="todo-chip__late mono">{{ todo.overdue }} po terminie</span>
+      <span class="mono" :class="`todo-chip__count--${urgency}`">{{ todo.open }}</span>
     </a>
 
     <template #tip>
@@ -35,10 +34,20 @@
 
 <script lang="ts" setup>
   import type { TodoSummary } from '@/types'
+  import { computed } from 'vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
 
-  /** The linked Todo project: open tasks (and overdue ones), a link to it in the Todo app; the breakdown on hover. */
-  defineProps<{ todo: TodoSummary }>()
+  /** The linked Todo project: how many open tasks, a link to it in the Todo app; the breakdown on hover. */
+  const props = defineProps<{ todo: TodoSummary }>()
+
+  /** the count's colour: red – something is overdue; normal – due today or within 7 days; grey – nothing close */
+  const urgency = computed(() => {
+    if (props.todo.overdue > 0) {
+      return 'late'
+    }
+
+    return (props.todo.today ?? 0) + (props.todo.soon ?? 0) > 0 ? 'near' : 'far'
+  })
 </script>
 
 <style scoped>
@@ -68,8 +77,17 @@
   border-radius: 3px;
 }
 
-.todo-chip__late {
+.todo-chip__late,
+.todo-chip__count--late {
   color: var(--danger);
+}
+
+.todo-chip__count--near {
+  color: var(--text);
+}
+
+.todo-chip__count--far {
+  color: var(--text-3);
 }
 
 .todo-tip__head {
