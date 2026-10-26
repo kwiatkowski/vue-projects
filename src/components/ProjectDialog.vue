@@ -409,7 +409,7 @@
   /** the addresses under "Dostęp" – each with a button that opens it */
   const ACCESS_LINKS: Array<{ field: 'adminUrl' | 'stagingUrl' | 'stagingAdminUrl' | 'localUrl' | 'localAdminUrl', label: string, placeholder: string, wide?: boolean }> = [
     { field: 'adminUrl', label: 'Panel – produkcja', placeholder: 'https://…/wp/wp-login.php', wide: true },
-    { field: 'stagingUrl', label: 'Staging – adres', placeholder: 'https://…/' },
+    { field: 'stagingUrl', label: 'Staging – adres', placeholder: 'https://….medendev.eu/' },
     { field: 'stagingAdminUrl', label: 'Staging – panel', placeholder: 'https://…/wp/wp-login.php' },
     { field: 'localUrl', label: 'Lokalnie – adres', placeholder: 'https://….local/' },
     { field: 'localAdminUrl', label: 'Lokalnie – panel', placeholder: 'https://….local/wp/wp-login.php' },

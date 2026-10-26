@@ -8,7 +8,7 @@
         v-model.trim="name"
         :aria-invalid="error ? 'true' : undefined"
         class="input"
-        placeholder="np. Meden, Własne"
+        placeholder="Nazwa kategorii"
         type="text"
       >
     </label>
