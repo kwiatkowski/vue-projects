@@ -25,7 +25,7 @@
           <span v-if="nameError" class="error-text">{{ nameError }}</span>
         </div>
 
-        <div class="field">
+        <label class="field">
           <span>Domeny <span class="faint">– pierwsza jest główna (link na liście)</span></span>
 
           <div class="domains">
@@ -53,20 +53,20 @@
               <Plus /> Dodaj domenę
             </button>
           </div>
-        </div>
+        </label>
 
-        <div class="field">
+        <label class="field">
           <span>Status</span>
 
           <SelectField v-model="form.status" label="Status" :options="statusOptions">
             <template #option="{ option }"><StatusChip :status="option.value" /></template>
           </SelectField>
-        </div>
+        </label>
 
-        <div class="field">
+        <label class="field">
           <span>Kategoria</span>
           <SelectField v-model="form.categoryId" label="Kategoria" :options="categoryOptions" />
-        </div>
+        </label>
 
         <label class="field">
           <span>Repozytorium</span>
@@ -215,31 +215,31 @@
           <p class="faint">Uzupełnia też raport strony.</p>
 
           <div class="stack">
-            <div class="field">
+            <label class="field">
               <span>Silnik</span>
               <SelectField label="Silnik" :model-value="form.engine || null" :options="engineOptions" @update:model-value="form.engine = $event ?? ''" />
-            </div>
+            </label>
 
-            <div class="field">
+            <label class="field">
               <span>Wersja</span>
 
               <SelectField label="Wersja" :model-value="form.version || null" :options="versionOptions" @update:model-value="form.version = $event ?? ''">
                 <template #option="{ option }"><span class="mono">{{ option.label }}</span></template>
               </SelectField>
-            </div>
+            </label>
 
             <label class="field">
               <span>Motyw</span>
               <input v-model.trim="form.theme" class="input" type="text">
             </label>
 
-            <div class="field">
+            <label class="field">
               <span>PHP</span>
 
               <SelectField label="PHP" :model-value="form.php || null" :options="phpOptions" @update:model-value="form.php = $event ?? ''">
                 <template #option="{ option }"><span class="mono">{{ option.label }}</span></template>
               </SelectField>
-            </div>
+            </label>
           </div>
         </div>
 

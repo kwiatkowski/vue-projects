@@ -340,6 +340,11 @@ a {
   color: var(--text-2);
 }
 
+/* a label's caption: a click goes to its field below – focuses it, opens a select (a label activates its control) */
+label.field > span:first-child {
+  cursor: pointer;
+}
+
 .input {
   width: 100%;
   min-height: 36px;
