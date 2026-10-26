@@ -4,7 +4,7 @@ export const STATUS_LABELS: Record<Status, string> = {
   online: 'online',
   dev: 'w budowie',
   suspended: 'zawieszona',
-  offline: 'nie działa',
+  offline: 'offline',
 }
 
 /** The colour of a status – chip--{tone} in the table, the same in the filter; suspended – the dark dot, like an unset report. */

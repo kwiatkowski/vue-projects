@@ -27,7 +27,7 @@ strony ─────── POST /wp-json/projects/v1/report (token) ─► PHP
 - **Todo**: projekt można powiązać z projektem w Todo (okno projektu → Todo). Kolumna Todo pokazuje liczbę otwartych
   zadań (link do projektu w Todo) – czerwoną, gdy coś jest po terminie, szarą, gdy nic nie jest bliżej niż 7 dni; po
   najechaniu – ile po terminie, na dziś, w najbliższych 7 dniach i bez terminu; okno projektu – spis otwartych zadań.
-- **Statusy**: online (zielony, pulsuje), w budowie (niebieski), nie działa (czerwony), zawieszona (ciemna kulka, wiersz
+- **Statusy**: online (zielony, pulsuje), w budowie (niebieski), offline (czerwony), zawieszona (ciemna kulka, wiersz
   wyszarzony) – w filtrach zawsze wszystkie. Podpowiedzi (raport, Todo) w stylu aplikacji, nie przeglądarki.
 
 W bundlu nie ma adresów, tokenów ani haseł – konfigurację wstrzykuje WordPress w chwili otwarcia strony.
