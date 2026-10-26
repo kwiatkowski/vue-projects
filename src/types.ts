@@ -71,7 +71,6 @@ export interface Project extends Record<Flag, boolean> {
   localAdminUrl: string | null
   login: string | null
   /** RRRR-MM-DD */
-  dbSync: string | null
   /** id of the linked Todo project */
   todoProject: number | null
   todo?: TodoSummary | null
@@ -111,4 +110,4 @@ export interface SiteReport {
 /** What the API takes: any field, null clears it. */
 export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'updatedAt'>>
 
-export type SortKey = 'name' | 'status' | 'server' | 'php' | 'version' | 'theme' | 'dbSync' | 'reportedAt'
+export type SortKey = 'name' | 'status' | 'server' | 'php' | 'version' | 'theme' | 'reportedAt'

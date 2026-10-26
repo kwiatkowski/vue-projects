@@ -158,8 +158,6 @@
               <Check v-if="project[flag]" :aria-label="FLAG_LABELS[flag]" class="yes" />
             </td>
 
-            <td class="mono nowrap" :class="cellChanged(project, 'dbSync')">{{ formatDay(project.dbSync) }}</td>
-
             <td class="center" :class="cellChanged(project, 'reportedAt', 'token')">
               <HoverTip :text="reportTitle(project)">
                 <span
@@ -263,7 +261,7 @@
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
   import { dragId, dragKind, dropTarget, setDrag } from '@/utils/drag'
-  import { formatDateTime, formatDay, latestWordpress, repoHost, reportState, siteUrl } from '@/utils/projects'
+  import { formatDateTime, latestWordpress, repoHost, reportState, siteUrl } from '@/utils/projects'
 
   const props = defineProps<{
     groups: Array<Group<Project>>
@@ -344,7 +342,6 @@
       { key: 'local', label: 'Local', class: 'center' },
       { key: 'acf', label: 'ACF', class: 'center' },
       { key: 'miModal', label: 'MI Modal', class: 'center' },
-      { key: 'dbSync', label: 'DB sync', sort: 'dbSync' },
       { key: 'report', label: 'Raport', sort: 'reportedAt', class: 'center' },
       { key: 'todo', label: 'Todo' },
     ]

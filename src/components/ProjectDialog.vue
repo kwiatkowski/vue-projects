@@ -131,17 +131,10 @@
         <fieldset class="group">
           <legend class="eyebrow">Kod</legend>
 
-          <div class="grid grid--3">
-            <label class="field field--2">
-              <span>Repozytorium</span>
-              <input v-model.trim="form.repo" class="input" placeholder="https://github.com/…" type="url">
-            </label>
-
-            <label class="field">
-              <span>DB sync</span>
-              <input v-model="form.dbSync" class="input" type="date">
-            </label>
-          </div>
+          <label class="field">
+            <span>Repozytorium</span>
+            <input v-model.trim="form.repo" class="input" placeholder="https://github.com/…" type="url">
+          </label>
         </fieldset>
 
         <fieldset class="group">
@@ -402,7 +395,7 @@
   type Form = Required<Omit<ProjectInput, 'status'>> & { status: Status | null }
 
   const TEXT_FIELDS = [
-    'server', 'serverUrl', 'serverAccount', 'php', 'engine', 'version', 'theme', 'repo', 'dbSync', 'notes',
+    'server', 'serverUrl', 'serverAccount', 'php', 'engine', 'version', 'theme', 'repo', 'notes',
     'adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login',
   ] as const
 
