@@ -24,6 +24,20 @@
   color: var(--positive);
 }
 
+/* suspended – the dark dot of an unset report, no pulse, the label greyed */
+.chip--off {
+  color: var(--text-3);
+}
+
+.chip--off .dot {
+  background: var(--off);
+  box-shadow: 0 0 0 1px var(--line-strong);
+}
+
+.chip--off .dot::after {
+  display: none;
+}
+
 /* the size of the dots in Todo */
 .dot {
   position: relative;

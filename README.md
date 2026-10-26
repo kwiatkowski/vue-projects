@@ -25,7 +25,10 @@ strony ─────── POST /wp-json/projects/v1/report (token) ─► PHP
   (też na telefonie), usunięcie. Przeciąganie działa bez filtra i wyszukiwania. Kliknięcie w nagłówek kolumny sortuje
   płaską listę, „Własna kolejność” wraca do kategorii.
 - **Todo**: projekt można powiązać z projektem w Todo (okno projektu → Todo). Kolumna Todo pokazuje liczbę otwartych
-  zadań i tych po terminie (link do projektu w Todo), okno projektu – spis otwartych zadań.
+  zadań i tych po terminie (link do projektu w Todo), po najechaniu – ile po terminie, na dziś, w najbliższych 7 dniach
+  i bez terminu; okno projektu – spis otwartych zadań.
+- **Statusy**: online (zielony, pulsuje), w budowie (niebieski), nie działa (czerwony), zawieszona (ciemna kulka, wiersz
+  wyszarzony) – w filtrach zawsze wszystkie. Podpowiedzi (raport, Todo) w stylu aplikacji, nie przeglądarki.
 
 W bundlu nie ma adresów, tokenów ani haseł – konfigurację wstrzykuje WordPress w chwili otwarcia strony.
 

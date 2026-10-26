@@ -161,13 +161,15 @@
             <td class="mono nowrap" :class="cellChanged(project, 'dbSync')">{{ formatDay(project.dbSync) }}</td>
 
             <td class="center" :class="cellChanged(project, 'reportedAt', 'token')">
-              <span
-                :aria-label="reportTitle(project)"
-                class="report"
-                :class="`report--${reportState(project)}`"
-                role="img"
-                :title="reportTitle(project)"
-              />
+              <HoverTip :text="reportTitle(project)">
+                <span
+                  :aria-label="reportTitle(project)"
+                  class="report"
+                  :class="`report--${reportState(project)}`"
+                  role="img"
+                  tabindex="0"
+                />
+              </HoverTip>
             </td>
 
             <td class="nowrap" :class="cellChanged(project, 'todo')">
@@ -256,6 +258,7 @@
   import CategoryMenu from '@/components/CategoryMenu.vue'
   import StatusChip from '@/components/StatusChip.vue'
   import TodoChip from '@/components/TodoChip.vue'
+  import HoverTip from '@/components/ui/HoverTip.vue'
   import { config } from '@/config'
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
@@ -843,9 +846,9 @@ tr:hover .row-grip {
   color: var(--danger);
 }
 
-/* the ink of the dark theme – a hairline keeps it visible on the dark background */
+/* a hairline keeps the dark dot visible on the dark background */
 .report--off {
-  color: #151513;
+  color: var(--off);
   box-shadow: 0 0 0 1px var(--line-strong);
 }
 

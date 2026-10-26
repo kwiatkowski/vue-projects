@@ -23,10 +23,13 @@ export interface TodoProject {
   url: string
 }
 
-/** The linked Todo project with how much is left there. */
+/** The linked Todo project with how much is left there: open tasks – overdue, due today, in the next 7 days, undated. */
 export interface TodoSummary extends TodoProject {
   open: number
   overdue: number
+  today?: number
+  soon?: number
+  undated?: number
 }
 
 export interface TodoTask {

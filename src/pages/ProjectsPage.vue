@@ -171,8 +171,8 @@
       { value: 'other', label: 'Bez strony', count: count('other') },
     ]
 
-    // only what is there – and the current one, even when it emptied
-    return options.filter(option => option.value === 'all' || option.count > 0 || option.value === filter.value)
+    // the statuses always (offline at 0 too); "Bez strony" only when there is such a project – or it is the current one
+    return options.filter(option => option.value !== 'other' || option.count > 0 || option.value === filter.value)
   })
 
   const groups = computed<Array<Group<Project>>>(() => {
@@ -288,9 +288,14 @@
   --tone-soft: var(--danger-soft);
 }
 
-.status--warn {
-  --tone: var(--warn);
-  --tone-soft: var(--warn-soft);
+.status--off {
+  --tone: var(--text-2);
+  --tone-soft: var(--hover);
+}
+
+.status--off .dot {
+  background: var(--off);
+  box-shadow: 0 0 0 1px var(--line-strong);
 }
 
 .toolbar__category {
