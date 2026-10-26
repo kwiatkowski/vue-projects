@@ -5,6 +5,9 @@
       <span class="top__site">Lista projektów</span>
     </RouterLink>
 
+    <!-- the plugin's version (RRRR.MM.DD) – which build of the list this is -->
+    <span v-if="config.version" class="top__version mono">{{ config.version }}</span>
+
     <span class="top__space" />
 
     <template v-if="config.canManage">
@@ -102,6 +105,13 @@
 .top__site {
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.top__version {
+  margin-left: 2px;
+  color: var(--text-3);
+  font-size: 11px;
   white-space: nowrap;
 }
 
