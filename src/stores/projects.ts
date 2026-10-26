@@ -28,8 +28,8 @@ export const useProjectsStore = defineStore('projects', () => {
 
   /**
    * Projects a refresh found changed (or new) → the fields that changed ('*' – a new project). The table highlights
-   * the row and blurs those cells under a spinner until the user has seen them – 10 s once the window has focus (a
-   * refresh in a window behind the terminal waits) – then the row is `fading` for the fade-out.
+   * the row and blurs those cells under a spinner for 10 s – counted while the tab is visible (a change that came in a
+   * background tab waits for it) – then the row is `fading` for the fade-out.
    */
   const changed = ref<Map<number, Set<string>>>(new Map())
   const fading = ref<Set<number>>(new Set())
@@ -41,10 +41,10 @@ export const useProjectsStore = defineStore('projects', () => {
 
   function settleWhenSeen (): void {
     clearTimeout(changedTimer)
-    window.removeEventListener('focus', settleWhenSeen)
+    document.removeEventListener('visibilitychange', settleWhenSeen)
 
-    if (!document.hasFocus()) {
-      window.addEventListener('focus', settleWhenSeen, { once: true })
+    if (document.hidden) {
+      document.addEventListener('visibilitychange', settleWhenSeen, { once: true })
 
       return
     }
@@ -59,10 +59,14 @@ export const useProjectsStore = defineStore('projects', () => {
     }, SHOW_MS)
   }
 
+  /** when the server's list last changed (GET /changed) – as of the data shown */
+  let changedAt: string | null = null
+
   async function load (): Promise<void> {
     status.value = 'loading'
 
     try {
+      changedAt = await projectsApi.changed().then(result => result.changedAt).catch(() => null)
       ;[items.value, categories.value] = await Promise.all([projectsApi.list(), categoriesApi.list()])
       status.value = 'ready'
     } catch (error) {
@@ -77,12 +81,29 @@ export const useProjectsStore = defineStore('projects', () => {
   }
 
   /**
-   * Fetches the list again without any loading state; only what really changed is replaced (and flashed). Skipped
-   * when the list isn't loaded yet, and dropped when the user changed something while it was on the way.
+   * Asks the server whether the list changed since it was fetched (a tiny request, every few seconds) and refreshes
+   * it only then – a site's report shows up at once.
    */
-  async function refresh (): Promise<void> {
+  async function checkChanged (): Promise<void> {
     if (status.value !== 'ready') {
       return
+    }
+
+    const now = await projectsApi.changed().then(result => result.changedAt).catch(() => null)
+
+    if (now !== null && now !== changedAt && await refresh()) {
+      changedAt = now
+    }
+  }
+
+  /**
+   * Fetches the list again without any loading state; only what really changed is replaced (and flashed). Skipped
+   * when the list isn't loaded yet, and dropped when the user changed something while it was on the way.
+   * Resolves to whether the list is now the server's (false – failed or dropped, try again later).
+   */
+  async function refresh (): Promise<boolean> {
+    if (status.value !== 'ready') {
+      return false
     }
 
     const itemsBefore = items.value
@@ -92,12 +113,12 @@ export const useProjectsStore = defineStore('projects', () => {
     try {
       fresh = await Promise.all([projectsApi.list(), categoriesApi.list()])
     } catch {
-      // the next minute tries again – no toast for a background check
-      return
+      // the next check tries again – no toast for a background one
+      return false
     }
 
     if (items.value !== itemsBefore || categories.value !== categoriesBefore) {
-      return
+      return false
     }
 
     const [freshItems, freshCategories] = fresh
@@ -118,7 +139,7 @@ export const useProjectsStore = defineStore('projects', () => {
     }
 
     if (found.size === 0 && freshItems.length === itemsBefore.length) {
-      return
+      return true
     }
 
     items.value = freshItems
@@ -134,6 +155,8 @@ export const useProjectsStore = defineStore('projects', () => {
       changed.value = merged
       settleWhenSeen()
     }
+
+    return true
   }
 
   /** The fields of `before` and `after` that differ; '*' when there was no `before` (a new project). */
@@ -326,6 +349,7 @@ export const useProjectsStore = defineStore('projects', () => {
     editingCategory,
     load,
     refresh,
+    checkChanged,
     add,
     update,
     remove,

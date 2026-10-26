@@ -3,6 +3,8 @@ import { request } from './client'
 
 export const projectsApi = {
   list: () => request<Project[]>('GET', 'projects'),
+  /** when the list last changed on the server – polled to refresh it at once */
+  changed: () => request<{ changedAt: string }>('GET', 'changed'),
   create: (input: ProjectInput & { name: string }) => request<Project>('POST', 'projects', input),
   update: (id: number, input: ProjectInput) => request<Project>('PATCH', `projects/${id}`, input),
   remove: (id: number) => request<{ deleted: boolean }>('DELETE', `projects/${id}`),

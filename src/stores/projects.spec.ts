@@ -5,41 +5,45 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 const api = vi.hoisted(() => ({
   projects: [] as Array<Partial<Project>>,
   categories: [] as Category[],
+  changedAt: '1',
 }))
 
 vi.mock('@/api/projects', () => ({
-  projectsApi: { list: async () => structuredClone(api.projects) },
+  projectsApi: { list: async () => structuredClone(api.projects), changed: async () => ({ changedAt: api.changedAt }) },
   categoriesApi: { list: async () => structuredClone(api.categories) },
   todoApi: { projects: async () => [] },
 }))
 
 const { useProjectsStore } = await import('./projects')
 
-// the window behind the terminal or in front – what document.hasFocus() answers
-let focused = true
-const focusListeners = new Set<() => void>()
+// a background tab or the visible one – what document.hidden says
+let hidden = false
+const visibilityListeners = new Set<() => void>()
 
-function focusWindow (): void {
-  focused = true
-  for (const listener of focusListeners) {
+function showTab (): void {
+  hidden = false
+  for (const listener of visibilityListeners) {
     listener()
   }
-  focusListeners.clear()
+  visibilityListeners.clear()
 }
 
 describe('refresh', () => {
   beforeEach(() => {
     vi.useFakeTimers()
-    focused = true
-    focusListeners.clear()
-    vi.stubGlobal('document', { hasFocus: () => focused })
-    vi.stubGlobal('window', {
-      addEventListener: (_: string, listener: () => void) => focusListeners.add(listener),
-      removeEventListener: (_: string, listener: () => void) => focusListeners.delete(listener),
+    hidden = false
+    visibilityListeners.clear()
+    vi.stubGlobal('document', {
+      get hidden () {
+        return hidden
+      },
+      addEventListener: (_: string, listener: () => void) => visibilityListeners.add(listener),
+      removeEventListener: (_: string, listener: () => void) => visibilityListeners.delete(listener),
     })
     setActivePinia(createPinia())
     api.projects = [{ id: 1, name: 'a.pl', php: '8.2' }, { id: 2, name: 'b.pl', php: '8.3' }]
     api.categories = []
+    api.changedAt = '1'
   })
 
   afterEach(() => {
@@ -80,19 +84,33 @@ describe('refresh', () => {
     expect(store.fading.size).toBe(0)
   })
 
-  it('keeps the highlight while the window is in the background, until it gets focus', async () => {
+  it('keeps the highlight while the tab is in the background, until it is shown', async () => {
     const store = useProjectsStore()
     await store.load()
-    focused = false
+    hidden = true
     api.projects[0]!.php = '8.3'
 
     await store.refresh()
     vi.advanceTimersByTime(60_000)
     expect([...store.changed.keys()]).toEqual([1])
 
-    focusWindow()
+    showTab()
     vi.advanceTimersByTime(10_000)
     expect(store.changed.size).toBe(0)
+  })
+
+  it('refreshes only when the server says the list changed', async () => {
+    const store = useProjectsStore()
+    await store.load()
+    api.projects[0]!.php = '8.4'
+
+    await store.checkChanged()
+    expect(store.items[0]?.php).toBe('8.2')
+
+    api.changedAt = '2'
+    await store.checkChanged()
+    expect(store.items[0]?.php).toBe('8.4')
+    expect([...store.changed.keys()]).toEqual([1])
   })
 
   it('collects every changed field, a new project as \'*\'', async () => {

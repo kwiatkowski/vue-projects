@@ -26,10 +26,20 @@
 
   const projects = useProjectsStore()
 
-  // the list refreshes itself every minute, quietly – only while the tab is visible, and at once when it comes back
+  // quietly, only while the tab is visible: every few seconds a tiny check whether the list changed on the server (a
+  // site's report, an edit elsewhere) – then it refreshes at once; every minute the whole list anyway (Todo's tasks
+  // don't move the server's marker); and both when the tab comes back
+  const CHECK_MS = 3000
   const REFRESH_MS = 60_000
   let lastRefresh = Date.now()
-  let timer: ReturnType<typeof setInterval> | undefined
+  let checkTimer: ReturnType<typeof setInterval> | undefined
+  let refreshTimer: ReturnType<typeof setInterval> | undefined
+
+  function check (): void {
+    if (!document.hidden) {
+      void projects.checkChanged()
+    }
+  }
 
   function refresh (): void {
     if (document.hidden) {
@@ -41,19 +51,27 @@
   }
 
   function onVisible (): void {
-    if (!document.hidden && Date.now() - lastRefresh >= REFRESH_MS) {
+    if (document.hidden) {
+      return
+    }
+
+    if (Date.now() - lastRefresh >= REFRESH_MS) {
       refresh()
+    } else {
+      check()
     }
   }
 
   onMounted(() => {
     void projects.load()
-    timer = setInterval(refresh, REFRESH_MS)
+    checkTimer = setInterval(check, CHECK_MS)
+    refreshTimer = setInterval(refresh, REFRESH_MS)
     document.addEventListener('visibilitychange', onVisible)
   })
 
   onBeforeUnmount(() => {
-    clearInterval(timer)
+    clearInterval(checkTimer)
+    clearInterval(refreshTimer)
     document.removeEventListener('visibilitychange', onVisible)
   })
 </script>
