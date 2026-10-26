@@ -570,7 +570,7 @@ input[type='checkbox'] {
   height: 18px;
   margin: 0;
   border: 1px solid var(--line-strong);
-  border-radius: 5px;
+  border-radius: 4px;
   background: var(--panel);
   cursor: pointer;
   appearance: none;
