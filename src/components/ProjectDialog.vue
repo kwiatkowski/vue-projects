@@ -2,8 +2,8 @@
   <BaseDialog
     v-model="open"
     :can-close="canClose"
-    :title="project ? 'Projekt' : 'Nowy projekt'"
-    :width="640"
+    :title="project ? 'Edycja projektu' : 'Nowy projekt'"
+    :width="1040"
     @submit="save"
   >
     <input
@@ -18,255 +18,262 @@
 
     <span v-if="nameError" class="error-text">{{ nameError }}</span>
 
-    <div class="field">
-      <span>Domeny <span class="faint">– pierwsza jest główna (link na liście)</span></span>
+    <!-- two columns: the site and its tech on the left; visibility, Todo, notes and the report on the right -->
+    <div class="cols">
+      <div class="col">
+        <div class="field">
+          <span>Domeny <span class="faint">– pierwsza jest główna (link na liście)</span></span>
 
-      <div class="domains">
-        <div v-for="(_, index) in form.domains" :key="index" class="domains__row">
-          <input
-            v-model.trim="form.domains[index]"
-            :aria-label="`Domena ${index + 1}`"
-            class="input"
-            placeholder="przyklad.pl"
-            type="text"
-            @blur="onDomainBlur(index)"
-          >
+          <div class="domains">
+            <div v-for="(_, index) in form.domains" :key="index" class="domains__row">
+              <input
+                v-model.trim="form.domains[index]"
+                :aria-label="`Domena ${index + 1}`"
+                class="input"
+                placeholder="przyklad.pl"
+                type="text"
+                @blur="onDomainBlur(index)"
+              >
 
-          <button
-            v-if="form.domains.length > 1"
-            aria-label="Usuń domenę"
-            class="btn btn--icon btn--sm"
-            title="Usuń domenę"
-            type="button"
-            @click="form.domains.splice(index, 1)"
-          ><X /></button>
+              <button
+                v-if="form.domains.length > 1"
+                aria-label="Usuń domenę"
+                class="btn btn--icon btn--sm"
+                title="Usuń domenę"
+                type="button"
+                @click="form.domains.splice(index, 1)"
+              ><X /></button>
+            </div>
+
+            <button class="btn btn--sm domains__add" type="button" @click="addDomain">
+              <Plus /> Dodaj domenę
+            </button>
+          </div>
         </div>
 
-        <button class="btn btn--sm domains__add" type="button" @click="addDomain">
-          <Plus /> Dodaj domenę
-        </button>
+        <div class="grid">
+
+          <label class="field">
+            <span>Status</span>
+
+            <select v-model="form.status" class="input">
+              <option :value="null">—</option>
+              <option v-for="(label, value) in STATUS_LABELS" :key="value" :value="value">{{ label }}</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Kategoria</span>
+
+            <select v-model="form.categoryId" class="input">
+              <option :value="null">— bez kategorii —</option>
+              <option v-for="category in projects.sortedCategories" :key="category.id" :value="category.id">{{ category.name }}</option>
+            </select>
+          </label>
+        </div>
+
+        <fieldset class="group">
+          <legend class="eyebrow">Serwer</legend>
+
+          <div class="grid grid--3">
+            <label class="field">
+              <span>Hosting</span>
+              <input v-model.trim="form.server" class="input" placeholder="hostido.pl" type="text">
+            </label>
+
+            <label class="field">
+              <span>Link (panel)</span>
+              <input v-model.trim="form.serverUrl" class="input" placeholder="https://…" type="url">
+            </label>
+
+            <label class="field">
+              <span>Konto</span>
+              <input v-model.trim="form.serverAccount" class="input mono" type="text">
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend class="eyebrow">Technologia <span class="group__hint">– uzupełnia też raport strony</span></legend>
+
+          <div class="grid grid--4">
+            <label class="field">
+              <span>Silnik</span>
+              <input v-model.trim="form.engine" class="input" list="engines" type="text">
+            </label>
+
+            <label class="field">
+              <span>Wersja</span>
+              <input v-model.trim="form.version" class="input mono" type="text">
+            </label>
+
+            <label class="field">
+              <span>PHP</span>
+              <input v-model.trim="form.php" class="input mono" type="text">
+            </label>
+
+            <label class="field">
+              <span>Motyw</span>
+              <input v-model.trim="form.theme" class="input" type="text">
+            </label>
+          </div>
+
+          <datalist id="engines">
+            <option value="wordpress" />
+            <option value="vue" />
+            <option value="static" />
+          </datalist>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend class="eyebrow">Kod</legend>
+
+          <div class="grid grid--3">
+            <label class="field">
+              <span>Repozytorium</span>
+              <input v-model.trim="form.repo" class="input" placeholder="https://github.com/…" type="url">
+            </label>
+
+            <label class="field">
+              <span>Wersja lokalna</span>
+              <input v-model.trim="form.localUrl" class="input" placeholder="https://….local/" type="url">
+            </label>
+
+            <label class="field">
+              <span>DB sync</span>
+              <input v-model="form.dbSync" class="input" type="date">
+            </label>
+          </div>
+
+          <div class="checks checks--column">
+            <label v-for="flag in FLAGS" :key="flag" class="check">
+              <input v-model="form[flag]" type="checkbox"> {{ FLAG_LABELS[flag] }}
+            </label>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="col">
+        <fieldset class="group">
+          <legend class="eyebrow">Widoczność</legend>
+
+          <div class="checks">
+            <label class="check">
+              <input v-model="form.listed" type="checkbox"> Na publicznej liście <span class="faint">(z domeną)</span>
+            </label>
+
+          </div>
+        </fieldset>
+
+        <fieldset class="group">
+          <legend class="eyebrow">Todo</legend>
+
+          <label class="field">
+            <span>Powiązany projekt w Todo – jego otwarte zadania widać na liście</span>
+
+            <select v-model="form.todoProject" class="input">
+              <option :value="null">— brak —</option>
+              <option v-for="todo in projects.todoProjects" :key="todo.id" :value="todo.id">{{ todo.name }}</option>
+            </select>
+          </label>
+
+          <p v-if="form.todoProject && form.todoProject !== project?.todoProject" class="faint">Zadania pokażą się po zapisaniu.</p>
+
+          <template v-else-if="project?.todo">
+            <p v-if="tasksLoading" class="faint">Wczytuję zadania…</p>
+            <p v-else-if="tasks.length === 0" class="faint">Brak otwartych zadań.</p>
+
+            <ul v-else class="tasks">
+              <li v-for="task in tasks" :key="task.id" class="task" :class="`p-${task.priority}`">
+                <span class="task__check" :class="{ 'task__check--doing': task.status === 'doing' }" />
+                <span class="task__title">{{ task.title }}</span>
+
+                <span v-if="task.due" class="task__due mono" :class="{ 'task__due--late': task.due < today }">
+                  {{ formatDay(task.due) }}<template v-if="task.time"> {{ task.time }}</template>
+                </span>
+              </li>
+            </ul>
+
+            <a class="btn btn--sm btn--outline tasks__open" :href="project.todo.url" :target="TODO_TAB">
+              <ListChecks /> Otwórz w Todo
+            </a>
+          </template>
+        </fieldset>
+
+        <label class="field">
+          <span>Notatki</span>
+          <textarea v-model="form.notes" class="input" rows="3" />
+        </label>
+
+        <fieldset v-if="project" class="group report">
+          <legend class="eyebrow">Raport strony</legend>
+
+          <p class="muted report__state">
+            <template v-if="project.reportedAt">
+              Ostatni: <strong class="mono">{{ formatDateTime(project.reportedAt) }}</strong> <span class="faint">{{ ago(project.reportedAt) }}</span>
+            </template>
+
+            <template v-else>Strona jeszcze nic nie wysłała.</template>
+          </p>
+
+          <dl v-if="siteReport?.users || siteReport?.plugins" class="site">
+            <template v-if="siteReport.users">
+              <dt>Użytkownicy</dt>
+
+              <dd>
+                <strong class="mono">{{ siteReport.users.total }}</strong>
+                <span v-if="siteReport.users.online !== null" class="site__online"><span class="dot" /> {{ siteReport.users.online }} online</span>
+                <span v-for="role in siteReport.users.roles" :key="role.role" class="chip chip--soft">{{ role.name }} <span class="mono">{{ role.count }}</span></span>
+              </dd>
+            </template>
+
+            <template v-if="siteReport.plugins">
+              <dt>Wtyczki</dt>
+
+              <dd>
+                <strong class="mono">{{ siteReport.plugins.length }}</strong>
+                <span class="faint">{{ activePlugins }} aktywnych</span>
+                <span v-if="pluginUpdates.length > 0" class="chip chip--warn">{{ pluginUpdates.length }} do aktualizacji</span>
+                <span v-else class="site__ok">aktualne</span>
+              </dd>
+
+              <dd class="site__plugins">
+                <details :open="pluginUpdates.length > 0">
+                  <summary class="faint">Lista wtyczek</summary>
+
+                  <ul class="plugins">
+                    <li v-for="plugin in sortedPlugins" :key="plugin.file" class="plugin" :class="{ 'plugin--off': !plugin.active }">
+                      <span class="plugin__name">{{ plugin.name }}</span>
+                      <span v-if="plugin.mu" class="faint">MU</span>
+                      <span v-else-if="!plugin.active" class="faint">nieaktywna</span>
+
+                      <span class="plugin__version mono">
+                        {{ plugin.version }}<template v-if="plugin.update"> → <strong>{{ plugin.update }}</strong></template>
+                      </span>
+                    </li>
+                  </ul>
+                </details>
+              </dd>
+            </template>
+          </dl>
+
+          <template v-if="project.token">
+            <p class="muted">W <code>.env</code> strony (moduł <code>report</code> MK Core):</p>
+            <pre class="env mono">{{ envLines }}</pre>
+          </template>
+
+          <div class="report__actions">
+            <button v-if="project.token" class="btn btn--sm btn--outline" type="button" @click="copyEnv">
+              <Copy /> Kopiuj
+            </button>
+
+            <button class="btn btn--sm" :disabled="busy" type="button" @click="newToken">
+              <KeyRound /> {{ project.token ? 'Nowy token' : 'Utwórz token' }}
+            </button>
+          </div>
+        </fieldset>
       </div>
     </div>
-
-    <div class="grid">
-
-      <label class="field">
-        <span>Status</span>
-
-        <select v-model="form.status" class="input">
-          <option :value="null">—</option>
-          <option v-for="(label, value) in STATUS_LABELS" :key="value" :value="value">{{ label }}</option>
-        </select>
-      </label>
-
-      <label class="field">
-        <span>Kategoria</span>
-
-        <select v-model="form.categoryId" class="input">
-          <option :value="null">— bez kategorii —</option>
-          <option v-for="category in projects.sortedCategories" :key="category.id" :value="category.id">{{ category.name }}</option>
-        </select>
-      </label>
-    </div>
-
-    <fieldset class="group">
-      <legend class="eyebrow">Serwer</legend>
-
-      <div class="grid grid--3">
-        <label class="field">
-          <span>Hosting</span>
-          <input v-model.trim="form.server" class="input" placeholder="hostido.pl" type="text">
-        </label>
-
-        <label class="field">
-          <span>Link (panel)</span>
-          <input v-model.trim="form.serverUrl" class="input" placeholder="https://…" type="url">
-        </label>
-
-        <label class="field">
-          <span>Konto</span>
-          <input v-model.trim="form.serverAccount" class="input mono" type="text">
-        </label>
-      </div>
-    </fieldset>
-
-    <fieldset class="group">
-      <legend class="eyebrow">Technologia <span class="group__hint">– uzupełnia też raport strony</span></legend>
-
-      <div class="grid grid--4">
-        <label class="field">
-          <span>Silnik</span>
-          <input v-model.trim="form.engine" class="input" list="engines" type="text">
-        </label>
-
-        <label class="field">
-          <span>Wersja</span>
-          <input v-model.trim="form.version" class="input mono" type="text">
-        </label>
-
-        <label class="field">
-          <span>PHP</span>
-          <input v-model.trim="form.php" class="input mono" type="text">
-        </label>
-
-        <label class="field">
-          <span>Motyw</span>
-          <input v-model.trim="form.theme" class="input" type="text">
-        </label>
-      </div>
-
-      <datalist id="engines">
-        <option value="wordpress" />
-        <option value="vue" />
-        <option value="static" />
-      </datalist>
-    </fieldset>
-
-    <fieldset class="group">
-      <legend class="eyebrow">Kod</legend>
-
-      <div class="grid grid--3">
-        <label class="field">
-          <span>Repozytorium</span>
-          <input v-model.trim="form.repo" class="input" placeholder="https://github.com/…" type="url">
-        </label>
-
-        <label class="field">
-          <span>Wersja lokalna</span>
-          <input v-model.trim="form.localUrl" class="input" placeholder="https://….local/" type="url">
-        </label>
-
-        <label class="field">
-          <span>DB sync</span>
-          <input v-model="form.dbSync" class="input" type="date">
-        </label>
-      </div>
-
-      <div class="checks">
-        <label v-for="flag in FLAGS" :key="flag" class="check">
-          <input v-model="form[flag]" type="checkbox"> {{ FLAG_LABELS[flag] }}
-        </label>
-      </div>
-    </fieldset>
-
-    <fieldset class="group">
-      <legend class="eyebrow">Widoczność</legend>
-
-      <div class="checks">
-        <label class="check">
-          <input v-model="form.listed" type="checkbox"> Na publicznej liście <span class="faint">(z domeną)</span>
-        </label>
-
-      </div>
-    </fieldset>
-
-    <fieldset class="group">
-      <legend class="eyebrow">Todo</legend>
-
-      <label class="field">
-        <span>Powiązany projekt w Todo – jego otwarte zadania widać na liście</span>
-
-        <select v-model="form.todoProject" class="input">
-          <option :value="null">— brak —</option>
-          <option v-for="todo in projects.todoProjects" :key="todo.id" :value="todo.id">{{ todo.name }}</option>
-        </select>
-      </label>
-
-      <p v-if="form.todoProject && form.todoProject !== project?.todoProject" class="faint">Zadania pokażą się po zapisaniu.</p>
-
-      <template v-else-if="project?.todo">
-        <p v-if="tasksLoading" class="faint">Wczytuję zadania…</p>
-        <p v-else-if="tasks.length === 0" class="faint">Brak otwartych zadań.</p>
-
-        <ul v-else class="tasks">
-          <li v-for="task in tasks" :key="task.id" class="task" :class="`p-${task.priority}`">
-            <span class="task__check" :class="{ 'task__check--doing': task.status === 'doing' }" />
-            <span class="task__title">{{ task.title }}</span>
-
-            <span v-if="task.due" class="task__due mono" :class="{ 'task__due--late': task.due < today }">
-              {{ formatDay(task.due) }}<template v-if="task.time"> {{ task.time }}</template>
-            </span>
-          </li>
-        </ul>
-
-        <a class="btn btn--sm btn--outline tasks__open" :href="project.todo.url" :target="TODO_TAB">
-          <ListChecks /> Otwórz w Todo
-        </a>
-      </template>
-    </fieldset>
-
-    <label class="field">
-      <span>Notatki</span>
-      <textarea v-model="form.notes" class="input" rows="3" />
-    </label>
-
-    <fieldset v-if="project" class="group report">
-      <legend class="eyebrow">Raport strony</legend>
-
-      <p class="muted report__state">
-        <template v-if="project.reportedAt">
-          Ostatni: <strong class="mono">{{ formatDateTime(project.reportedAt) }}</strong> <span class="faint">{{ ago(project.reportedAt) }}</span>
-        </template>
-
-        <template v-else>Strona jeszcze nic nie wysłała.</template>
-      </p>
-
-      <dl v-if="siteReport?.users || siteReport?.plugins" class="site">
-        <template v-if="siteReport.users">
-          <dt>Użytkownicy</dt>
-
-          <dd>
-            <strong class="mono">{{ siteReport.users.total }}</strong>
-            <span v-if="siteReport.users.online !== null" class="site__online"><span class="dot" /> {{ siteReport.users.online }} online</span>
-            <span v-for="role in siteReport.users.roles" :key="role.role" class="chip chip--soft">{{ role.name }} <span class="mono">{{ role.count }}</span></span>
-          </dd>
-        </template>
-
-        <template v-if="siteReport.plugins">
-          <dt>Wtyczki</dt>
-
-          <dd>
-            <strong class="mono">{{ siteReport.plugins.length }}</strong>
-            <span class="faint">{{ activePlugins }} aktywnych</span>
-            <span v-if="pluginUpdates.length > 0" class="chip chip--warn">{{ pluginUpdates.length }} do aktualizacji</span>
-            <span v-else class="site__ok">aktualne</span>
-          </dd>
-
-          <dd class="site__plugins">
-            <details :open="pluginUpdates.length > 0">
-              <summary class="faint">Lista wtyczek</summary>
-
-              <ul class="plugins">
-                <li v-for="plugin in sortedPlugins" :key="plugin.file" class="plugin" :class="{ 'plugin--off': !plugin.active }">
-                  <span class="plugin__name">{{ plugin.name }}</span>
-                  <span v-if="plugin.mu" class="faint">MU</span>
-                  <span v-else-if="!plugin.active" class="faint">nieaktywna</span>
-
-                  <span class="plugin__version mono">
-                    {{ plugin.version }}<template v-if="plugin.update"> → <strong>{{ plugin.update }}</strong></template>
-                  </span>
-                </li>
-              </ul>
-            </details>
-          </dd>
-        </template>
-      </dl>
-
-      <template v-if="project.token">
-        <p class="muted">W <code>.env</code> strony (moduł <code>report</code> MK Core):</p>
-        <pre class="env mono">{{ envLines }}</pre>
-      </template>
-
-      <div class="report__actions">
-        <button v-if="project.token" class="btn btn--sm btn--outline" type="button" @click="copyEnv">
-          <Copy /> Kopiuj
-        </button>
-
-        <button class="btn btn--sm" :disabled="busy" type="button" @click="newToken">
-          <KeyRound /> {{ project.token ? 'Nowy token' : 'Utwórz token' }}
-        </button>
-      </div>
-    </fieldset>
 
     <div v-if="confirmDelete" class="alert">
       <div>Usunąć „{{ project?.name }}”? Trafi do kosza WordPressa (projekt w Todo zostaje bez zmian).</div>
@@ -560,6 +567,25 @@
   gap: 6px 18px;
 }
 
+/* one under the other – Deploy, DEV, Bedrock, Wordfence, ACF, MI Modal */
+.checks--column {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 32px;
+  align-items: start;
+}
+
+.col {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
 .check {
   display: inline-flex;
   align-items: center;
@@ -760,6 +786,12 @@ code {
 
 .tasks__open {
   justify-self: start;
+}
+
+@media (max-width: 860px) {
+  .cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (max-width: 640px) {

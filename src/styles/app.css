@@ -33,8 +33,8 @@
 
   /* the positive case – online, the newest WordPress, a checkmark, a fresh report; the same green in both themes (as in Todo) */
   --positive: #7a9a3a;
-  /* "nothing going on" – a suspended site, an unset report: a dark dot (with a hairline, it's the dark theme's ink) */
-  --off: #151513;
+  /* "nothing going on" – a suspended site, an unset report: a dot in the row's background, only its hairline shows */
+  --off: var(--surface);
 
   --danger: #c2412d;
   --danger-soft: #f7e2dd;
