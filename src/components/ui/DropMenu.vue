@@ -246,6 +246,11 @@
   margin-top: 1px;
 }
 
+/* status dots in a list don't pulse – only the one shown in the field (and the table) does */
+.menu__panel .menu__item .dot::after {
+  display: none;
+}
+
 /* the chosen option – like one under the pointer */
 .menu__panel--attached .menu__item[aria-checked='true'] {
   background: var(--hover);
