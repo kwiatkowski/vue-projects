@@ -2,7 +2,8 @@
   <span
     ref="anchor"
     class="tip-anchor"
-    @focusin="show"
+    @click="hide"
+    @focusin="onFocus"
     @focusout="hide"
     @mouseenter="show"
     @mouseleave="hide"
@@ -51,6 +52,8 @@
     position.value = { visibility: 'hidden', left: '0px', top: '0px' }
     open.value = true
     window.addEventListener('scroll', hide, { capture: true, passive: true })
+    // leaving the tab (a link opened Todo in another one) fires no mouseleave – close it then
+    window.addEventListener('blur', hide)
 
     await nextTick()
 
@@ -79,6 +82,16 @@
   function hide (): void {
     open.value = false
     window.removeEventListener('scroll', hide, { capture: true })
+    window.removeEventListener('blur', hide)
+  }
+
+  /**
+   * Keyboard focus only: coming back to the tab gives the clicked link its focus again – that shouldn't reopen the tip.
+   */
+  function onFocus (event: FocusEvent): void {
+    if ((event.target as Element | null)?.matches(':focus-visible')) {
+      void show()
+    }
   }
 
   onBeforeUnmount(hide)
