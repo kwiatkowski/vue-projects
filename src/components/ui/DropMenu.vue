@@ -42,7 +42,9 @@
     triggerClass?: string
     /** which edge of the trigger the panel lines up with */
     align?: 'start' | 'end'
-  }>(), { label: 'Więcej', triggerClass: 'btn btn--icon btn--sm', align: 'end' })
+    /** a select-like trigger: the panel exactly under it, at least as wide */
+    matchWidth?: boolean
+  }>(), { label: 'Więcej', triggerClass: 'btn btn--icon btn--sm', align: 'end', matchWidth: false })
 
   const open = ref(false)
   const position = ref<Record<string, string>>({})
@@ -79,6 +81,12 @@
 
     const below = anchor.bottom + 4 + height < window.innerHeight
     const top = `${below ? anchor.bottom + 4 : anchor.top - 4 - height}px`
+
+    if (props.matchWidth) {
+      position.value = { top, left: `${anchor.left}px`, minWidth: `${anchor.width}px` }
+
+      return
+    }
 
     position.value = props.align === 'start'
       ? { top, left: `${Math.max(anchor.left - 6, 8)}px` }

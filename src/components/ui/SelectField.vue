@@ -1,6 +1,6 @@
 <template>
   <div class="select-field">
-    <DropMenu align="start" :label="label" trigger-class="input select-field__trigger">
+    <DropMenu align="start" :label="label" match-width trigger-class="input select-field__trigger">
       <template #trigger>
         <span v-if="current" class="select-field__value"><slot name="option" :option="current">{{ current.label }}</slot></span>
         <span v-else class="faint">{{ placeholder }}</span>
