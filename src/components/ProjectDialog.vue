@@ -939,12 +939,9 @@
   display: block;
 }
 
-.input-row--inside .input {
-  padding-right: 40px;
-}
-
+/* the text runs to the field's end; the copy button covers it only while shown – on the field's own background */
 .input-row--two .input {
-  padding-right: 72px;
+  padding-right: 40px;
 }
 
 .input-row--inside .btn {
@@ -960,8 +957,15 @@
 }
 
 .input-copy {
+  background: var(--panel);
+  box-shadow: -6px 0 6px var(--panel);
   opacity: 0;
   transition: opacity .12s;
+}
+
+.input-copy:hover {
+  background: var(--panel);
+  color: var(--text);
 }
 
 .input-row--inside:hover .input-copy,
