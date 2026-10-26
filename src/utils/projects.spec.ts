@@ -1,6 +1,6 @@
 import type { Project } from '@/types'
 import { describe, expect, it } from 'vitest'
-import { ago, bareDomain, compareManual, formatDay, groupProjects, latestWordpress, matches, moveId, repoHost, reportStale, siteUrl, sortProjects } from './projects'
+import { ago, bareDomain, compareManual, formatDateTime, formatDay, groupProjects, latestWordpress, matches, moveId, repoHost, reportStale, siteUrl, sortProjects } from './projects'
 
 const p = (name: string, extra: Partial<Project> = {}): Partial<Project> => ({ name, domains: [name], status: 'online', ...extra })
 
@@ -85,8 +85,19 @@ describe('helpers', () => {
   })
 
   it('formats days and links', () => {
-    expect(formatDay('2026-07-24')).toBe('24.07.2026')
+    expect(formatDay('2026-07-24')).toBe('2026.07.24')
     expect(formatDay(null)).toBe('')
+  })
+
+  it('formats a moment in the local time zone', () => {
+    const iso = '2026-10-26T15:05:00Z'
+    const local = new Date(iso)
+    const pad = (value: number) => String(value).padStart(2, '0')
+
+    expect(formatDateTime(iso)).toBe(`2026.10.${pad(local.getDate())} ${pad(local.getHours())}:${pad(local.getMinutes())}`)
+    expect(formatDateTime('2026-01-02T03:04:00')).toBe('2026.01.02 03:04')
+    expect(formatDateTime(null)).toBe('')
+    expect(formatDateTime('nonsense')).toBe('')
     expect(siteUrl('ckmed.pl')).toBe('https://ckmed.pl/')
     expect(bareDomain(' HTTPS://Edgemedical.EU/bg/ ')).toBe('edgemedical.eu')
   })

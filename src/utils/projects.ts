@@ -142,11 +142,24 @@ export function siteUrl (domain: string): string {
   return /^https?:\/\//.test(domain) ? domain : `https://${domain}/`
 }
 
-/** "2026-10-07" → "7.10.2026" */
+/** "2026-10-07" → "2026.10.07" */
 export function formatDay (day: string | null | undefined): string {
   const match = day?.match(/^(\d{4})-(\d{2})-(\d{2})/)
 
-  return match ? `${Number(match[3])}.${match[2]}.${match[1]}` : ''
+  return match ? `${match[1]}.${match[2]}.${match[3]}` : ''
+}
+
+/** "2026-10-26T15:15:00+00:00" → "2026.10.26 16:15" – in the browser's time zone */
+export function formatDateTime (iso: string | null | undefined): string {
+  const date = iso ? new Date(iso) : null
+
+  if (!date || Number.isNaN(date.getTime())) {
+    return ''
+  }
+
+  const pad = (value: number) => String(value).padStart(2, '0')
+
+  return `${date.getFullYear()}.${pad(date.getMonth() + 1)}.${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
 
 /** "dziś", "wczoraj", "3 dni temu" – how long since the site reported. */

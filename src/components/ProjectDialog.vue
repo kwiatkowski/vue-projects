@@ -205,7 +205,7 @@
 
       <p class="muted report__state">
         <template v-if="project.reportedAt">
-          Ostatni: <strong>{{ ago(project.reportedAt) }}</strong> <span class="mono faint">{{ project.reportedAt.slice(0, 16).replace('T', ' ') }} UTC</span>
+          Ostatni: <strong class="mono">{{ formatDateTime(project.reportedAt) }}</strong> <span class="faint">{{ ago(project.reportedAt) }}</span>
         </template>
 
         <template v-else>Strona jeszcze nic nie wysłała.</template>
@@ -302,7 +302,7 @@
   import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
-  import { ago, bareDomain, formatDay, STATUS_LABELS } from '@/utils/projects'
+  import { ago, bareDomain, formatDateTime, formatDay, STATUS_LABELS } from '@/utils/projects'
 
   const projects = useProjectsStore()
   const notify = useNotifyStore()

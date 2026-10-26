@@ -83,7 +83,7 @@ zmienia się razem z nazwą kategorii). Filtr (status, „Bez strony”) i wyszu
 (`/projects/meden?status=online&q=hostido`), sortowanie po kliknięciu w nagłówek kolumny. Lista odświeża się sama, bez wskaźnika wczytywania
 (tylko w widocznej karcie): co 3 s sprawdza znacznik zmian (`GET /changed`) i pobiera listę, gdy się ruszył – raport
 strony widać od razu – a całą listę i tak co minutę. Zmieniony wiersz przez 3 s ma kolor jak po najechaniu
-i wyszarzony tekst, a zmienione pola są rozmyte pod kręcącym się wskaźnikiem. PHP starsze niż 8.1 jest wyróżnione, raport starszy niż 2 dni – na pomarańczowo.
+i wyszarzony tekst, a zmienione pola są rozmyte pod kręcącym się wskaźnikiem. PHP starsze niż 8.1 jest wyróżnione, daty jako RRRR.MM.DD (raport z godziną, w strefie przeglądarki), raport starszy niż 2 dni – na pomarańczowo.
 
 ## Wersje
 

@@ -161,8 +161,8 @@
             <td class="mono nowrap" :class="cellChanged(project, 'dbSync')">{{ formatDay(project.dbSync) }}</td>
 
             <td class="nowrap" :class="cellChanged(project, 'reportedAt')">
-              <span v-if="project.reportedAt" class="report" :class="{ 'report--stale': reportStale(project.reportedAt) }" :title="project.reportedAt">
-                <span class="dot" /> {{ ago(project.reportedAt) }}
+              <span v-if="project.reportedAt" class="report" :class="{ 'report--stale': reportStale(project.reportedAt) }" :title="ago(project.reportedAt)">
+                <span class="dot" /> {{ formatDateTime(project.reportedAt) }}
               </span>
             </td>
 
@@ -256,7 +256,7 @@
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
   import { dragId, dragKind, dropTarget, setDrag } from '@/utils/drag'
-  import { ago, formatDay, latestWordpress, repoHost, reportStale, siteUrl } from '@/utils/projects'
+  import { ago, formatDateTime, formatDay, latestWordpress, repoHost, reportStale, siteUrl } from '@/utils/projects'
 
   const props = defineProps<{
     groups: Array<Group<Project>>
