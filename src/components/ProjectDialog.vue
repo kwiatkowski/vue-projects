@@ -335,42 +335,47 @@
               </span>
             </label>
 
-            <label class="field">
-              <span>Login</span>
+            <!-- the panel's login and password side by side -->
+            <div class="grid">
+              <label class="field">
+                <span>Login</span>
 
-              <CopyInput
-                v-model="form.login"
-                autocomplete="off"
-                class="mono"
-                tip="Kopiuj login"
-                type="text"
-                what="Login"
-              />
-            </label>
+                <CopyInput
+                  v-model="form.login"
+                  autocomplete="off"
+                  class="mono"
+                  tip="Kopiuj login"
+                  type="text"
+                  what="Login"
+                />
+              </label>
 
-            <label class="field">
-              <span>Hasło</span>
-              <PasswordInput v-model="password" v-model:shown="showPassword" :loading="passwordLoading" what="Hasło" />
-            </label>
+              <label class="field">
+                <span>Hasło</span>
+                <PasswordInput v-model="password" v-model:shown="showPassword" :loading="passwordLoading" what="Hasło" />
+              </label>
+            </div>
 
             <!-- a site behind HTTP Basic Auth: the list fetches its report with these -->
-            <label class="field">
-              <span>Basic Auth – login</span>
+            <div class="grid">
+              <label class="field">
+                <span>Basic Auth – login</span>
 
-              <CopyInput
-                v-model="form.authUser"
-                autocomplete="off"
-                class="mono"
-                tip="Kopiuj login Basic Auth"
-                type="text"
-                what="Login Basic Auth"
-              />
-            </label>
+                <CopyInput
+                  v-model="form.authUser"
+                  autocomplete="off"
+                  class="mono"
+                  tip="Kopiuj login Basic Auth"
+                  type="text"
+                  what="Login Basic Auth"
+                />
+              </label>
 
-            <label class="field">
-              <span>Basic Auth – hasło</span>
-              <PasswordInput v-model="authPassword" v-model:shown="showAuthPassword" :loading="authPasswordLoading" what="Hasło Basic Auth" />
-            </label>
+              <label class="field">
+                <span>Basic Auth – hasło</span>
+                <PasswordInput v-model="authPassword" v-model:shown="showAuthPassword" :loading="authPasswordLoading" what="Hasło Basic Auth" />
+              </label>
+            </div>
           </div>
         </div>
 
