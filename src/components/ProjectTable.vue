@@ -113,7 +113,25 @@
 
           <td :class="cellChanged(project, 'engine')"><span v-if="project.engine" class="chip chip--soft">{{ project.engine }}</span></td>
           <td class="mono" :class="[{ latest: isLatest(project) }, cellChanged(project, 'version')]" :title="isLatest(project) ? latestTitle : undefined">{{ project.version }}</td>
-          <td class="cell-theme" :class="cellChanged(project, 'theme')">{{ project.theme }}</td>
+
+          <td class="cell-theme" :class="cellChanged(project, 'theme')">
+            <HoverTip v-if="themeRows(project).length > 0">
+              <span class="has-tip" tabindex="0">{{ project.theme }}</span>
+
+              <template #tip>
+                <div class="info-tip__head">{{ project.theme }}</div>
+
+                <dl class="info-tip">
+                  <template v-for="row in themeRows(project)" :key="row.label">
+                    <dt>{{ row.label }}</dt>
+                    <dd>{{ row.value }}</dd>
+                  </template>
+                </dl>
+              </template>
+            </HoverTip>
+
+            <template v-else>{{ project.theme }}</template>
+          </td>
 
           <template v-if="full">
             <td class="center" :class="cellChanged(project, 'repo')">
@@ -163,7 +181,7 @@
             </td>
 
             <td class="center" :class="cellChanged(project, 'reportedAt', 'token')">
-              <HoverTip :text="reportTitle(project)">
+              <HoverTip>
                 <span
                   :aria-label="reportTitle(project)"
                   class="report"
@@ -171,6 +189,11 @@
                   role="img"
                   tabindex="0"
                 />
+
+                <template #tip>
+                  {{ reportTitle(project) }}
+                  <div v-if="project.reporter" class="info-tip__sub mono">{{ reporterLabel(project.reporter) }}</div>
+                </template>
               </HoverTip>
             </td>
           </template>
@@ -318,6 +341,24 @@
       }
     }
   }
+
+  /** the theme's tooltip: what the report knows beyond the name – empty, no tooltip */
+  function themeRows (project: Project): Array<{ label: string, value: string }> {
+    const details = project.themeDetails
+    const parent = project.parentTheme
+      ? [project.parentTheme, details?.parentVersion].filter(Boolean).join(' ')
+      : null
+
+    return [
+      { label: 'Wersja', value: details?.version },
+      { label: 'Autor', value: details?.author },
+      { label: 'Motyw nadrzędny', value: parent },
+      { label: 'Autor nadrzędnego', value: parent ? details?.parentAuthor : null },
+    ].filter((row): row is { label: string, value: string } => Boolean(row.value))
+  }
+
+  /** "mk-core 2026.10.27" → "MK Core 2026.10.27"; plugin_meden as it is */
+  const reporterLabel = (reporter: string) => reporter.replace(/^mk-core\b/, 'MK Core')
 
   const isLatest = (project: Project) => latestWordpress(project, config.latestWordpress)
   const latestTitle = config.latestWordpress ? `Najnowszy WordPress (${config.latestWordpress})` : undefined
@@ -767,6 +808,48 @@ tr:hover .row-grip {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* the tooltip's anchor as a plain block – a long name still ends with "…" */
+.cell-theme :deep(.tip-anchor) {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* the theme with more in its tooltip (version, author, parent) */
+.has-tip {
+  cursor: default;
+  text-decoration: underline dotted var(--text-3);
+  text-underline-offset: 3px;
+}
+
+.info-tip__head {
+  margin-bottom: 6px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.info-tip {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 2px 16px;
+  margin: 0;
+}
+
+.info-tip dt {
+  color: var(--text-2);
+}
+
+.info-tip dd {
+  margin: 0;
+}
+
+/* under the report's date: what sent it */
+.info-tip__sub {
+  margin-top: 2px;
+  color: var(--text-2);
+  font-size: 12px;
 }
 
 .link {

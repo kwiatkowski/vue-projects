@@ -85,6 +85,19 @@ export interface Project extends Record<Flag, boolean> {
   /** whether a Basic Auth password is kept */
   hasAuthPassword?: boolean
   updatedAt: string | null
+  /** from the last report (not on the public list): the parent theme, the themes' versions and authors, what sent it */
+  parentTheme?: string | null
+  themeDetails?: ThemeDetails | null
+  /** "plugin_meden 1.10.0", "mk-core 2026.10.27" */
+  reporter?: string | null
+}
+
+/** The theme's version and author – and its parent's – as the site reported them. */
+export interface ThemeDetails {
+  version: string | null
+  author: string | null
+  parentVersion: string | null
+  parentAuthor: string | null
 }
 
 /** A plugin of a reported site; update – the version waiting for it, null when up to date. */
@@ -112,7 +125,7 @@ export interface SiteReport {
 }
 
 /** What the API takes: any field, null clears it. */
-export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'updatedAt'>>
+export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter'>>
 
 /** the passwords kept encrypted: the panel's and HTTP Basic Auth's */
 export type PasswordKind = 'panel' | 'auth'
