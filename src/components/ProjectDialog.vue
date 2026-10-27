@@ -90,11 +90,6 @@
             </label>
           </div>
         </fieldset>
-
-        <p class="reported-note">
-          <Activity />
-          <span><span class="reported-mark">*</span> Uzupełnia też raport strony (status – po stronie głównej).</span>
-        </p>
       </div>
 
       <div class="col">
@@ -250,11 +245,6 @@
         </div>
 
         <div v-show="tab === 'tech'" class="tab-panel" role="tabpanel">
-          <p class="reported-note">
-            <Activity />
-            <span><span class="reported-mark">*</span> Uzupełnia też raport strony.</span>
-          </p>
-
           <div class="stack">
             <label class="field">
               <span>Silnik <span class="reported-mark">*</span></span>
@@ -409,6 +399,13 @@
     <div v-if="confirmDelete" class="alert">
       <div>Usunąć „{{ project?.name }}”? Trafi do kosza WordPressa (projekt w Todo zostaje bez zmian).</div>
     </div>
+
+    <template #note>
+      <p class="reported-note">
+        <Activity />
+        <span><span class="reported-mark">*</span> Uzupełnia też raport strony (status – po stronie głównej).</span>
+      </p>
+    </template>
 
     <template #actions>
       <!-- as in Todo: with changes made the only ways out are saving or dropping them -->
@@ -870,6 +867,7 @@
 
 .reported-note {
   display: flex;
+  margin: 0;
   align-items: center;
   gap: 8px;
   padding: 8px 12px;

@@ -22,6 +22,11 @@
         <slot />
       </div>
 
+      <!-- a note for the whole dialog, over the buttons – it doesn't scroll away with the body -->
+      <div v-if="$slots.note" class="dialog__note">
+        <slot name="note" />
+      </div>
+
       <footer v-if="$slots.actions" class="dialog__actions">
         <slot name="actions" />
       </footer>
@@ -150,6 +155,10 @@
   gap: 16px;
   padding: 16px 20px 20px;
   overflow-y: auto;
+}
+
+.dialog__note {
+  padding: 0 20px 12px;
 }
 
 .dialog__actions {
