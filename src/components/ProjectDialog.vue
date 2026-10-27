@@ -424,6 +424,7 @@
       <p class="reported-note">
         <Activity />
         <span v-if="reporting">Pola oznaczone <span class="reported-mark">*</span> uzupełnia automatycznie raport strony.</span>
+        <span v-else-if="project?.token">Pola oznaczone <span class="reported-mark">*</span> uzupełni automatycznie pierwszy raport strony – token jest, strona jeszcze nic nie wysłała.</span>
         <span v-else>Pola oznaczone <span class="reported-mark">*</span> wypełni automatycznie raport strony, gdy go włączysz (zakładka „Raport strony”) – do tego czasu wpisz je ręcznie.</span>
       </p>
     </template>
