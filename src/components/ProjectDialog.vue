@@ -56,7 +56,7 @@
         </label>
 
         <label class="field">
-          <span>Status</span>
+          <span>Status <span class="reported-mark">*</span></span>
 
           <SelectField v-model="form.status" label="Status" :options="statusOptions">
             <template #option="{ option }"><StatusChip :status="option.value" /></template>
@@ -69,7 +69,7 @@
         </label>
 
         <label class="field">
-          <span>Repozytorium</span>
+          <span>Repozytorium <span class="reported-mark">*</span></span>
 
           <CopyInput
             v-model="form.repo"
@@ -86,9 +86,15 @@
           <div class="checks checks--column">
             <label v-for="flag in FLAGS" :key="flag" class="check">
               <input v-model="form[flag]" type="checkbox"> {{ FLAG_LABELS[flag] }}
+              <span v-if="REPORTED_FLAGS.has(flag)" class="reported-mark">*</span>
             </label>
           </div>
         </fieldset>
+
+        <p class="reported-note">
+          <Activity />
+          <span><span class="reported-mark">*</span> Uzupełnia też raport strony (status – po stronie głównej).</span>
+        </p>
       </div>
 
       <div class="col">
@@ -476,6 +482,9 @@
     miModal: 'MI Modal',
   }
 
+  /** the flags a site's report sets – a star by them */
+  const REPORTED_FLAGS = new Set<Flag>(['bedrock', 'security', 'acf', 'miModal'])
+
   type Form = Required<Omit<ProjectInput, 'status'>> & { status: Status | null }
 
   const TEXT_FIELDS = [
@@ -859,7 +868,7 @@
   font-weight: 600;
 }
 
-.tab-panel > .reported-note {
+.reported-note {
   display: flex;
   align-items: center;
   gap: 8px;
