@@ -22,9 +22,11 @@
       </thead>
 
       <tbody
-        v-for="group in groups"
-        :key="groupKey(group)"
+        v-for="group in rowGroups"
+        :key="group.sizer ? 'sizer' : groupKey(group)"
+        :aria-hidden="group.sizer || undefined"
         :class="{
+          sizer: group.sizer,
           'group--over': projectDrop?.group === groupKey(group),
           'group--dragging': group.category && draggingCategory === group.category.id,
           [`group--drop-${categoryDrop?.after ? 'after' : 'before'}`]: group.category && categoryDrop?.id === group.category.id,
@@ -33,7 +35,7 @@
         @dragover="onOver($event, group)"
         @drop.prevent="onDrop($event, group)"
       >
-        <tr v-if="showHeaders" class="group-row">
+        <tr v-if="showHeaders && !group.sizer" class="group-row">
           <td :colspan="columns.length">
             <div class="group-head">
               <span
@@ -208,7 +210,7 @@
           </template>
         </tr>
 
-        <tr v-if="group.projects.length === 0" class="drop-here">
+        <tr v-if="!group.sizer && group.projects.length === 0" class="drop-here">
           <td :colspan="columns.length">{{ canDrag ? 'Przeciągnij tu projekt' : 'Brak projektów' }}</td>
         </tr>
       </tbody>
@@ -311,6 +313,20 @@
   const emit = defineEmits<{ open: [Project], sort: [SortKey] }>()
 
   const projects = useProjectsStore()
+
+  /**
+   * The groups to draw, plus the projects a filter or the search hides as rows that take no room (visibility:
+   * collapse) – the columns are still as wide as their longest value of all projects, so they don't jump between filters.
+   */
+  const rowGroups = computed<Array<Group<Project> & { sizer: boolean }>>(() => {
+    const shown = new Set(props.groups.flatMap(group => group.projects.map(project => project.id)))
+    const hidden = projects.items.filter(project => !shown.has(project.id))
+
+    return [
+      ...props.groups.map(group => ({ ...group, sizer: false })),
+      ...(hidden.length > 0 ? [{ category: null, projects: hidden, sizer: true }] : []),
+    ]
+  })
 
   /** the flags a card shows – DEV is left out, the Stage address says the same */
   const CARD_FLAGS = FLAGS.filter(flag => flag !== 'dev')
@@ -502,6 +518,11 @@
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--surface);
+}
+
+/* the projects a filter hides: no room, but their widths count for the columns */
+.sizer tr {
+  visibility: collapse;
 }
 
 .table {
