@@ -418,7 +418,7 @@
     <template #note>
       <p class="reported-note">
         <Activity />
-        <span v-if="reporting">Pola oznaczone <span class="reported-mark">*</span> wypełnia automatycznie raport strony – zmienią się same przy następnym raporcie.</span>
+        <span v-if="reporting">Pola oznaczone <span class="reported-mark">*</span> uzupełnia automatycznie raport strony.</span>
         <span v-else>Pola oznaczone <span class="reported-mark">*</span> wypełni automatycznie raport strony, gdy go włączysz (zakładka „Raport strony”) – do tego czasu wpisz je ręcznie.</span>
       </p>
     </template>
