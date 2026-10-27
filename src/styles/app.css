@@ -467,6 +467,80 @@ textarea.input--title {
   color: var(--danger);
 }
 
+/* an input with small buttons after it (open, show, copy) */
+.input-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.input-row .input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* the buttons inside the field, on its right: copy shows on hover (or focus); on touch screens always */
+.input-row--inside {
+  position: relative;
+  display: block;
+}
+
+/* the text runs to the field's end; the copy button covers it only while shown – on the field's own background */
+.input-row--two .input {
+  padding-right: 40px;
+}
+
+/* small grey icons like the × in a select: 22px, a soft patch and the text colour on hover; the tooltip's anchor
+   (.field-icon – HoverTip's own element) is what sits in the field's right end */
+.input-row--inside > .field-icon {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  translate: 0 -50%;
+}
+
+.input-row--inside > .field-icon--second {
+  right: 32px;
+}
+
+.input-row--inside .btn {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--text-3);
+}
+
+.input-row--inside .btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* the hover patch over the field's own background – opaque, so the text under the icon stays hidden */
+.input-row--inside .btn:hover {
+  background: linear-gradient(var(--hover), var(--hover)), var(--panel);
+  color: var(--text);
+}
+
+.input-copy {
+  box-shadow: -6px 0 6px var(--panel);
+  opacity: 0;
+  transition: opacity .12s;
+}
+
+.input-row--inside:hover .input-copy,
+.input-row--inside:focus-within .input-copy {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .input-copy {
+    opacity: 1;
+  }
+}
+
 /* ---------- segmented control ---------- */
 
 .seg {

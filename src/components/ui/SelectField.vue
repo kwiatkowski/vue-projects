@@ -183,8 +183,15 @@
   outline: none;
 }
 
+.select-field__query:hover {
+  border-color: var(--text-3);
+}
+
+/* focused like the other fields: the green edge and the 1px ring – without the global :focus-visible outline */
 .select-field__query:focus {
-  border-color: var(--line-strong);
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
+  outline: none;
 }
 
 .select-field__empty {

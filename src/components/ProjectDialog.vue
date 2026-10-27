@@ -71,18 +71,13 @@
         <label class="field">
           <span>Repozytorium</span>
 
-          <span class="input-row input-row--inside">
-            <input v-model.trim="form.repo" class="input" placeholder="https://github.com/…" type="url">
-
-            <HoverTip v-if="form.repo" anchor-class="field-icon" text="Kopiuj adres repozytorium">
-              <button
-                aria-label="Kopiuj adres repozytorium"
-                class="btn btn--icon btn--sm input-copy"
-                type="button"
-                @click="copy(form.repo, 'Adres repozytorium')"
-              ><Copy /></button>
-            </HoverTip>
-          </span>
+          <CopyInput
+            v-model="form.repo"
+            placeholder="https://github.com/…"
+            tip="Kopiuj adres repozytorium"
+            type="url"
+            what="Adres repozytorium"
+          />
         </label>
 
         <fieldset class="group">
@@ -165,7 +160,7 @@
             </dl>
 
             <template v-if="project.token">
-              <p class="muted">W <code>.env</code> strony (moduł <code>report</code> MK Core):</p>
+              <p class="muted">Dodaj do pliku <code>.env</code> strony:</p>
 
               <!-- the copy button sits in the block, top right, and shows on hover -->
               <div class="env">
@@ -196,32 +191,56 @@
           <div class="stack">
             <label class="field">
               <span>Hosting</span>
-              <input v-model.trim="form.server" class="input" placeholder="hostido.pl" type="text">
+
+              <CopyInput
+                v-model="form.server"
+                placeholder="hostido.pl"
+                tip="Kopiuj hosting"
+                type="text"
+                what="Hosting"
+              />
             </label>
 
             <label class="field">
-              <span>Link (panel)</span>
-              <input v-model.trim="form.serverUrl" class="input" placeholder="https://…" type="url">
+              <span>Adres panelu</span>
+
+              <CopyInput
+                v-model="form.serverUrl"
+                placeholder="https://…"
+                tip="Kopiuj adres panelu"
+                type="url"
+                what="Adres panelu"
+              />
             </label>
 
             <label class="field">
-              <span>Konto</span>
-              <input v-model.trim="form.serverAccount" class="input mono" type="text">
+              <span>Nazwa konta</span>
+
+              <CopyInput
+                v-model="form.serverAccount"
+                class="mono"
+                tip="Kopiuj nazwę konta"
+                type="text"
+                what="Nazwa konta"
+              />
             </label>
           </div>
         </div>
 
         <div v-show="tab === 'tech'" class="tab-panel" role="tabpanel">
-          <p class="faint">Uzupełnia też raport strony.</p>
+          <p class="reported-note">
+            <Activity />
+            <span><span class="reported-mark">*</span> Uzupełnia też raport strony.</span>
+          </p>
 
           <div class="stack">
             <label class="field">
-              <span>Silnik</span>
+              <span>Silnik <span class="reported-mark">*</span></span>
               <SelectField label="Silnik" :model-value="form.engine || null" :options="engineOptions" @update:model-value="form.engine = $event ?? ''" />
             </label>
 
             <label class="field">
-              <span>Wersja</span>
+              <span>Wersja <span class="reported-mark">*</span></span>
 
               <SelectField
                 custom
@@ -236,12 +255,12 @@
             </label>
 
             <label class="field">
-              <span>Motyw</span>
+              <span>Motyw <span class="reported-mark">*</span></span>
               <input v-model.trim="form.theme" class="input" type="text">
             </label>
 
             <label class="field">
-              <span>PHP</span>
+              <span>PHP <span class="reported-mark">*</span></span>
 
               <SelectField
                 custom
@@ -259,8 +278,8 @@
 
         <div v-show="tab === 'access'" class="tab-panel" role="tabpanel">
 
-          <div class="grid">
-            <label v-for="link in ACCESS_LINKS" :key="link.field" class="field" :class="{ 'field--2': link.wide }">
+          <div class="stack">
+            <label v-for="link in ACCESS_LINKS" :key="link.field" class="field">
               <span>{{ link.label }}</span>
 
               <span class="input-row input-row--inside input-row--two">
@@ -292,18 +311,14 @@
             <label class="field">
               <span>Login</span>
 
-              <span class="input-row input-row--inside">
-                <input v-model.trim="form.login" autocomplete="off" class="input mono" type="text">
-
-                <HoverTip v-if="form.login" anchor-class="field-icon" text="Kopiuj login">
-                  <button
-                    aria-label="Kopiuj login"
-                    class="btn btn--icon btn--sm input-copy"
-                    type="button"
-                    @click="copy(form.login, 'Login')"
-                  ><Copy /></button>
-                </HoverTip>
-              </span>
+              <CopyInput
+                v-model="form.login"
+                autocomplete="off"
+                class="mono"
+                tip="Kopiuj login"
+                type="text"
+                what="Login"
+              />
             </label>
 
             <label class="field">
@@ -435,6 +450,7 @@
   import { projectsApi } from '@/api/projects'
   import StatusChip from '@/components/StatusChip.vue'
   import BaseDialog from '@/components/ui/BaseDialog.vue'
+  import CopyInput from '@/components/ui/CopyInput.vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
   import SelectField from '@/components/ui/SelectField.vue'
   import { config, TODO_TAB } from '@/config'
@@ -504,8 +520,8 @@
   }
 
   /** the addresses under "Dostęp" – each with a button that opens it */
-  const ACCESS_LINKS: Array<{ field: 'adminUrl' | 'stagingUrl' | 'stagingAdminUrl' | 'localUrl' | 'localAdminUrl', label: string, placeholder: string, wide?: boolean }> = [
-    { field: 'adminUrl', label: 'Panel – produkcja', placeholder: 'https://…/wp/wp-login.php', wide: true },
+  const ACCESS_LINKS: Array<{ field: 'adminUrl' | 'stagingUrl' | 'stagingAdminUrl' | 'localUrl' | 'localAdminUrl', label: string, placeholder: string }> = [
+    { field: 'adminUrl', label: 'Panel – produkcja', placeholder: 'https://…/wp/wp-login.php' },
     { field: 'stagingUrl', label: 'Staging – adres', placeholder: 'https://….medendev.eu/' },
     { field: 'stagingAdminUrl', label: 'Staging – panel', placeholder: 'https://…/wp/wp-login.php' },
     { field: 'localUrl', label: 'Lokalnie – adres', placeholder: 'https://….local/' },
@@ -732,7 +748,7 @@
   }
 
   // the path only – MK Core sends it to the list's site (kwiatkowski.co)
-  const envLines = computed(() => `PROJECTS_REPORT_URL=${config.reportUrl}\nPROJECTS_REPORT_TOKEN=${project.value?.token ?? ''}`)
+  const envLines = computed(() => `# Site report for the projects list\nPROJECTS_REPORT_URL=${config.reportUrl}\nPROJECTS_REPORT_TOKEN=${project.value?.token ?? ''}`)
 
   async function copyEnv (): Promise<void> {
     try {
@@ -796,6 +812,29 @@
   text-transform: none;
 }
 
+/* the fields a site's report also fills: a green star by the name and a note over them */
+.reported-mark {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.tab-panel > .reported-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 13px;
+}
+
+.reported-note svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+}
+
 .checks {
   display: flex;
   flex-wrap: wrap;
@@ -821,23 +860,6 @@
 .checks--column {
   flex-direction: column;
   align-items: flex-start;
-}
-
-/* a field over two of the grid's columns */
-.field--2 {
-  grid-column: span 2;
-}
-
-/* an input with small buttons after it (open, show, copy) */
-.input-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.input-row .input {
-  flex: 1;
-  min-width: 0;
 }
 
 .cols {
@@ -953,68 +975,6 @@
 .env:hover .env__copy,
 .env__copy:focus-visible {
   opacity: 1;
-}
-
-/* the buttons inside the field, on its right: copy shows on hover (or focus); on touch screens always */
-.input-row--inside {
-  position: relative;
-  display: block;
-}
-
-/* the text runs to the field's end; the copy button covers it only while shown – on the field's own background */
-.input-row--two .input {
-  padding-right: 40px;
-}
-
-/* small grey icons like the × in a select: 22px, a soft patch and the text colour on hover; the tooltip's anchor
-   (.field-icon – HoverTip's own element, hence :deep) is what sits in the field's right end */
-.input-row--inside > :deep(.field-icon) {
-  position: absolute;
-  top: 50%;
-  right: 7px;
-  translate: 0 -50%;
-}
-
-.input-row--inside > :deep(.field-icon--second) {
-  right: 32px;
-}
-
-.input-row--inside .btn {
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: var(--panel);
-  color: var(--text-3);
-}
-
-.input-row--inside .btn svg {
-  width: 14px;
-  height: 14px;
-}
-
-/* the hover patch over the field's own background – opaque, so the text under the icon stays hidden */
-.input-row--inside .btn:hover {
-  background: linear-gradient(var(--hover), var(--hover)), var(--panel);
-  color: var(--text);
-}
-
-.input-copy {
-  box-shadow: -6px 0 6px var(--panel);
-  opacity: 0;
-  transition: opacity .12s;
-}
-
-.input-row--inside:hover .input-copy,
-.input-row--inside:focus-within .input-copy {
-  opacity: 1;
-}
-
-@media (hover: none) {
-  .input-copy {
-    opacity: 1;
-  }
 }
 
 .todo-option {
@@ -1221,10 +1181,6 @@ code {
   .grid--3,
   .grid--4 {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .field--2 {
-    grid-column: auto;
   }
 }
 </style>
