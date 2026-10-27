@@ -38,12 +38,14 @@
         <tr v-if="showHeaders && !group.sizer" class="group-row">
           <td :colspan="columns.length">
             <div class="group-head">
+              <!-- kept when dragging is off (a filter) – just hidden, so the names don't move sideways -->
               <span
-                v-if="canDrag && group.category"
+                v-if="full && group.category"
                 aria-hidden="true"
                 class="grip"
-                draggable="true"
-                title="Przeciągnij kategorię"
+                :class="{ 'grip--off': !canDrag }"
+                :draggable="canDrag ? 'true' : undefined"
+                :title="canDrag ? 'Przeciągnij kategorię' : undefined"
                 @dragend="endDrag"
                 @dragstart="startCategory($event, group.category.id)"
               ><GripVertical /></span>
@@ -75,7 +77,7 @@
           @dragstart="startProject($event, project.id)"
         >
           <td class="cell-name" :class="cellChanged(project, 'name', 'domains')">
-            <GripVertical v-if="canDrag" aria-hidden="true" class="row-grip" />
+            <GripVertical v-if="full" aria-hidden="true" class="row-grip" :class="{ 'grip--off': !canDrag }" />
 
             <a
               v-if="project.domains[0]"
@@ -595,6 +597,11 @@ tbody:first-of-type .group-row td {
   margin-left: -6px;
   color: var(--text-3);
   cursor: grab;
+}
+
+/* the place stays, the handle doesn't – the columns are the same with a filter and without */
+.grip--off {
+  visibility: hidden;
 }
 
 .grip svg {
