@@ -73,8 +73,6 @@
         <button v-if="sort" class="btn btn--sm toolbar__order" type="button" @click="sort = null">
           <ListOrdered /> Własna kolejność
         </button>
-
-        <span v-else-if="config.canManage && !canDrag" class="faint toolbar__hint">Przeciąganie – bez filtra i wyszukiwania</span>
       </div>
     </header>
 
@@ -339,10 +337,6 @@
   min-width: 0;
 }
 
-.toolbar__hint {
-  font-size: 12px;
-}
-
 .toolbar__toggle,
 .toolbar__status {
   display: none;
@@ -377,7 +371,6 @@
     padding-top: 14px;
   }
 
-  .toolbar__hint,
   .toolbar__filters {
     display: none;
   }
