@@ -292,9 +292,8 @@
   height: 30px;
 }
 
-/* a status in its colour – as the chip in the table; hover keeps it (the dot follows the text) */
-.status,
-.seg .status:hover {
+/* a status in its colour – as the chip in the table (the dot follows the text) */
+.status {
   color: var(--tone);
 }
 
@@ -303,7 +302,15 @@
   height: 6px;
 }
 
-.seg .status[aria-checked='true'] {
+/* hover looks like the chosen one */
+.toolbar__filters button:hover {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
+.seg .status[aria-checked='true'],
+.toolbar__filters .status:hover {
   background: var(--tone-soft);
   color: var(--tone);
 }
