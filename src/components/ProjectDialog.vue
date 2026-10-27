@@ -160,14 +160,30 @@
             </dl>
 
             <template v-if="project.token">
-              <p class="muted">Dodaj do pliku <code>.env</code> strony:</p>
+              <!-- Bedrock reads .env, a plain WordPress the constant in wp-config.php -->
+              <div class="env-head">
+                <p class="muted">
+                  Dodaj do pliku <code>{{ envFile }}</code> strony<template v-if="envTarget === 'wordpress'">, przed „That’s all, stop editing”</template>:
+                </p>
+
+                <div aria-label="Rodzaj instalacji" class="seg" role="radiogroup">
+                  <button
+                    v-for="option in ENV_TARGETS"
+                    :key="option.value"
+                    :aria-checked="envTarget === option.value"
+                    role="radio"
+                    type="button"
+                    @click="envTarget = option.value"
+                  >{{ option.label }}</button>
+                </div>
+              </div>
 
               <!-- the copy button sits in the block, top right, and shows on hover -->
               <div class="env">
                 <pre class="env__lines mono">{{ envLines }}</pre>
 
                 <button
-                  aria-label="Kopiuj linie do .env"
+                  :aria-label="`Kopiuj linie do ${envFile}`"
                   class="btn btn--icon btn--sm env__copy"
                   title="Kopiuj"
                   type="button"
@@ -587,6 +603,7 @@
     showPassword.value = false
     // a new project has no report yet – it starts on the server
     tab.value = editing === 'new' ? 'server' : 'report'
+    envTarget.value = editing !== 'new' && !editing.bedrock ? 'wordpress' : 'bedrock'
 
     if (editing === 'new') {
       password.value = savedPassword.value = ''
@@ -747,13 +764,31 @@
     busy.value = false
   }
 
-  // the path only – MK Core sends it to the list's site (kwiatkowski.co)
-  const envLines = computed(() => `# Site report for the projects list\nPROJECTS_REPORT_URL=${config.reportUrl}\nPROJECTS_REPORT_TOKEN=${project.value?.token ?? ''}`)
+  type EnvTarget = 'bedrock' | 'wordpress'
+
+  const ENV_TARGETS: Array<{ value: EnvTarget, label: string }> = [
+    { value: 'bedrock', label: 'Bedrock' },
+    { value: 'wordpress', label: 'WordPress' },
+  ]
+
+  /** where the report's settings go – picked by the project's Bedrock flag when the dialog opens */
+  const envTarget = ref<EnvTarget>('bedrock')
+  const envFile = computed(() => envTarget.value === 'bedrock' ? '.env' : 'wp-config.php')
+
+  // the path only – the report sends it to the list's site (kwiatkowski.co); without Bedrock the token alone, as a
+  // constant (the path is the default one)
+  const envLines = computed(() => {
+    const token = project.value?.token ?? ''
+
+    return envTarget.value === 'bedrock'
+      ? `# Site report for the projects list\nPROJECTS_REPORT_URL=${config.reportUrl}\nPROJECTS_REPORT_TOKEN=${token}`
+      : `// Site report for the projects list\ndefine('PROJECTS_REPORT_TOKEN', '${token}');`
+  })
 
   async function copyEnv (): Promise<void> {
     try {
       await navigator.clipboard.writeText(envLines.value)
-      notify.show('Skopiowano – wklej do .env strony.')
+      notify.show(`Skopiowano – wklej do ${envFile.value} strony.`)
     } catch {
       notify.show('Nie udało się skopiować – zaznacz tekst ręcznie.', { tone: 'error' })
     }
@@ -947,6 +982,18 @@
 
 .report__state strong {
   color: var(--text);
+}
+
+.env-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.env-head p {
+  margin: 0;
 }
 
 .env {
