@@ -70,6 +70,8 @@ export interface Project extends Record<Flag, boolean> {
   stagingAdminUrl: string | null
   localAdminUrl: string | null
   login: string | null
+  /** HTTP Basic Auth in front of the site – the list fetches the report with it (the password apart, like the panel's) */
+  authUser: string | null
   /** RRRR-MM-DD */
   /** id of the linked Todo project */
   todoProject: number | null
@@ -80,6 +82,8 @@ export interface Project extends Record<Flag, boolean> {
   token: string | null
   /** whether a panel password is kept – the password itself only through projectsApi.password() */
   hasPassword?: boolean
+  /** whether a Basic Auth password is kept */
+  hasAuthPassword?: boolean
   updatedAt: string | null
 }
 
@@ -108,6 +112,9 @@ export interface SiteReport {
 }
 
 /** What the API takes: any field, null clears it. */
-export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'updatedAt'>>
+export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'updatedAt'>>
+
+/** the passwords kept encrypted: the panel's and HTTP Basic Auth's */
+export type PasswordKind = 'panel' | 'auth'
 
 export type SortKey = 'name' | 'status' | 'server' | 'php' | 'version' | 'theme' | 'reportedAt'

@@ -1,4 +1,4 @@
-import type { Category, Project, ProjectInput, TodoProject } from '@/types'
+import type { Category, PasswordKind, Project, ProjectInput, TodoProject } from '@/types'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { categoriesApi, projectsApi, todoApi } from '@/api/projects'
@@ -220,9 +220,9 @@ export const useProjectsStore = defineStore('projects', () => {
   }
 
   /** The panel password, saved apart from the other fields (encrypted on the server). */
-  async function setPassword (id: number, password: string | null): Promise<Project | null> {
+  async function setPassword (id: number, password: string | null, kind: PasswordKind = 'panel'): Promise<Project | null> {
     try {
-      const project = await projectsApi.setPassword(id, password)
+      const project = await projectsApi.setPassword(id, password, kind)
       replace(project)
 
       return project

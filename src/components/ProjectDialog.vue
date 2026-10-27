@@ -339,38 +339,26 @@
 
             <label class="field">
               <span>Hasło</span>
+              <PasswordInput v-model="password" v-model:shown="showPassword" :loading="passwordLoading" what="Hasło" />
+            </label>
 
-              <span class="input-row input-row--inside input-row--two">
-                <input
-                  v-model="password"
-                  autocomplete="new-password"
-                  class="input mono"
-                  :placeholder="passwordLoading ? 'Wczytuję…' : ''"
-                  :type="showPassword ? 'text' : 'password'"
-                >
+            <!-- a site behind HTTP Basic Auth: the list fetches its report with these -->
+            <label class="field">
+              <span>Basic Auth – login</span>
 
-                <!-- the eye – left of copy, or in copy's place when there is no password to copy -->
-                <HoverTip :anchor-class="password ? 'field-icon field-icon--second' : 'field-icon'" :text="showPassword ? 'Ukryj hasło' : 'Pokaż hasło'">
-                  <button
-                    :aria-label="showPassword ? 'Ukryj hasło' : 'Pokaż hasło'"
-                    class="btn btn--icon btn--sm"
-                    type="button"
-                    @click="showPassword = !showPassword"
-                  >
-                    <EyeOff v-if="showPassword" />
-                    <Eye v-else />
-                  </button>
-                </HoverTip>
+              <CopyInput
+                v-model="form.authUser"
+                autocomplete="off"
+                class="mono"
+                tip="Kopiuj login Basic Auth"
+                type="text"
+                what="Login Basic Auth"
+              />
+            </label>
 
-                <HoverTip v-if="password" anchor-class="field-icon" text="Kopiuj hasło">
-                  <button
-                    aria-label="Kopiuj hasło"
-                    class="btn btn--icon btn--sm input-copy"
-                    type="button"
-                    @click="copy(password, 'Hasło')"
-                  ><Copy /></button>
-                </HoverTip>
-              </span>
+            <label class="field">
+              <span>Basic Auth – hasło</span>
+              <PasswordInput v-model="authPassword" v-model:shown="showAuthPassword" :loading="authPasswordLoading" what="Hasło Basic Auth" />
             </label>
           </div>
         </div>
@@ -461,13 +449,14 @@
 
 <script lang="ts" setup>
   import type { Flag, Project, ProjectInput, ReportPlugin, SiteReport, Status, TodoTask } from '@/types'
-  import { Activity, AlertTriangle, ArrowUpRight, Check, Copy, Cpu, Eye, EyeOff, KeyRound, ListChecks, PenLine, Plus, Server, Trash2, X } from 'lucide-vue-next'
+  import { Activity, AlertTriangle, ArrowUpRight, Check, Copy, Cpu, KeyRound, ListChecks, PenLine, Plus, Server, Trash2, X } from 'lucide-vue-next'
   import { type Component, computed, nextTick, ref, useTemplateRef, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
   import StatusChip from '@/components/StatusChip.vue'
   import BaseDialog from '@/components/ui/BaseDialog.vue'
   import CopyInput from '@/components/ui/CopyInput.vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
+  import PasswordInput from '@/components/ui/PasswordInput.vue'
   import SelectField from '@/components/ui/SelectField.vue'
   import { config, TODO_TAB } from '@/config'
   import { useNotifyStore } from '@/stores/notify'
@@ -491,7 +480,7 @@
 
   const TEXT_FIELDS = [
     'server', 'serverUrl', 'serverAccount', 'php', 'engine', 'version', 'theme', 'repo', 'notes',
-    'adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login',
+    'adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login', 'authUser',
   ] as const
 
   // ---- the dropdowns' options
@@ -520,19 +509,19 @@
     { key: 'report', label: 'Raport strony', icon: Activity, fields: [] },
     { key: 'server', label: 'Serwer', icon: Server, fields: ['server', 'serverUrl', 'serverAccount'] },
     { key: 'tech', label: 'Technologia', icon: Cpu, fields: ['engine', 'version', 'theme', 'php'] },
-    { key: 'access', label: 'Dostęp', icon: KeyRound, fields: ['adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login'] },
+    { key: 'access', label: 'Dostęp', icon: KeyRound, fields: ['adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login', 'authUser'] },
     { key: 'todo', label: 'Todo', icon: ListChecks, fields: ['todoProject'] },
   ]
 
   const tab = ref<Tab>('report')
 
-  /** a tab with unsaved changes in its fields (the password counts for "Dostęp") */
+  /** a tab with unsaved changes in its fields (the passwords count for "Dostęp") */
   function tabChanged (key: Tab): boolean {
     const before = JSON.parse(initial.value || '{}') as Record<string, unknown>
     const fields = TABS.find(item => item.key === key)?.fields ?? []
     const changed = fields.some(field => JSON.stringify((form.value as Record<string, unknown>)[field]) !== JSON.stringify(before[field]))
 
-    return changed || (key === 'access' && password.value !== savedPassword.value)
+    return changed || (key === 'access' && passwordsChanged.value)
   }
 
   /** the addresses under "Dostęp" – each with a button that opens it */
@@ -600,13 +589,13 @@
     initial.value = JSON.stringify(form.value)
     nameError.value = ''
     confirmDelete.value = false
-    showPassword.value = false
+    showPassword.value = showAuthPassword.value = false
     // a new project has no report yet – it starts on the server
     tab.value = editing === 'new' ? 'server' : 'report'
     envTarget.value = editing !== 'new' && !editing.bedrock ? 'wordpress' : 'bedrock'
 
     if (editing === 'new') {
-      password.value = savedPassword.value = ''
+      password.value = savedPassword.value = authPassword.value = savedAuthPassword.value = ''
       void nextTick(() => nameInput.value?.focus())
     } else {
       void loadTasks(editing)
@@ -615,22 +604,34 @@
     }
   })
 
-  /** the panel password – apart from the form: kept encrypted, fetched only when the dialog opens, saved on its own */
+  /**
+   * The passwords – the panel's and Basic Auth's – apart from the form: kept encrypted, fetched only when the dialog
+   * opens, saved on their own.
+   */
   const password = ref('')
   const savedPassword = ref('')
   const passwordLoading = ref(false)
   const showPassword = ref(false)
+  const authPassword = ref('')
+  const savedAuthPassword = ref('')
+  const authPasswordLoading = ref(false)
+  const showAuthPassword = ref(false)
+
+  const passwordsChanged = computed(() => password.value !== savedPassword.value || authPassword.value !== savedAuthPassword.value)
 
   async function loadPassword (project: Project): Promise<void> {
-    password.value = savedPassword.value = ''
+    password.value = savedPassword.value = authPassword.value = savedAuthPassword.value = ''
+    passwordLoading.value = !!project.hasPassword
+    authPasswordLoading.value = !!project.hasAuthPassword
 
-    if (!project.hasPassword) {
-      return
-    }
+    const [panel, auth] = await Promise.all([
+      project.hasPassword ? projectsApi.password(project.id).catch(() => null) : null,
+      project.hasAuthPassword ? projectsApi.password(project.id, 'auth').catch(() => null) : null,
+    ])
 
-    passwordLoading.value = true
-    password.value = savedPassword.value = (await projectsApi.password(project.id).catch(() => null))?.password ?? ''
-    passwordLoading.value = false
+    password.value = savedPassword.value = panel?.password ?? ''
+    authPassword.value = savedAuthPassword.value = auth?.password ?? ''
+    passwordLoading.value = authPasswordLoading.value = false
   }
 
   async function copy (text: string | null | undefined, what: string): Promise<void> {
@@ -685,8 +686,8 @@
   }
 
   /** unsaved changes – ask before they are thrown away */
-  /** something typed since it opened (or since the last save) – the password too */
-  const dirty = computed(() => JSON.stringify(form.value) !== initial.value || password.value !== savedPassword.value)
+  /** something typed since it opened (or since the last save) – the passwords too */
+  const dirty = computed(() => JSON.stringify(form.value) !== initial.value || passwordsChanged.value)
 
   /** "Zapisz" only with changes to save */
   const canSave = computed(() => dirty.value && !busy.value)
@@ -739,6 +740,11 @@
     if (saved && password.value !== savedPassword.value) {
       saved = await projects.setPassword(saved.id, password.value || null)
       savedPassword.value = saved ? password.value : savedPassword.value
+    }
+
+    if (saved && authPassword.value !== savedAuthPassword.value) {
+      saved = await projects.setPassword(saved.id, authPassword.value || null, 'auth')
+      savedAuthPassword.value = saved ? authPassword.value : savedAuthPassword.value
     }
 
     busy.value = false

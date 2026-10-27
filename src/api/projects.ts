@@ -1,4 +1,4 @@
-import type { Category, Project, ProjectInput, SiteReport, TodoProject, TodoSummary, TodoTask } from '@/types'
+import type { Category, PasswordKind, Project, ProjectInput, SiteReport, TodoProject, TodoSummary, TodoTask } from '@/types'
 import { request } from './client'
 
 export const projectsApi = {
@@ -10,10 +10,10 @@ export const projectsApi = {
   remove: (id: number) => request<{ deleted: boolean }>('DELETE', `projects/${id}`),
   /** these projects (one category) in this order; answers with all projects */
   reorder: (ids: number[]) => request<Project[]>('POST', 'projects/order', { ids }),
-  /** the panel password (kept encrypted, sent only on request) */
-  password: (id: number) => request<{ password: string | null }>('GET', `projects/${id}/password`),
-  /** sets the panel password; empty or null removes it; answers with the project */
-  setPassword: (id: number, password: string | null) => request<Project>('POST', `projects/${id}/password`, { password }),
+  /** a password – the panel's or Basic Auth's (kept encrypted, sent only on request) */
+  password: (id: number, kind: PasswordKind = 'panel') => request<{ password: string | null }>('GET', `projects/${id}/password?kind=${kind}`),
+  /** sets a password; empty or null removes it; answers with the project */
+  setPassword: (id: number, password: string | null, kind: PasswordKind = 'panel') => request<Project>('POST', `projects/${id}/password`, { password, kind }),
   /** a new reporter token – the old one stops working at once */
   token: (id: number) => request<Project>('POST', `projects/${id}/token`),
   /** open tasks of the linked Todo project */
