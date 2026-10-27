@@ -292,8 +292,9 @@
   height: 30px;
 }
 
-/* a status in its colour – as the chip in the table */
-.status {
+/* a status in its colour – as the chip in the table; hover keeps it (the dot follows the text) */
+.status,
+.seg .status:hover {
   color: var(--tone);
 }
 
