@@ -6,6 +6,7 @@
       aria-haspopup="menu"
       :aria-label="label"
       :class="triggerClass"
+      :disabled="disabled"
       :title="label"
       type="button"
       @click="toggle"
@@ -47,7 +48,8 @@
     align?: 'start' | 'end'
     /** a select-like trigger: the panel exactly under it, at least as wide */
     matchWidth?: boolean
-  }>(), { label: 'Więcej', triggerClass: 'btn btn--icon btn--sm', align: 'end', matchWidth: false })
+    disabled?: boolean
+  }>(), { label: 'Więcej', triggerClass: 'btn btn--icon btn--sm', align: 'end', matchWidth: false, disabled: false })
 
   const open = ref(false)
   const position = ref<Record<string, string>>({})

@@ -1,6 +1,12 @@
 <template>
   <div class="select-field" @pointerdown.capture="query = ''">
-    <DropMenu align="start" :label="label" match-width trigger-class="input select-field__trigger">
+    <DropMenu
+      align="start"
+      :disabled="disabled"
+      :label="label"
+      match-width
+      trigger-class="input select-field__trigger"
+    >
       <template #trigger>
         <span v-if="current" class="select-field__value"><slot name="option" :option="current">{{ current.label }}</slot></span>
         <span v-else class="faint">{{ placeholder }}</span>
@@ -50,7 +56,7 @@
 
     <!-- next to the arrow, outside the trigger (a button can't hold a button) -->
     <button
-      v-if="model !== null"
+      v-if="clearable && !disabled && model !== null"
       :aria-label="`Wyczyść: ${label}`"
       class="select-field__clear"
       :title="`Wyczyść: ${label}`"
@@ -79,7 +85,10 @@
     searchable?: boolean
     /** a typed value that isn't in the list can be chosen as it is (string values) */
     custom?: boolean
-  }>(), { placeholder: '', searchable: false, custom: false })
+    /** the × next to the arrow – off when one of the options means "none" (a filter's "all") */
+    clearable?: boolean
+    disabled?: boolean
+  }>(), { placeholder: '', searchable: false, custom: false, clearable: true, disabled: false })
 
   const model = defineModel<T | null>({ default: null })
   const query = ref('')
@@ -125,6 +134,10 @@
   padding-right: 58px;
   cursor: pointer;
   text-align: left;
+}
+
+.select-field__trigger:disabled {
+  cursor: default;
 }
 
 /* focused – or its list open – looks like a focused text field */

@@ -3,7 +3,7 @@
     <header ref="head" class="head">
       <h1 class="visually-hidden">{{ category?.name ?? 'Projekty' }}</h1>
 
-      <div class="toolbar">
+      <div class="toolbar" :class="{ 'toolbar--open': filtersOpen }">
         <label class="search">
           <Search />
 
@@ -16,18 +16,28 @@
           >
         </label>
 
-        <select
-          v-if="projects.categories.length > 0"
-          aria-label="Kategoria"
-          class="input toolbar__category"
-          :disabled="!config.canManage"
-          :title="config.canManage ? undefined : 'Wybór kategorii po zalogowaniu'"
-          :value="category?.slug ?? ''"
-          @change="setCategory(($event.target as HTMLSelectElement).value)"
+        <!-- phones: category and status fold under this button; the dot – a filter is on -->
+        <button
+          :aria-expanded="filtersOpen"
+          aria-label="Kategorie i statusy"
+          class="btn btn--icon btn--outline toolbar__toggle"
+          type="button"
+          @click="filtersOpen = !filtersOpen"
         >
-          <option value="">Wszystkie kategorie</option>
-          <option v-for="item in projects.sortedCategories" :key="item.id" :value="item.slug">{{ item.name }}</option>
-        </select>
+          <ListFilter />
+          <span v-if="category || filter !== 'all'" class="toolbar__dot" />
+        </button>
+
+        <SelectField
+          v-if="projects.categories.length > 0"
+          class="toolbar__category"
+          :clearable="false"
+          :disabled="!config.canManage"
+          :label="config.canManage ? 'Kategoria' : 'Wybór kategorii po zalogowaniu'"
+          :model-value="category?.slug ?? ''"
+          :options="categoryOptions"
+          @update:model-value="setCategory($event ?? '')"
+        />
 
         <div aria-label="Status" class="seg toolbar__filters" role="radiogroup">
           <button
@@ -43,6 +53,22 @@
             {{ option.label }} <span class="mono faint">{{ option.count }}</span>
           </button>
         </div>
+
+        <!-- phones: the same statuses as a full-width select – the buttons don't fit in one row -->
+        <SelectField
+          class="toolbar__status"
+          :clearable="false"
+          label="Status"
+          :model-value="filter"
+          :options="filters"
+          @update:model-value="filter = $event ?? 'all'"
+        >
+          <template #option="{ option }">
+            <StatusChip v-if="option.value in STATUS_LABELS" :status="option.value as Status" />
+            <template v-else>{{ option.label }}</template>
+            <span class="mono faint">{{ filters.find(item => item.value === option.value)?.count }}</span>
+          </template>
+        </SelectField>
 
         <button v-if="sort" class="btn btn--sm toolbar__order" type="button" @click="sort = null">
           <ListOrdered /> Własna kolejność
@@ -84,12 +110,14 @@
 </template>
 
 <script lang="ts" setup>
-  import type { Category, Project, SortKey } from '@/types'
+  import type { Category, Project, SortKey, Status } from '@/types'
   import type { Filter, Group } from '@/utils/projects'
-  import { ListOrdered, Search, SearchX } from 'lucide-vue-next'
+  import { ListFilter, ListOrdered, Search, SearchX } from 'lucide-vue-next'
   import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import ProjectTable from '@/components/ProjectTable.vue'
+  import StatusChip from '@/components/StatusChip.vue'
+  import SelectField from '@/components/ui/SelectField.vue'
   import { config } from '@/config'
   import { useProjectsStore } from '@/stores/projects'
   import { groupProjects, matches, sortProjects, STATUS_LABELS, STATUS_TONES } from '@/utils/projects'
@@ -112,6 +140,7 @@
   // filter and search in the address – a filtered list can be linked and survives a reload
   const filter = ref<Filter>((route.query.status as Filter) || 'all')
   const query = ref(typeof route.query.q === 'string' ? route.query.q : '')
+  const filtersOpen = ref(false)
 
   watch([filter, query], ([status, q]) => {
     void router.replace({ query: { ...(status === 'all' ? {} : { status }), ...(q ? { q } : {}) } })
@@ -145,6 +174,11 @@
 
     void router.replace({ name: 'projects', params: renamed ? { category: renamed.slug } : {}, query: route.query })
   }, { immediate: true })
+
+  const categoryOptions = computed(() => [
+    { value: '', label: 'Wszystkie kategorie' },
+    ...projects.sortedCategories.map(item => ({ value: item.slug, label: item.name })),
+  ])
 
   /** the projects of the chosen category – or all of them */
   const scoped = computed(() => category.value ? projects.items.filter(project => project.categoryId === category.value?.id) : projects.items)
@@ -300,7 +334,6 @@
 
 .toolbar__category {
   flex: 0 1 220px;
-  width: auto;
   min-width: 0;
 }
 
@@ -308,13 +341,62 @@
   font-size: 12px;
 }
 
+.toolbar__toggle,
+.toolbar__status {
+  display: none;
+}
+
+.toolbar__toggle {
+  position: relative;
+  flex: none;
+  width: 36px;
+  height: 36px;
+}
+
+.toolbar__toggle[aria-expanded='true'] {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.toolbar__dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid var(--surface);
+  border-radius: 50%;
+  background: var(--accent);
+  box-sizing: content-box;
+}
+
 @media (max-width: 900px) {
   .head {
     padding-top: 14px;
   }
 
-  .toolbar__hint {
+  .toolbar__hint,
+  .toolbar__filters {
     display: none;
+  }
+
+  .search {
+    flex: 1 1 0;
+    max-width: none;
+  }
+
+  .toolbar__toggle {
+    display: inline-flex;
+  }
+
+  .toolbar__category {
+    display: none;
+  }
+
+  .toolbar--open .toolbar__category,
+  .toolbar--open .toolbar__status {
+    display: block;
+    flex: 1 1 100%;
   }
 }
 </style>

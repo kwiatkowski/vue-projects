@@ -158,6 +158,10 @@
               <Check v-if="project[flag]" :aria-label="FLAG_LABELS[flag]" class="yes" />
             </td>
 
+            <td class="nowrap" :class="cellChanged(project, 'todo')">
+              <TodoChip v-if="project.todo" :todo="project.todo" />
+            </td>
+
             <td class="center" :class="cellChanged(project, 'reportedAt', 'token')">
               <HoverTip :text="reportTitle(project)">
                 <span
@@ -168,10 +172,6 @@
                   tabindex="0"
                 />
               </HoverTip>
-            </td>
-
-            <td class="nowrap" :class="cellChanged(project, 'todo')">
-              <TodoChip v-if="project.todo" :todo="project.todo" />
             </td>
           </template>
         </tr>
@@ -346,8 +346,8 @@
       { key: 'stage', label: 'Stage', class: 'center' },
       { key: 'acf', label: 'ACF', class: 'center' },
       { key: 'miModal', label: 'MI Modal', class: 'center' },
-      { key: 'report', label: 'Raport', sort: 'reportedAt', class: 'center' },
       { key: 'todo', label: 'Todo' },
+      { key: 'report', label: 'Raport', sort: 'reportedAt', class: 'center' },
     ]
     : [
       { key: 'name', label: 'Projekt', sort: 'name' },
