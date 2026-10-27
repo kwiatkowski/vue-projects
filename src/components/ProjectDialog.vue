@@ -205,13 +205,24 @@
               </button>
 
               <button
-                v-if="project.token"
+                v-if="project.token && !confirmToken"
                 class="btn btn--sm btn--danger"
                 :disabled="busy"
                 type="button"
-                @click="deleteToken"
+                @click="confirmToken = true"
               >
                 <Trash2 /> Usuń token
+              </button>
+            </div>
+
+            <!-- asked here, in the dialog – as deleting the project -->
+            <div v-if="project.token && confirmToken" class="alert">
+              <div>Usunąć token? Strona przestanie wysyłać raport – ostatni raport zostaje, a pola z raportu znów da się edytować.</div>
+
+              <button class="btn btn--sm" type="button" @click="confirmToken = false">Anuluj</button>
+
+              <button class="btn btn--danger-solid btn--sm" :disabled="busy" type="button" @click="deleteToken">
+                <Trash2 /> Tak, usuń token
               </button>
             </div>
           </template>
@@ -611,6 +622,7 @@
   const initial = ref('')
   const nameError = ref('')
   const confirmDelete = ref(false)
+  const confirmToken = ref(false)
   const busy = ref(false)
   const nameInput = useTemplateRef<HTMLInputElement>('nameInput')
   const dialog = useTemplateRef<InstanceType<typeof BaseDialog>>('dialog')
@@ -626,7 +638,7 @@
     form.value = editing === 'new' ? blank() : fromProject(editing)
     initial.value = JSON.stringify(form.value)
     nameError.value = ''
-    confirmDelete.value = false
+    confirmDelete.value = confirmToken.value = false
     showPassword.value = showAuthPassword.value = false
     // a new project has no report yet – it starts on the server
     tab.value = editing === 'new' ? 'server' : 'report'
@@ -863,13 +875,14 @@
   }
 
   async function deleteToken (): Promise<void> {
-    if (!project.value || !window.confirm('Usunąć token? Strona przestanie wysyłać raport, ostatni raport zostaje, a pola z raportu znów da się edytować.')) {
+    if (!project.value) {
       return
     }
 
     busy.value = true
     const updated = await projects.removeToken(project.value.id)
     busy.value = false
+    confirmToken.value = false
 
     if (updated) {
       projects.editing = updated
