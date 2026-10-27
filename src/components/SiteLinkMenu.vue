@@ -1,5 +1,5 @@
 <template>
-  <DropMenu align="start" :label="`${label}: ${url}`" trigger-class="menu__bare site-link">
+  <DropMenu align="start" :label="`${label}: ${url}`" tip trigger-class="menu__bare site-link">
     <template #trigger>
       <slot />
     </template>

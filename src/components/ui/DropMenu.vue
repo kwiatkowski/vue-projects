@@ -1,6 +1,23 @@
 <template>
   <div class="menu" @click.stop>
+    <!-- `tip`: the label in the app's tooltip instead of the browser's -->
+    <HoverTip v-if="tip" :text="label">
+      <button
+        ref="trigger"
+        :aria-expanded="open"
+        aria-haspopup="menu"
+        :aria-label="label"
+        :class="triggerClass"
+        :disabled="disabled"
+        type="button"
+        @click="toggle"
+      >
+        <slot name="trigger"><Ellipsis /></slot>
+      </button>
+    </HoverTip>
+
     <button
+      v-else
       ref="trigger"
       :aria-expanded="open"
       aria-haspopup="menu"
@@ -36,6 +53,7 @@
 <script lang="ts" setup>
   import { Ellipsis } from 'lucide-vue-next'
   import { nextTick, onBeforeUnmount, ref, useTemplateRef } from 'vue'
+  import HoverTip from '@/components/ui/HoverTip.vue'
 
   /**
    * A "…" button with a small menu; items are `<button class="menu__item">` in the default slot.
@@ -49,7 +67,9 @@
     /** a select-like trigger: the panel exactly under it, at least as wide */
     matchWidth?: boolean
     disabled?: boolean
-  }>(), { label: 'Więcej', triggerClass: 'btn btn--icon btn--sm', align: 'end', matchWidth: false, disabled: false })
+    /** the label in a HoverTip, not the browser's title */
+    tip?: boolean
+  }>(), { label: 'Więcej', triggerClass: 'btn btn--icon btn--sm', align: 'end', matchWidth: false, disabled: false, tip: false })
 
   const open = ref(false)
   const position = ref<Record<string, string>>({})
