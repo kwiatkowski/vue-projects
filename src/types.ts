@@ -122,6 +122,8 @@ export interface SiteReport {
   pluginUpdates?: number
   environment?: string
   reporter?: string
+  /** the site's git origin as https – null without git */
+  repo?: string | null
 }
 
 /** What the API takes: any field, null clears it. */

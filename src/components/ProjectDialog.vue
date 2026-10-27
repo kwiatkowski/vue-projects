@@ -73,6 +73,7 @@
 
           <CopyInput
             v-model="form.repo"
+            :disabled="locked('repo')"
             placeholder="https://github.com/…"
             tip="Kopiuj adres repozytorium"
             type="url"
@@ -85,7 +86,7 @@
 
           <div class="checks checks--column">
             <label v-for="flag in FLAGS" :key="flag" class="check">
-              <input v-model="form[flag]" type="checkbox"> {{ FLAG_LABELS[flag] }}
+              <input v-model="form[flag]" :disabled="REPORTED_FLAGS.has(flag) && locked(flag)" type="checkbox"> {{ FLAG_LABELS[flag] }}
               <span v-if="REPORTED_FLAGS.has(flag)" class="reported-mark">*</span>
             </label>
           </div>
@@ -248,7 +249,14 @@
           <div class="stack">
             <label class="field">
               <span>Silnik <span class="reported-mark">*</span></span>
-              <SelectField label="Silnik" :model-value="form.engine || null" :options="engineOptions" @update:model-value="form.engine = $event ?? ''" />
+
+              <SelectField
+                :disabled="locked('engine')"
+                label="Silnik"
+                :model-value="form.engine || null"
+                :options="engineOptions"
+                @update:model-value="form.engine = $event ?? ''"
+              />
             </label>
 
             <label class="field">
@@ -256,6 +264,7 @@
 
               <SelectField
                 custom
+                :disabled="locked('version')"
                 label="Wersja"
                 :model-value="form.version || null"
                 :options="versionOptions"
@@ -268,7 +277,7 @@
 
             <label class="field">
               <span>Motyw <span class="reported-mark">*</span></span>
-              <input v-model.trim="form.theme" class="input" type="text">
+              <input v-model.trim="form.theme" class="input" :disabled="locked('theme')" type="text">
             </label>
 
             <label class="field">
@@ -276,6 +285,7 @@
 
               <SelectField
                 custom
+                :disabled="locked('php')"
                 label="PHP"
                 :model-value="form.php || null"
                 :options="phpOptions"
@@ -403,7 +413,8 @@
     <template #note>
       <p class="reported-note">
         <Activity />
-        <span><span class="reported-mark">*</span> Uzupełnia też raport strony (status – po stronie głównej).</span>
+        <span v-if="reporting">Pola oznaczone <span class="reported-mark">*</span> wypełnia automatycznie raport strony – zmienią się same przy następnym raporcie.</span>
+        <span v-else>Pola oznaczone <span class="reported-mark">*</span> wypełni automatycznie raport strony, gdy go włączysz (zakładka „Raport strony”) – do tego czasu wpisz je ręcznie.</span>
       </p>
     </template>
 
@@ -662,6 +673,13 @@
     if (project.reportedAt) {
       siteReport.value = (await projectsApi.report(project.id).catch(() => null))?.report ?? null
     }
+  }
+
+  /** the site reports – the fields it fills are read-only; the repository only when the report brings one (git) */
+  const reporting = computed(() => Boolean(project.value?.token && project.value?.reportedAt))
+
+  function locked (field: 'repo' | 'php' | 'engine' | 'version' | 'theme' | Flag): boolean {
+    return reporting.value && (field !== 'repo' || Boolean(siteReport.value?.repo))
   }
 
   const activePlugins = computed(() => siteReport.value?.plugins?.filter(plugin => plugin.active).length ?? 0)
