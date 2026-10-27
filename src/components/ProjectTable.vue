@@ -496,11 +496,9 @@
      keeps the column headers on top */
   max-height: calc(100dvh - var(--topbar) - var(--head, 0px) - 16px);
   overflow: auto;
-  /* thin, in the line colour – no arrows */
-  scrollbar-width: thin;
-  scrollbar-color: var(--line-strong) transparent;
-  /* room for the scrollbar always – a filter that shortens the list doesn't widen the table */
-  scrollbar-gutter: stable;
+  /* no scrollbar – it would take width only on a long list and shift the columns between filters; it scrolls with
+     the wheel, the trackpad and touch */
+  scrollbar-width: none;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--surface);
