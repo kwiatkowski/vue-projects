@@ -131,6 +131,7 @@
             </HoverTip>
 
             <template v-else>{{ project.theme }}</template>
+            <span v-if="project.theme && project.themeDetails?.version" class="cell-sub mono">{{ project.themeDetails.version }}</span>
           </td>
 
           <template v-if="full">
