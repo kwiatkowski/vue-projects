@@ -288,8 +288,10 @@
   margin-left: auto;
 }
 
+/* as tall as the search and the category (36px): 2 × 1px border + 2 × 2px padding + 30px */
 .toolbar__filters button {
   flex: none;
+  height: 30px;
 }
 
 /* a status in its colour – as the chip in the table */
