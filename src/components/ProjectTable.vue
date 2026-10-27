@@ -111,8 +111,16 @@
             <td class="mono" :class="[{ warn: outdatedPhp(project.php) }, cellChanged(project, 'php')]">{{ project.php }}</td>
           </template>
 
-          <td :class="cellChanged(project, 'engine')"><span v-if="project.engine" class="chip chip--soft">{{ project.engine }}</span></td>
-          <td class="mono" :class="[{ latest: isLatest(project) }, cellChanged(project, 'version')]" :title="isLatest(project) ? latestTitle : undefined">{{ project.version }}</td>
+          <td :class="cellChanged(project, 'engine', 'version')">
+            <span v-if="project.engine" class="chip chip--soft">{{ project.engine }}</span>
+
+            <span
+              v-if="project.version"
+              class="cell-sub mono"
+              :class="{ latest: isLatest(project) }"
+              :title="isLatest(project) ? latestTitle : undefined"
+            >{{ project.version }}</span>
+          </td>
 
           <td class="cell-theme" :class="cellChanged(project, 'theme')">
             <HoverTip v-if="themeRows(project).length > 0">
@@ -377,8 +385,7 @@
       { key: 'status', label: 'Status', sort: 'status' },
       { key: 'server', label: 'Serwer', sort: 'server' },
       { key: 'php', label: 'PHP', sort: 'php' },
-      { key: 'engine', label: 'Silnik' },
-      { key: 'version', label: 'Wersja', sort: 'version' },
+      { key: 'engine', label: 'Silnik', sort: 'version' },
       { key: 'theme', label: 'Motyw', sort: 'theme' },
       { key: 'repo', label: 'Repo', class: 'center' },
       { key: 'deploy', label: 'Deploy', class: 'center' },
@@ -394,8 +401,7 @@
     : [
       { key: 'name', label: 'Projekt', sort: 'name' },
       { key: 'status', label: 'Status', sort: 'status' },
-      { key: 'engine', label: 'Silnik' },
-      { key: 'version', label: 'Wersja', sort: 'version' },
+      { key: 'engine', label: 'Silnik', sort: 'version' },
       { key: 'theme', label: 'Motyw', sort: 'theme' },
     ])
 
