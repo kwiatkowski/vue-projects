@@ -499,6 +499,8 @@
   /* thin, in the line colour – no arrows */
   scrollbar-width: thin;
   scrollbar-color: var(--line-strong) transparent;
+  /* room for the scrollbar always – a filter that shortens the list doesn't widen the table */
+  scrollbar-gutter: stable;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--surface);
