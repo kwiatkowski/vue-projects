@@ -60,7 +60,6 @@
 
           <SelectField
             v-model="form.status"
-            :clearable="false"
             :disabled="locked('status')"
             label="Status"
             :options="statusOptions"
