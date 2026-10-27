@@ -16,6 +16,8 @@ export const projectsApi = {
   setPassword: (id: number, password: string | null, kind: PasswordKind = 'panel') => request<Project>('POST', `projects/${id}/password`, { password, kind }),
   /** a new reporter token – the old one stops working at once */
   token: (id: number) => request<Project>('POST', `projects/${id}/token`),
+  /** no token – the site stops reporting; the last report stays */
+  removeToken: (id: number) => request<Project>('DELETE', `projects/${id}/token`),
   /** open tasks of the linked Todo project */
   tasks: (id: number) => request<{ todo: TodoSummary | null, tasks: TodoTask[] }>('GET', `projects/${id}/tasks`),
   /** the last report of the site, as it came */

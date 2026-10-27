@@ -203,6 +203,16 @@
               <button class="btn btn--sm btn--warn" :disabled="busy" type="button" @click="newToken">
                 <KeyRound /> {{ project.token ? 'Nowy token' : 'Utwórz token' }}
               </button>
+
+              <button
+                v-if="project.token"
+                class="btn btn--sm btn--danger"
+                :disabled="busy"
+                type="button"
+                @click="deleteToken"
+              >
+                <Trash2 /> Usuń token
+              </button>
             </div>
           </template>
 
@@ -849,6 +859,21 @@
       // the dialog keeps the unsaved form, only the token part is new
       projects.editing = updated
       notify.show('Nowy token gotowy.')
+    }
+  }
+
+  async function deleteToken (): Promise<void> {
+    if (!project.value || !window.confirm('Usunąć token? Strona przestanie wysyłać raport, ostatni raport zostaje, a pola z raportu znów da się edytować.')) {
+      return
+    }
+
+    busy.value = true
+    const updated = await projects.removeToken(project.value.id)
+    busy.value = false
+
+    if (updated) {
+      projects.editing = updated
+      notify.show('Token usunięty.')
     }
   }
 </script>

@@ -246,6 +246,19 @@ export const useProjectsStore = defineStore('projects', () => {
     }
   }
 
+  async function removeToken (id: number): Promise<Project | null> {
+    try {
+      const project = await projectsApi.removeToken(id)
+      replace(project)
+
+      return project
+    } catch (error) {
+      notify.error(error)
+
+      return null
+    }
+  }
+
   /**
    * Drops project `id` into `categoryId` (null = none), next to `targetId` (before, or after with `after`; null – at
    * the end). The list changes at once; the server gets the new category, then the order of that category.
@@ -368,6 +381,7 @@ export const useProjectsStore = defineStore('projects', () => {
     update,
     remove,
     regenerateToken,
+    removeToken,
     setPassword,
     moveProject,
     addCategory,
