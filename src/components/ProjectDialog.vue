@@ -58,7 +58,13 @@
         <label class="field">
           <span>Status <span class="reported-mark">*</span></span>
 
-          <SelectField v-model="form.status" label="Status" :options="statusOptions">
+          <SelectField
+            v-model="form.status"
+            :clearable="false"
+            :disabled="locked('status')"
+            label="Status"
+            :options="statusOptions"
+          >
             <template #option="{ option }"><StatusChip :status="option.value" /></template>
           </SelectField>
         </label>
@@ -675,10 +681,11 @@
     }
   }
 
-  /** the site reports – the fields it fills are read-only; the repository only when the report brings one (git) */
+  /** the site reports – the fields it fills are read-only (the status too: online / offline from its home page);
+   * the repository only when the report brings one (git) */
   const reporting = computed(() => Boolean(project.value?.token && project.value?.reportedAt))
 
-  function locked (field: 'repo' | 'php' | 'engine' | 'version' | 'theme' | Flag): boolean {
+  function locked (field: 'status' | 'repo' | 'php' | 'engine' | 'version' | 'theme' | Flag): boolean {
     return reporting.value && (field !== 'repo' || Boolean(siteReport.value?.repo))
   }
 
