@@ -56,6 +56,11 @@
         </label>
 
         <label class="field">
+          <span>Kategoria</span>
+          <SelectField v-model="form.categoryId" label="Kategoria" :options="categoryOptions" />
+        </label>
+
+        <label class="field">
           <span>Status <span class="reported-mark">*</span></span>
 
           <SelectField
@@ -66,11 +71,6 @@
           >
             <template #option="{ option }"><StatusChip :status="option.value" /></template>
           </SelectField>
-        </label>
-
-        <label class="field">
-          <span>Kategoria</span>
-          <SelectField v-model="form.categoryId" label="Kategoria" :options="categoryOptions" />
         </label>
 
         <label class="field">
