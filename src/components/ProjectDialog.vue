@@ -514,7 +514,7 @@
   const notify = useNotifyStore()
 
   const FLAG_LABELS: Record<Flag, string> = {
-    deploy: 'Deploy (skrypty)',
+    deploy: 'Deploy (git na produkcji)',
     dev: 'DEV (stage)',
     bedrock: 'Bedrock',
     security: 'Wordfence',
@@ -523,7 +523,7 @@
   }
 
   /** the flags a site's report sets – a star by them */
-  const REPORTED_FLAGS = new Set<Flag>(['bedrock', 'security', 'acf', 'miModal'])
+  const REPORTED_FLAGS = new Set<Flag>(['deploy', 'bedrock', 'security', 'acf', 'miModal'])
 
   type Form = Required<Omit<ProjectInput, 'status'>> & { status: Status | null }
 
