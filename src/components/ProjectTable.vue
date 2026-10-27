@@ -129,7 +129,7 @@
             </td>
 
             <td
-              v-for="flag in ['deploy', 'dev', 'bedrock', 'security'] as const"
+              v-for="flag in ['deploy', 'bedrock', 'security'] as const"
               :key="flag"
               class="center"
               :class="cellChanged(project, flag)"
@@ -237,9 +237,9 @@
               <span v-if="project.php" class="mono">PHP {{ project.php }}</span>
             </div>
 
-            <div v-if="project.todo || FLAGS.some(flag => project[flag])" class="card__flags">
+            <div v-if="project.todo || CARD_FLAGS.some(flag => project[flag])" class="card__flags">
               <TodoChip v-if="project.todo" :todo="project.todo" />
-              <span v-for="flag in FLAGS.filter(flag => project[flag])" :key="flag" class="chip chip--accent">{{ FLAG_LABELS[flag] }}</span>
+              <span v-for="flag in CARD_FLAGS.filter(flag => project[flag])" :key="flag" class="chip chip--accent">{{ FLAG_LABELS[flag] }}</span>
             </div>
           </template>
         </li>
@@ -279,6 +279,9 @@
   const emit = defineEmits<{ open: [Project], sort: [SortKey] }>()
 
   const projects = useProjectsStore()
+
+  /** the flags a card shows – DEV is left out, the Stage address says the same */
+  const CARD_FLAGS = FLAGS.filter(flag => flag !== 'dev')
 
   const FLAG_LABELS: Record<Flag, string> = {
     deploy: 'Deploy',
@@ -337,7 +340,6 @@
       { key: 'theme', label: 'Motyw', sort: 'theme' },
       { key: 'repo', label: 'Repo', class: 'center' },
       { key: 'deploy', label: 'Deploy', class: 'center' },
-      { key: 'dev', label: 'Dev', class: 'center' },
       { key: 'bedrock', label: 'Bedrock', class: 'center' },
       { key: 'security', label: 'Security', class: 'center' },
       { key: 'local', label: 'Local', class: 'center' },
