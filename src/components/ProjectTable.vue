@@ -200,48 +200,11 @@
               <TodoChip v-if="project.todo" :todo="project.todo" />
             </td>
 
-            <td class="center" :class="cellChanged(project, 'reportedAt', 'token')">
-              <HoverTip anchor-class="report-hit">
-                <!-- a site that reports: a click opens what to update and the button that does it -->
-                <DropMenu
-                  v-if="full && project.token"
-                  align="end"
-                  :label="reportTitle(project)"
-                  panel-class="menu__panel--tip"
-                  :title="false"
-                  trigger-class="menu__bare report-trigger"
-                >
-                  <template #trigger>
-                    <span class="report" :class="`report--${dotState(project)}`" />
-                  </template>
-
-                  <!-- the same as the tooltip, then what to do -->
-                  <div class="report-menu__summary">
-                    <ReportSummary menu :project="project" :title="reportTitle(project)" />
-                  </div>
-
-                  <div class="report-menu__actions">
-                    <!-- everything (plugins, translations, the database; on Bedrock through Composer, committed and pushed),
-                       or the translations alone – only when something waits -->
-                    <button
-                      v-if="scopeOf(project)"
-                      class="menu__item"
-                      :disabled="projects.updating.has(project.id)"
-                      role="menuitem"
-                      type="button"
-                      @click="projects.runUpdate(project.id, scopeOf(project) ?? 'all')"
-                    >
-                      <RefreshCw /> {{ projects.updating.has(project.id) ? 'Aktualizuję…' : UPDATE_LABELS[scopeOf(project) ?? 'all'] }}
-                    </button>
-
-                    <button class="menu__item" role="menuitem" type="button" @click="emit('open', project)">
-                      <FileText /> Szczegóły raportu
-                    </button>
-                  </div>
-                </DropMenu>
-
+            <!-- a click here works the dot's popup, not the row's dialog -->
+            <td class="center" :class="cellChanged(project, 'reportedAt', 'token')" @click.stop>
+              <!-- one popup for the dot: what the report says and, for a site that reports, what to do – it can be entered -->
+              <HoverTip anchor-class="report-hit" :interactive="full && Boolean(project.token)">
                 <span
-                  v-else
                   :aria-label="reportTitle(project)"
                   class="report"
                   :class="`report--${dotState(project)}`"
@@ -249,8 +212,26 @@
                   tabindex="0"
                 />
 
-                <template #tip>
-                  <ReportSummary :project="project" :title="reportTitle(project)" />
+                <template #tip="{ hide }">
+                  <ReportSummary :menu="full && Boolean(project.token)" :project="project" :title="reportTitle(project)" />
+
+                  <div v-if="full && project.token" class="report-actions">
+                    <!-- everything (plugins, translations, the database; on Bedrock through Composer, committed and pushed),
+                         or the translations alone – only when something waits -->
+                    <button
+                      v-if="scopeOf(project)"
+                      class="menu__item"
+                      :disabled="projects.updating.has(project.id)"
+                      type="button"
+                      @click="projects.runUpdate(project.id, scopeOf(project) ?? 'all')"
+                    >
+                      <RefreshCw /> {{ projects.updating.has(project.id) ? 'Aktualizuję…' : UPDATE_LABELS[scopeOf(project) ?? 'all'] }}
+                    </button>
+
+                    <button class="menu__item" type="button" @click="hide(); emit('open', project)">
+                      <FileText /> Szczegóły raportu
+                    </button>
+                  </div>
                 </template>
               </HoverTip>
             </td>
@@ -339,7 +320,6 @@
   import SiteLinkMenu from '@/components/SiteLinkMenu.vue'
   import StatusChip from '@/components/StatusChip.vue'
   import TodoChip from '@/components/TodoChip.vue'
-  import DropMenu from '@/components/ui/DropMenu.vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
   import { config } from '@/config'
   import { useProjectsStore } from '@/stores/projects'
@@ -1012,42 +992,29 @@ tr:hover .row-grip {
   }
 }
 
-/* the menu: the summary with the tooltip's padding, a line, then the actions with room around them */
-.report-menu__summary {
-  padding: 6px 8px 8px;
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.report-menu__actions {
+/* the actions under the summary: a line, room around them */
+.report-actions {
   display: grid;
   gap: 2px;
-  margin-top: 4px;
+  margin: 8px -6px -3px;
   padding-top: 6px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--line-strong);
 }
 
-.report-menu__actions .menu__item {
-  height: 36px;
+.report-actions .menu__item {
+  height: 34px;
+  color: var(--text);
 }
 
-/* the dot as the menu's trigger – no button look */
-/* the dot is 8px – the area that shows its tooltip (and opens its menu) is much bigger, easy to hit */
+.report-actions .menu__item:hover {
+  background: color-mix(in srgb, var(--tip-bg) 85%, var(--text));
+}
+
+/* the dot is 8px – the area that shows its popup is much bigger, easy to hit */
 .center :deep(.report-hit) {
   justify-content: center;
   min-width: 36px;
   min-height: 36px;
-}
-
-.report-trigger {
-  display: inline-grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 0;
-  background: none;
-  cursor: pointer;
 }
 
 .report--ok::after,

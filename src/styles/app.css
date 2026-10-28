@@ -7,7 +7,7 @@
  */
 
 :root {
-  /* tooltips (and the report's menu, which shows the same): a shade lifted from the table they float over –
+  /* tooltips: a shade lifted from the table they float over –
      lighter in the dark theme, darker in the light one */
   --tip-bg: color-mix(in srgb, var(--surface) 88%, var(--text));
   color-scheme: light;
@@ -838,10 +838,4 @@ input[type='checkbox']:disabled {
 /* under a header's line */
 .info-tip--after {
   margin-top: 6px;
-}
-
-/* the report dot's menu – the same as its tooltip: the tooltip's background and edge */
-.menu__panel.menu__panel--tip {
-  border-color: var(--line-strong);
-  background: var(--tip-bg);
 }

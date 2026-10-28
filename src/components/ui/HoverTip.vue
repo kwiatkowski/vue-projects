@@ -3,11 +3,11 @@
     ref="anchor"
     class="tip-anchor"
     :class="anchorClass"
-    @click.capture="hide"
+    @click.capture="onClick"
     @focusin="onFocus"
-    @focusout="hide"
+    @focusout="onFocusOut"
     @mouseenter="show"
-    @mouseleave="hide"
+    @mouseleave="leave"
   >
     <slot />
   </span>
@@ -17,11 +17,14 @@
       v-if="open"
       ref="tip"
       class="tip"
-      :class="{ 'tip--below': below }"
-      role="tooltip"
+      :class="{ 'tip--below': below, 'tip--interactive': interactive }"
+      :role="interactive ? 'dialog' : 'tooltip'"
       :style="position"
+      @focusout="onFocusOut"
+      @mouseenter="stay"
+      @mouseleave="leave"
     >
-      <slot name="tip">{{ text }}</slot>
+      <slot :hide="hide" name="tip">{{ text }}</slot>
     </div>
   </Teleport>
 </template>
@@ -35,8 +38,14 @@
    * bottom; pushed sideways when it would leave the screen (the triangle still points at the anchor), below it when
    * there's no room above (under the top bar and the sticky header).
    * Rendered in <body>, so the table's own scrolling doesn't clip it.
+   * `interactive`: it can be entered and clicked (actions in it) – it stays while the pointer goes from the anchor onto
+   * it and closes a moment after it leaves both; a click on the anchor opens it (touch), Escape closes it.
    */
-  defineProps<{ text?: string, anchorClass?: string }>()
+  const props = defineProps<{ text?: string, anchorClass?: string, interactive?: boolean }>()
+
+  /** an interactive tip waits this long before closing – the pointer crosses the gap to it */
+  const LINGER = 200
+  let hideTimer: ReturnType<typeof setTimeout> | undefined
 
   /** room kept from the screen's edges, the gap to the anchor (the triangle sits in it) */
   const EDGE = 8
@@ -55,12 +64,20 @@
   const layer = ref<string | HTMLElement>('body')
 
   async function show (): Promise<void> {
+    stay()
+
+    // back from the tip onto the anchor: it is open and placed already
+    if (open.value) {
+      return
+    }
+
     layer.value = anchor.value?.closest('dialog') ?? 'body'
     position.value = { visibility: 'hidden', left: '0px', top: '0px' }
     open.value = true
     window.addEventListener('scroll', hide, { capture: true, passive: true })
     // leaving the tab (a link opened Todo in another one) fires no mouseleave – close it then
     window.addEventListener('blur', hide)
+    window.addEventListener('keydown', onKey)
 
     await nextTick()
 
@@ -96,9 +113,53 @@
   }
 
   function hide (): void {
+    stay()
     open.value = false
     window.removeEventListener('scroll', hide, { capture: true })
     window.removeEventListener('blur', hide)
+    window.removeEventListener('keydown', onKey)
+  }
+
+  function stay (): void {
+    clearTimeout(hideTimer)
+  }
+
+  /** the pointer (or the focus) left the anchor or the tip – a plain tip goes at once, an interactive one a moment later */
+  function leave (): void {
+    if (!props.interactive) {
+      hide()
+
+      return
+    }
+
+    stay()
+    hideTimer = setTimeout(hide, LINGER)
+  }
+
+  /** a plain tip gets out of the way of a click; an interactive one opens on it (a touch has no hover) */
+  function onClick (): void {
+    if (props.interactive) {
+      void show()
+    } else {
+      hide()
+    }
+  }
+
+  /** the focus moving between the anchor and an interactive tip keeps it open */
+  function onFocusOut (event: FocusEvent): void {
+    const next = event.relatedTarget as Node | null
+
+    if (props.interactive && next && (anchor.value?.contains(next) || tip.value?.contains(next))) {
+      return
+    }
+
+    leave()
+  }
+
+  function onKey (event: KeyboardEvent): void {
+    if (event.key === 'Escape') {
+      hide()
+    }
   }
 
   /**
@@ -151,6 +212,25 @@
   translate: -50% 0;
   rotate: 45deg;
   content: '';
+}
+
+/* it can be entered: the pointer works in it, and an invisible bridge over the gap keeps it while crossing */
+.tip--interactive {
+  pointer-events: auto;
+}
+
+.tip--interactive::after {
+  position: absolute;
+  right: 0;
+  bottom: -12px;
+  left: 0;
+  height: 12px;
+  content: '';
+}
+
+.tip--interactive.tip--below::after {
+  top: -12px;
+  bottom: auto;
 }
 
 .tip--below::before {
