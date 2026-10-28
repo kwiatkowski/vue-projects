@@ -103,7 +103,10 @@
       <template v-if="dirty">
         <span class="unsaved"><AlertTriangle /> Niezapisane zmiany</span>
         <span style="flex: 1" />
-        <button class="btn btn--danger btn--sm" type="button" @click="columns.settingsOpen = false">Zamknij bez zapisywania</button>
+
+        <button class="btn btn--danger btn--sm" type="button" @click="columns.settingsOpen = false">
+          <X /> Zamknij bez zapisywania
+        </button>
       </template>
 
       <template v-else>

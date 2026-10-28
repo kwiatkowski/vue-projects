@@ -21,7 +21,9 @@
 
     <template #actions>
       <template v-if="category">
-        <button v-if="!confirmDelete" class="btn btn--danger btn--sm" type="button" @click="confirmDelete = true">Usuń</button>
+        <button v-if="!confirmDelete" class="btn btn--danger btn--sm" type="button" @click="confirmDelete = true">
+          <Trash2 /> Usuń
+        </button>
 
         <button
           v-else
@@ -29,17 +31,26 @@
           :disabled="busy"
           type="button"
           @click="remove"
-        >Tak, usuń</button>
+        >
+          <Trash2 /> Tak, usuń
+        </button>
       </template>
 
       <span style="flex: 1" />
-      <button class="btn btn--sm" type="button" @click="open = false">Anuluj</button>
-      <button class="btn btn--primary btn--sm" :disabled="busy" type="submit">{{ category ? 'Zapisz' : 'Utwórz' }}</button>
+
+      <button class="btn btn--sm" type="button" @click="open = false">
+        <X /> Anuluj
+      </button>
+
+      <button class="btn btn--accent btn--sm" :disabled="busy" type="submit">
+        <component :is="category ? Check : Plus" /> {{ category ? 'Zapisz' : 'Utwórz' }}
+      </button>
     </template>
   </BaseDialog>
 </template>
 
 <script lang="ts" setup>
+  import { Check, Plus, Trash2, X } from 'lucide-vue-next'
   import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
   import BaseDialog from '@/components/ui/BaseDialog.vue'
   import { useProjectsStore } from '@/stores/projects'
