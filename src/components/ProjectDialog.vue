@@ -354,99 +354,107 @@
         </div>
 
         <div v-show="tab === 'access'" class="tab-panel" role="tabpanel">
+          <!-- one section per environment: its addresses (open, copy), then its logins -->
+          <div class="access">
+            <fieldset v-for="group in ACCESS_GROUPS" :key="group.key" class="group access__group">
+              <legend class="eyebrow">{{ group.label }}</legend>
 
-          <div class="stack">
-            <label v-for="link in ACCESS_LINKS" :key="link.field" class="field">
-              <span>{{ link.label }}</span>
+              <div :class="group.links.length > 1 ? 'grid' : 'stack'">
+                <label v-for="link in group.links" :key="link.field" class="field">
+                  <span>{{ link.label }}</span>
 
-              <span class="input-row input-row--inside input-row--two">
-                <input v-model.trim="form[link.field]" class="input" :placeholder="link.placeholder" type="url">
+                  <span class="input-row input-row--inside input-row--two">
+                    <input v-model.trim="form[link.field]" class="input" :placeholder="link.placeholder" type="url">
 
-                <template v-if="form[link.field]">
-                  <HoverTip anchor-class="field-icon field-icon--second" text="Otwórz w nowej karcie">
-                    <a
-                      :aria-label="`Otwórz: ${link.label}`"
-                      class="btn btn--icon btn--sm input-copy"
-                      :href="form[link.field] ?? undefined"
-                      rel="noopener"
-                      target="_blank"
-                    ><ArrowUpRight /></a>
-                  </HoverTip>
+                    <template v-if="form[link.field]">
+                      <HoverTip anchor-class="field-icon field-icon--second" text="Otwórz w nowej karcie">
+                        <a
+                          :aria-label="`Otwórz: ${group.label} – ${link.label}`"
+                          class="btn btn--icon btn--sm input-copy"
+                          :href="form[link.field] ?? undefined"
+                          rel="noopener"
+                          target="_blank"
+                        ><ArrowUpRight /></a>
+                      </HoverTip>
 
-                  <HoverTip anchor-class="field-icon" text="Kopiuj adres">
-                    <button
-                      :aria-label="`Kopiuj: ${link.label}`"
-                      class="btn btn--icon btn--sm input-copy"
-                      type="button"
-                      @click="copy(form[link.field], link.label)"
-                    ><Copy /></button>
-                  </HoverTip>
-                </template>
-              </span>
-            </label>
+                      <HoverTip anchor-class="field-icon" text="Kopiuj adres">
+                        <button
+                          :aria-label="`Kopiuj: ${group.label} – ${link.label}`"
+                          class="btn btn--icon btn--sm input-copy"
+                          type="button"
+                          @click="copy(form[link.field], `${group.label} – ${link.label}`)"
+                        ><Copy /></button>
+                      </HoverTip>
+                    </template>
+                  </span>
+                </label>
+              </div>
 
-            <!-- the panel's login and password side by side -->
-            <div class="grid">
-              <label class="field">
-                <span>Login</span>
+              <template v-if="group.key === 'production'">
+                <!-- the panel's login and password -->
+                <div class="grid">
+                  <label class="field">
+                    <span>Login do panelu</span>
 
-                <CopyInput
-                  v-model="form.login"
-                  autocomplete="off"
-                  class="mono"
-                  tip="Kopiuj login"
-                  type="text"
-                  what="Login"
-                />
-              </label>
+                    <CopyInput
+                      v-model="form.login"
+                      autocomplete="off"
+                      class="mono"
+                      tip="Kopiuj login"
+                      type="text"
+                      what="Login"
+                    />
+                  </label>
 
-              <label class="field">
-                <span>Hasło</span>
-                <PasswordInput v-model="password" v-model:shown="showPassword" :loading="passwordLoading" what="Hasło" />
-              </label>
-            </div>
+                  <label class="field">
+                    <span>Hasło do panelu</span>
+                    <PasswordInput v-model="password" v-model:shown="showPassword" :loading="passwordLoading" what="Hasło" />
+                  </label>
+                </div>
 
-            <!-- a site behind HTTP Basic Auth: the list fetches its report with these -->
-            <div class="grid">
-              <label class="field">
-                <span>Basic Auth – login</span>
+                <!-- a site behind HTTP Basic Auth: the list fetches its report with these -->
+                <div class="grid">
+                  <label class="field">
+                    <span>Basic Auth – login</span>
 
-                <CopyInput
-                  v-model="form.authUser"
-                  autocomplete="off"
-                  class="mono"
-                  tip="Kopiuj login Basic Auth"
-                  type="text"
-                  what="Login Basic Auth"
-                />
-              </label>
+                    <CopyInput
+                      v-model="form.authUser"
+                      autocomplete="off"
+                      class="mono"
+                      tip="Kopiuj login Basic Auth"
+                      type="text"
+                      what="Login Basic Auth"
+                    />
+                  </label>
 
-              <label class="field">
-                <span>Basic Auth – hasło</span>
-                <PasswordInput v-model="authPassword" v-model:shown="showAuthPassword" :loading="authPasswordLoading" what="Hasło Basic Auth" />
-              </label>
-            </div>
+                  <label class="field">
+                    <span>Basic Auth – hasło</span>
+                    <PasswordInput v-model="authPassword" v-model:shown="showAuthPassword" :loading="authPasswordLoading" what="Hasło Basic Auth" />
+                  </label>
+                </div>
+              </template>
 
-            <!-- the staging behind HTTP Basic Auth: the list checks it with these (green Stage icon when it answers 200) -->
-            <div class="grid">
-              <label class="field">
-                <span>Staging – Basic Auth login</span>
+              <!-- the staging behind HTTP Basic Auth: the list checks it with these (green Stage icon when it answers 200) -->
+              <div v-if="group.key === 'staging'" class="grid">
+                <label class="field">
+                  <span>Basic Auth – login</span>
 
-                <CopyInput
-                  v-model="form.stagingAuthUser"
-                  autocomplete="off"
-                  class="mono"
-                  tip="Kopiuj login Basic Auth stagingu"
-                  type="text"
-                  what="Login Basic Auth stagingu"
-                />
-              </label>
+                  <CopyInput
+                    v-model="form.stagingAuthUser"
+                    autocomplete="off"
+                    class="mono"
+                    tip="Kopiuj login Basic Auth stagingu"
+                    type="text"
+                    what="Login Basic Auth stagingu"
+                  />
+                </label>
 
-              <label class="field">
-                <span>Staging – Basic Auth hasło</span>
-                <PasswordInput v-model="stagingPassword" v-model:shown="showStagingPassword" :loading="stagingPasswordLoading" what="Hasło Basic Auth stagingu" />
-              </label>
-            </div>
+                <label class="field">
+                  <span>Basic Auth – hasło</span>
+                  <PasswordInput v-model="stagingPassword" v-model:shown="showStagingPassword" :loading="stagingPasswordLoading" what="Hasło Basic Auth stagingu" />
+                </label>
+              </div>
+            </fieldset>
           </div>
         </div>
 
@@ -624,12 +632,21 @@
   }
 
   /** the addresses under "Dostęp" – each with a button that opens it */
-  const ACCESS_LINKS: Array<{ field: 'adminUrl' | 'stagingUrl' | 'stagingAdminUrl' | 'localUrl' | 'localAdminUrl', label: string, placeholder: string }> = [
-    { field: 'adminUrl', label: 'Panel – produkcja', placeholder: 'https://…/wp/wp-login.php' },
-    { field: 'stagingUrl', label: 'Staging – adres', placeholder: 'https://….medendev.eu/' },
-    { field: 'stagingAdminUrl', label: 'Staging – panel', placeholder: 'https://…/wp/wp-login.php' },
-    { field: 'localUrl', label: 'Lokalnie – adres', placeholder: 'https://….local/' },
-    { field: 'localAdminUrl', label: 'Lokalnie – panel', placeholder: 'https://….local/wp/wp-login.php' },
+  type AccessField = 'adminUrl' | 'stagingUrl' | 'stagingAdminUrl' | 'localUrl' | 'localAdminUrl'
+
+  /** the Access tab: one section per environment, its addresses (the logins follow in the template) */
+  const ACCESS_GROUPS: Array<{ key: 'production' | 'staging' | 'local', label: string, links: Array<{ field: AccessField, label: string, placeholder: string }> }> = [
+    { key: 'production', label: 'Produkcja', links: [
+      { field: 'adminUrl', label: 'Panel', placeholder: 'https://…/wp/wp-login.php' },
+    ] },
+    { key: 'staging', label: 'Staging', links: [
+      { field: 'stagingUrl', label: 'Adres', placeholder: 'https://….medendev.eu/' },
+      { field: 'stagingAdminUrl', label: 'Panel', placeholder: 'https://…/wp/wp-login.php' },
+    ] },
+    { key: 'local', label: 'Lokalnie', links: [
+      { field: 'localUrl', label: 'Adres', placeholder: 'https://….local/' },
+      { field: 'localAdminUrl', label: 'Panel', placeholder: 'https://….local/wp/wp-login.php' },
+    ] },
   ]
 
   function blank (): Form {
@@ -1039,6 +1056,17 @@
   padding: 14px 0 0;
   border: 0;
   border-top: 1px solid var(--line);
+}
+
+/* the Access tab: the environments one under another, the first without a line over it */
+.access {
+  display: grid;
+  gap: 18px;
+}
+
+.access__group:first-child {
+  padding-top: 0;
+  border-top: 0;
 }
 
 .group legend {
