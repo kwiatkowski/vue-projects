@@ -1,6 +1,6 @@
 <template>
-  <BaseDialog v-model="columns.viewOpen" title="Wyświetl kolumny" :width="560" @submit="columns.viewOpen = false">
-    <!-- the sections side by side, two columns; the project's name is always there, so it isn't offered -->
+  <BaseDialog v-model="columns.viewOpen" title="Wyświetl kolumny" :width="760" @submit="columns.viewOpen = false">
+    <!-- the sections side by side, one column each; the project's name is always there, so it isn't offered -->
     <div class="view">
       <fieldset v-for="section in sections" :key="section.name" class="view__section">
         <legend class="eyebrow">{{ section.name }}</legend>
@@ -53,17 +53,18 @@
 </script>
 
 <style scoped>
-/* two columns of sections, each kept whole – balanced by height */
+/* a column per section – four side by side */
 .view {
-  columns: 2;
-  column-gap: 28px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px 20px;
+  align-items: start;
 }
 
 .view__section {
   display: grid;
   gap: 2px;
-  break-inside: avoid;
-  margin: 0 0 18px;
+  margin: 0;
   padding: 0;
   border: 0;
 }
@@ -104,9 +105,10 @@
   height: 14px;
 }
 
-@media (max-width: 520px) {
+/* phones: two by two */
+@media (max-width: 640px) {
   .view {
-    columns: 1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 </style>
