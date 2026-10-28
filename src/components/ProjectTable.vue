@@ -125,7 +125,7 @@
           </td>
 
           <td v-if="show('theme')" class="cell-theme" :class="cellChanged(project, 'theme')">
-            <!-- the name and its version together – one bigger area for the tooltip, shaded on hover -->
+            <!-- the name and its version together – one bigger area for the tooltip -->
             <HoverTip v-if="project.themeDetails?.version || themeRows(project).length > 0" anchor-class="theme-hit">
               <span class="theme-hit__body" tabindex="0">
                 <span class="has-tip">{{ project.theme }}</span>
@@ -901,18 +901,10 @@ tr:hover .row-grip {
   text-overflow: ellipsis;
 }
 
-/* the name and the version as one area, a little past the text on every side, shaded on hover */
+/* the name and the version as one area for the tooltip, a little past the text on every side */
 .cell-theme :deep(.theme-hit) {
   margin: -6px -8px;
   padding: 6px 8px;
-  border-radius: var(--radius-sm);
-  transition: background-color .12s;
-}
-
-/* the row is already shaded with --hover under the pointer – one step darker, so the area stands out */
-.cell-theme :deep(.theme-hit:hover),
-.cell-theme :deep(.theme-hit:focus-within) {
-  background: var(--press);
 }
 
 .theme-hit__body {
