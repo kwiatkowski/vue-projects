@@ -41,6 +41,8 @@
   /** room kept from the screen's edges, the gap to the anchor (the triangle sits in it) */
   const EDGE = 8
   const GAP = 10
+  /** the triangle in a corner: this far from the bubble's side */
+  const CORNER = 14
 
   const anchor = useTemplateRef<HTMLElement>('anchor')
   const tip = useTemplateRef<HTMLElement>('tip')
@@ -70,7 +72,16 @@
     }
 
     const center = box.left + box.width / 2
-    const left = Math.min(Math.max(center - size.width / 2, EDGE), window.innerWidth - size.width - EDGE)
+    let left = center - size.width / 2
+
+    // too close to an edge to centre it: the bubble goes the other way, its corner (and the triangle) at the anchor
+    if (left + size.width > window.innerWidth - EDGE) {
+      left = center + CORNER - size.width
+    } else if (left < EDGE) {
+      left = center - CORNER
+    }
+
+    left = Math.min(Math.max(left, EDGE), window.innerWidth - size.width - EDGE)
 
     // the top bar and the page's sticky header cover the upper part of the screen – no room above there
     const top = (document.querySelector('.head')?.getBoundingClientRect().bottom ?? 0) + EDGE
@@ -80,7 +91,7 @@
       'left': `${left}px`,
       'top': `${below.value ? box.bottom + GAP : box.top - GAP - size.height}px`,
       // where the triangle points – the anchor's centre, kept off the rounded corners
-      '--arrow': `${Math.min(Math.max(center - left, 12), size.width - 12)}px`,
+      '--arrow': `${Math.min(Math.max(center - left, CORNER), size.width - CORNER)}px`,
     }
   }
 
@@ -117,7 +128,7 @@
   z-index: 60;
   /* as wide as its content – near the screen's right edge a fixed box would otherwise squeeze and wrap */
   width: max-content;
-  max-width: 280px;
+  max-width: min(360px, calc(100vw - 16px));
   padding: 7px 10px;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);

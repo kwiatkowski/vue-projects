@@ -208,7 +208,7 @@
                   </template>
 
                   <div class="report-menu__head" :class="{ 'report-menu__head--ok': !scopeOf(project) }">
-                    <template v-if="toDo(project).length > 0">Do aktualizacji: {{ toDo(project).length }}</template>
+                    <template v-if="toDo(project).length > 0">Do aktualizacji wtyczki: {{ toDo(project).length }}</template>
                     <template v-else-if="scopeOf(project)">Tłumaczenia do aktualizacji</template>
                     <template v-else>Wszystko aktualne</template>
                   </div>
@@ -219,7 +219,7 @@
                   </div>
 
                   <div v-if="project.translationUpdates?.length" class="report-menu__item">
-                    <span>Tłumaczenia</span>
+                    <span>Do aktualizacji tłumaczenia</span>
                     <span class="mono info-tip__new">{{ project.translationUpdates.length }}</span>
                   </div>
 
@@ -251,14 +251,17 @@
                 />
 
                 <template #tip>
-                  {{ reportTitle(project) }}
-                  <div v-if="project.reporter" class="info-tip__sub mono">{{ reporterLabel(project.reporter) }}</div>
+                  <!-- a header: when (or why not), and what sent it on the right -->
+                  <div class="report-tip__title" :class="{ 'report-tip__title--alone': toDo(project).length === 0 && !project.translationUpdates?.length }">
+                    <strong>{{ reportTitle(project) }}</strong>
+                    <span v-if="project.reporter" class="mono faint">{{ reporterLabel(project.reporter) }}</span>
+                  </div>
 
                   <!-- what's waiting on the site: WordPress and the plugins, installed → available -->
                   <template v-if="toDo(project).length > 0">
-                    <div class="info-tip__head info-tip__head--todo">Do aktualizacji: {{ toDo(project).length }}</div>
+                    <div class="info-tip__head info-tip__head--todo">Do aktualizacji wtyczki: {{ toDo(project).length }}</div>
 
-                    <dl class="info-tip">
+                    <dl class="info-tip info-tip--right">
                       <template v-for="item in toDo(project)" :key="item.name">
                         <dt>{{ item.name }}</dt>
                         <dd class="mono">{{ item.version }} → <span class="info-tip__new">{{ item.update }}</span></dd>
@@ -266,8 +269,9 @@
                     </dl>
                   </template>
 
-                  <div v-if="project.translationUpdates?.length" class="info-tip__head info-tip__head--todo">
-                    Tłumaczenia do aktualizacji: {{ project.translationUpdates.length }}
+                  <div v-if="project.translationUpdates?.length" class="info-tip__head info-tip__head--todo report-tip__row">
+                    <span>Do aktualizacji tłumaczenia:</span>
+                    <span class="mono">{{ project.translationUpdates.length }}</span>
                   </div>
                 </template>
               </HoverTip>
@@ -969,11 +973,33 @@ tr:hover .row-grip {
   color: var(--warn);
 }
 
-/* under the report's date: what sent it */
-.info-tip__sub {
-  margin-top: 2px;
-  color: var(--text-2);
-  font-size: 12px;
+/* the report's tooltip: a header (when, what sent it), a line under it when more follows */
+.report-tip__title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding-bottom: 6px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--line-strong);
+  white-space: nowrap;
+}
+
+.report-tip__title--alone {
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: 0;
+}
+
+.report-tip__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* the versions on the right edge */
+.info-tip--right dd {
+  text-align: right;
 }
 
 .link {
