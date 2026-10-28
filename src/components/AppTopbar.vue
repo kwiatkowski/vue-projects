@@ -18,11 +18,6 @@
       <button class="btn btn--sm btn--accent" title="Nowy projekt" type="button" @click="projects.editing = 'new'">
         <Plus /> <span class="top__label">Nowy projekt</span>
       </button>
-
-      <!-- the list as everyone else sees it – without logging out -->
-      <button class="btn btn--sm btn--outline" title="Zobacz listę tak, jak widzą ją niezalogowani" type="button" @click="preview(true)">
-        <Eye /> <span class="top__label">Widok gościa</span>
-      </button>
     </template>
 
     <!-- the guest's view: says so, and leads back to the owner's -->
@@ -47,21 +42,48 @@
       <Moon v-else />
     </button>
 
-    <template v-if="config.user">
-      <img
-        alt=""
-        class="top__avatar"
-        height="24"
-        :src="config.user.avatar"
-        :title="config.user.name"
-        width="24"
-      >
+    <!-- the photo opens the account's menu: the guest's view (a switch) and logging out -->
+    <DropMenu
+      v-if="config.user"
+      :label="`Konto: ${config.user.name}`"
+      panel-class="user-menu"
+      :title="false"
+      :trigger-class="`menu__bare top__me${config.preview ? ' top__me--preview' : ''}`"
+    >
+      <template #trigger>
+        <img
+          alt=""
+          class="top__avatar"
+          height="24"
+          :src="config.user.avatar"
+          width="24"
+        >
 
-      <a v-if="config.logoutUrl" class="btn btn--icon btn--sm" :href="config.logoutUrl" title="Wyloguj">
-        <LogOut />
-        <span class="visually-hidden">Wyloguj</span>
+        <ChevronDown class="top__caret" />
+      </template>
+
+      <div class="user-menu__head">
+        <strong>{{ config.user.name }}</strong>
+        <span class="faint">{{ config.preview ? 'podgląd jako gość' : (config.canManage ? 'właściciel listy' : 'zalogowany') }}</span>
+      </div>
+
+      <!-- the list as everyone else sees it – without logging out -->
+      <button
+        v-if="config.canManage || config.preview"
+        :aria-checked="config.preview"
+        class="menu__item user-menu__switch"
+        role="menuitemcheckbox"
+        type="button"
+        @click="preview(!config.preview)"
+      >
+        <Eye /> Widok gościa
+        <span aria-hidden="true" class="switch" :class="{ 'switch--on': config.preview }" />
+      </button>
+
+      <a v-if="config.logoutUrl" class="menu__item" :href="config.logoutUrl" role="menuitem">
+        <LogOut /> Wyloguj
       </a>
-    </template>
+    </DropMenu>
 
     <a v-else-if="config.loginUrl" class="btn btn--sm btn--outline" :href="config.loginUrl">
       <LogIn /> <span class="top__label">Zaloguj</span>
@@ -70,7 +92,8 @@
 </template>
 
 <script lang="ts" setup>
-  import { Eye, EyeOff, FolderPlus, Layers, LogIn, LogOut, Moon, Plus, Sun } from 'lucide-vue-next'
+  import { ChevronDown, Eye, EyeOff, FolderPlus, Layers, LogIn, LogOut, Moon, Plus, Sun } from 'lucide-vue-next'
+  import DropMenu from '@/components/ui/DropMenu.vue'
   import { useTheme } from '@/composables/theme'
   import { config } from '@/config'
   import { useProjectsStore } from '@/stores/projects'
@@ -163,13 +186,94 @@
 .top__avatar {
   width: 24px;
   height: 24px;
-  margin-left: 4px;
   border-radius: 50%;
+}
+
+/* the photo and a small arrow – one button for the account's menu */
+.top :deep(.top__me) {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 4px;
+  padding: 2px 4px 2px 2px;
+  border-radius: 999px;
+  color: var(--text-3);
+}
+
+.top :deep(.top__me:hover),
+.top :deep(.top__me[aria-expanded='true']) {
+  background: var(--hover);
+  color: var(--text);
+}
+
+/* the guest's view: the photo ringed in the warning colour */
+.top :deep(.top__me--preview .top__avatar) {
+  box-shadow: 0 0 0 2px var(--warn);
+}
+
+.top__caret {
+  width: 14px;
+  height: 14px;
 }
 
 @media (max-width: 560px) {
   .top__label {
     display: none;
   }
+}
+</style>
+
+<!-- the account's menu is rendered in <body> – out of the scoped styles -->
+<style>
+.user-menu {
+  min-width: 220px;
+}
+
+.user-menu__head {
+  display: grid;
+  gap: 1px;
+  padding: 6px 10px 8px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.user-menu__head .faint {
+  font-size: 12px;
+}
+
+/* the switch on the right of its item */
+.user-menu__switch .switch {
+  margin-left: auto;
+}
+
+.switch {
+  position: relative;
+  flex: none;
+  width: 28px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--line-strong);
+  transition: background-color .15s;
+}
+
+.switch::after {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--surface);
+  content: '';
+  transition: translate .15s;
+}
+
+.switch--on {
+  background: var(--warn);
+}
+
+.switch--on::after {
+  translate: 12px 0;
 }
 </style>
