@@ -356,6 +356,31 @@
         <div v-show="tab === 'access'" class="tab-panel" role="tabpanel">
           <!-- one section per environment: its addresses (open, copy), then its logins -->
           <div class="access">
+            <!-- the panel's login and password – the same on production, staging and the local copy -->
+            <fieldset class="group access__group">
+              <legend class="eyebrow">Logowanie do panelu <span class="access__note">– wszystkie środowiska</span></legend>
+
+              <div class="grid">
+                <label class="field">
+                  <span>Login</span>
+
+                  <CopyInput
+                    v-model="form.login"
+                    autocomplete="off"
+                    class="mono"
+                    tip="Kopiuj login"
+                    type="text"
+                    what="Login"
+                  />
+                </label>
+
+                <label class="field">
+                  <span>Hasło</span>
+                  <PasswordInput v-model="password" v-model:shown="showPassword" :loading="passwordLoading" what="Hasło" />
+                </label>
+              </div>
+            </fieldset>
+
             <fieldset v-for="group in ACCESS_GROUPS" :key="group.key" class="group access__group">
               <legend class="eyebrow">{{ group.label }}</legend>
 
@@ -391,27 +416,6 @@
               </div>
 
               <template v-if="group.key === 'production'">
-                <!-- the panel's login and password -->
-                <div class="grid">
-                  <label class="field">
-                    <span>Login do panelu</span>
-
-                    <CopyInput
-                      v-model="form.login"
-                      autocomplete="off"
-                      class="mono"
-                      tip="Kopiuj login"
-                      type="text"
-                      what="Login"
-                    />
-                  </label>
-
-                  <label class="field">
-                    <span>Hasło do panelu</span>
-                    <PasswordInput v-model="password" v-model:shown="showPassword" :loading="passwordLoading" what="Hasło" />
-                  </label>
-                </div>
-
                 <!-- a site behind HTTP Basic Auth: the list fetches its report with these -->
                 <div class="grid">
                   <label class="field">
@@ -1062,6 +1066,12 @@
 .access {
   display: grid;
   gap: 18px;
+}
+
+.access__note {
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .access__group:first-child {
