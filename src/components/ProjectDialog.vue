@@ -4,7 +4,7 @@
     v-model="open"
     :can-close="canClose"
     :title="project ? 'Edycja projektu' : 'Nowy projekt'"
-    :width="1100"
+    :width="1240"
     @submit="save"
   >
     <!-- two columns: the name and what defines the project on the left, always in view; the details on the right, in
@@ -462,6 +462,10 @@
           </div>
         </div>
 
+        <div v-show="tab === 'notes'" class="tab-panel" role="tabpanel">
+          <NotesEditor :max-length="5000" :model-value="form.notes ?? ''" placeholder="Notatki" @update:model-value="form.notes = $event" />
+        </div>
+
         <div v-show="tab === 'todo'" class="tab-panel" role="tabpanel">
 
           <label class="field">
@@ -497,7 +501,7 @@
           </template>
         </div>
 
-        <div v-show="tab === 'notes'" class="tab-panel" role="tabpanel">
+        <div v-show="tab === 'integrations'" class="tab-panel" role="tabpanel">
           <!-- reCAPTCHA v3: the site key, and the secret one kept encrypted like the passwords -->
           <fieldset class="group">
             <legend class="eyebrow">reCAPTCHA v3</legend>
@@ -537,10 +541,6 @@
             </template>
           </fieldset>
 
-          <fieldset class="group">
-            <legend class="eyebrow">Notatka</legend>
-            <NotesEditor :max-length="5000" :model-value="form.notes ?? ''" placeholder="Notatki" @update:model-value="form.notes = $event" />
-          </fieldset>
         </div>
       </div>
     </div>
@@ -603,7 +603,7 @@
 
 <script lang="ts" setup>
   import type { Flag, Project, ProjectInput, ReportPlugin, SiteReport, Status, TodoTask, UpdateState } from '@/types'
-  import { Activity, AlertTriangle, ArrowUpRight, Check, Copy, Cpu, KeyRound, ListChecks, Minus, PenLine, Plus, Puzzle, RefreshCw, Server, Trash2, X } from 'lucide-vue-next'
+  import { Activity, AlertTriangle, ArrowUpRight, Check, Copy, Cpu, KeyRound, ListChecks, Minus, NotebookPen, PenLine, Plus, Puzzle, RefreshCw, Server, Trash2, X } from 'lucide-vue-next'
   import { type Component, computed, defineAsyncComponent, nextTick, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
   import StatusChip from '@/components/StatusChip.vue'
@@ -664,7 +664,7 @@
   const versionOptions = computed(() => versions(config.latestWordpress, ...config.wordpressVersions, form.value.version, ...projects.items.map(item => item.version)))
   const phpOptions = computed(() => versions('7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5', form.value.php, ...projects.items.map(item => item.php)))
 
-  type Tab = 'report' | 'server' | 'tech' | 'access' | 'todo' | 'notes'
+  type Tab = 'report' | 'server' | 'tech' | 'access' | 'integrations' | 'notes' | 'todo'
 
   /** the right column's tabs; `fields` – what a change there marks the tab with */
   const TABS: Array<{ key: Tab, label: string, icon: Component, fields: string[] }> = [
@@ -672,7 +672,8 @@
     { key: 'server', label: 'Serwer', icon: Server, fields: ['server', 'serverUrl', 'serverAccount'] },
     { key: 'tech', label: 'Technologia', icon: Cpu, fields: ['engine', 'version', 'theme', 'php'] },
     { key: 'access', label: 'Dostęp', icon: KeyRound, fields: ['adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login', 'authUser', 'stagingAuthUser'] },
-    { key: 'notes', label: 'Integracje', icon: Puzzle, fields: ['recaptchaSiteKey', 'notes'] },
+    { key: 'integrations', label: 'Integracje', icon: Puzzle, fields: ['recaptchaSiteKey'] },
+    { key: 'notes', label: 'Notatki', icon: NotebookPen, fields: ['notes'] },
     { key: 'todo', label: 'Todo', icon: ListChecks, fields: ['todoProject'] },
   ]
 
@@ -684,7 +685,7 @@
     const fields = TABS.find(item => item.key === key)?.fields ?? []
     const changed = fields.some(field => JSON.stringify((form.value as Record<string, unknown>)[field]) !== JSON.stringify(before[field]))
 
-    return changed || (key === 'access' && accessPasswordsChanged.value) || (key === 'notes' && recaptchaSecret.value !== savedRecaptchaSecret.value)
+    return changed || (key === 'access' && accessPasswordsChanged.value) || (key === 'integrations' && recaptchaSecret.value !== savedRecaptchaSecret.value)
   }
 
   /** the addresses under "Dostęp" – each with a button that opens it */

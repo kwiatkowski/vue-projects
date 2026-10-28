@@ -71,12 +71,39 @@
       Placeholder.configure({ placeholder: props.placeholder ?? '' }),
       CharacterCount.configure({ limit: props.maxLength ?? null }),
     ],
+    editorProps: { handlePaste: (view, event) => pastePlain(view.state.selection.$from.parent.type.spec.code === true, event) },
     onUpdate: ({ editor: current }) => {
       model.value = current.isEmpty ? '' : current.getMarkdown()
     },
     onFocus: () => (focused.value = true),
     onBlur: () => (focused.value = false),
   })
+
+  /**
+   * Plain text keeps its lines as they were: each line its own (a hard break), a blank one between paragraphs. Also for
+   * text from a code editor (VS Code: HTML with `white-space: pre`, which would come in as one line); other HTML –
+   * a web page's formatting – is left to the editor.
+   */
+  function pastePlain (inCode: boolean, event: ClipboardEvent): boolean {
+    const text = (event.clipboardData?.getData('text/plain') ?? '').replaceAll(/\r\n?/g, '\n')
+    const html = event.clipboardData?.getData('text/html') ?? ''
+
+    if (inCode || !editor.value || !text.includes('\n') || (html && !/white-space:\s*pre/.test(html))) {
+      return false
+    }
+
+    const paragraphs = text.replace(/^\n+|\n+$/g, '').split(/\n{2,}/).map(block => ({
+      type: 'paragraph',
+      content: block.split('\n').flatMap((line, index) => [
+        ...(index > 0 ? [{ type: 'hardBreak' }] : []),
+        ...(line ? [{ type: 'text', text: line }] : []),
+      ]),
+    }))
+
+    editor.value.chain().focus().insertContent(paragraphs).run()
+
+    return true
+  }
 
   // another project opened in the same dialog – swap the content without echoing it back
   watch(model, value => {
