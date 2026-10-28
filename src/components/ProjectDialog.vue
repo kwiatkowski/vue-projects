@@ -658,8 +658,8 @@
     { key: 'server', label: 'Serwer', icon: Server, fields: ['server', 'serverUrl', 'serverAccount'] },
     { key: 'tech', label: 'Technologia', icon: Cpu, fields: ['engine', 'version', 'theme', 'php'] },
     { key: 'access', label: 'Dostęp', icon: KeyRound, fields: ['adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login', 'authUser', 'stagingAuthUser'] },
-    { key: 'todo', label: 'Todo', icon: ListChecks, fields: ['todoProject'] },
     { key: 'notes', label: 'Notatki', icon: NotebookPen, fields: ['recaptchaSiteKey', 'notes'] },
+    { key: 'todo', label: 'Todo', icon: ListChecks, fields: ['todoProject'] },
   ]
 
   const tab = ref<Tab>('report')
