@@ -214,38 +214,29 @@
                     <span class="report" :class="`report--${dotState(project)}`" />
                   </template>
 
-                  <div class="report-menu__head" :class="{ 'report-menu__head--ok': !scopeOf(project) }">
-                    <template v-if="toDo(project).length > 0">Do aktualizacji wtyczki: {{ toDo(project).length }}</template>
-                    <template v-else-if="scopeOf(project)">Tłumaczenia do aktualizacji</template>
-                    <template v-else>Wszystko aktualne</template>
+                  <!-- the same as the tooltip, then what to do -->
+                  <div class="report-menu__summary">
+                    <ReportSummary menu :project="project" :title="reportTitle(project)" />
                   </div>
 
-                  <div v-for="item in toDo(project)" :key="item.name" class="report-menu__item">
-                    <span>{{ item.name }}</span>
-                    <span class="mono faint">{{ item.version }} → <span class="info-tip__new">{{ item.update }}</span></span>
-                  </div>
-
-                  <div v-if="project.translationUpdates?.length" class="report-menu__item">
-                    <span>Do aktualizacji tłumaczenia</span>
-                    <span class="mono info-tip__new">{{ project.translationUpdates.length }}</span>
-                  </div>
-
-                  <!-- everything (plugins, translations, the database; on Bedrock through Composer, committed and pushed),
+                  <div class="report-menu__actions">
+                    <!-- everything (plugins, translations, the database; on Bedrock through Composer, committed and pushed),
                        or the translations alone – only when something waits -->
-                  <button
-                    v-if="scopeOf(project)"
-                    class="menu__item"
-                    :disabled="projects.updating.has(project.id)"
-                    role="menuitem"
-                    type="button"
-                    @click="projects.runUpdate(project.id, scopeOf(project) ?? 'all')"
-                  >
-                    <RefreshCw /> {{ projects.updating.has(project.id) ? 'Aktualizuję…' : UPDATE_LABELS[scopeOf(project) ?? 'all'] }}
-                  </button>
+                    <button
+                      v-if="scopeOf(project)"
+                      class="menu__item"
+                      :disabled="projects.updating.has(project.id)"
+                      role="menuitem"
+                      type="button"
+                      @click="projects.runUpdate(project.id, scopeOf(project) ?? 'all')"
+                    >
+                      <RefreshCw /> {{ projects.updating.has(project.id) ? 'Aktualizuję…' : UPDATE_LABELS[scopeOf(project) ?? 'all'] }}
+                    </button>
 
-                  <button class="menu__item" role="menuitem" type="button" @click="emit('open', project)">
-                    <FileText /> Szczegóły raportu
-                  </button>
+                    <button class="menu__item" role="menuitem" type="button" @click="emit('open', project)">
+                      <FileText /> Szczegóły raportu
+                    </button>
+                  </div>
                 </DropMenu>
 
                 <span
@@ -258,28 +249,7 @@
                 />
 
                 <template #tip>
-                  <!-- a header: when (or why not), and what sent it on the right -->
-                  <div class="report-tip__title" :class="{ 'report-tip__title--alone': toDo(project).length === 0 && !project.translationUpdates?.length }">
-                    <strong>{{ reportTitle(project) }}</strong>
-                    <span v-if="project.reporter" class="mono faint">{{ reporterLabel(project.reporter) }}</span>
-                  </div>
-
-                  <!-- what's waiting on the site: WordPress and the plugins, installed → available -->
-                  <template v-if="toDo(project).length > 0">
-                    <div class="info-tip__head info-tip__head--todo">Do aktualizacji wtyczki: {{ toDo(project).length }}</div>
-
-                    <dl class="info-tip info-tip--right">
-                      <template v-for="item in toDo(project)" :key="item.name">
-                        <dt>{{ item.name }}</dt>
-                        <dd class="mono">{{ item.version }} → <span class="info-tip__new">{{ item.update }}</span></dd>
-                      </template>
-                    </dl>
-                  </template>
-
-                  <div v-if="project.translationUpdates?.length" class="info-tip__head info-tip__head--todo report-tip__row">
-                    <span>Do aktualizacji tłumaczenia:</span>
-                    <span class="mono">{{ project.translationUpdates.length }}</span>
-                  </div>
+                  <ReportSummary :project="project" :title="reportTitle(project)" />
                 </template>
               </HoverTip>
             </td>
@@ -364,6 +334,7 @@
   import { ArrowUpRight, Check, ChevronDown, FileText, FlaskConical, GripVertical, Laptop, RefreshCw } from 'lucide-vue-next'
   import { computed, ref } from 'vue'
   import CategoryMenu from '@/components/CategoryMenu.vue'
+  import ReportSummary from '@/components/ReportSummary.vue'
   import SiteLinkMenu from '@/components/SiteLinkMenu.vue'
   import StatusChip from '@/components/StatusChip.vue'
   import TodoChip from '@/components/TodoChip.vue'
@@ -373,7 +344,7 @@
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
   import { dragId, dragKind, dropTarget, setDrag } from '@/utils/drag'
-  import { formatDateTime, latestWordpress, pendingUpdates, repoHost, reportState, siteUrl, UPDATE_LABELS, updateScope } from '@/utils/projects'
+  import { formatDateTime, latestWordpress, repoHost, reportState, siteUrl, UPDATE_LABELS, updateScope } from '@/utils/projects'
 
   const props = defineProps<{
     groups: Array<Group<Project>>
@@ -458,8 +429,6 @@
     ].filter((row): row is { label: string, value: string } => Boolean(row.value))
   }
 
-  /** what the site should update: WordPress (older than the newest) and the plugins its report lists */
-  const toDo = (project: Project) => pendingUpdates(project, config.latestWordpress)
   const scopeOf = (project: Project) => updateScope(project, config.latestWordpress)
 
   /** the report's dot: orange instead of green when the site reports, but has something to update */
@@ -472,9 +441,6 @@
 
     return state === 'ok' && scopeOf(project) ? 'todo' : state
   }
-
-  /** "mk-core 2026.10.27" → "MK Core 2026.10.27"; plugin_meden as it is */
-  const reporterLabel = (reporter: string) => reporter.replace(/^mk-core\b/, 'MK Core')
 
   const isLatest = (project: Project) => latestWordpress(project, config.latestWordpress)
   const latestTitle = config.latestWordpress ? `Najnowszy WordPress (${config.latestWordpress})` : undefined
@@ -969,71 +935,6 @@ tr:hover .row-grip {
   text-underline-offset: 3px;
 }
 
-.info-tip__head {
-  margin-bottom: 6px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.info-tip {
-  display: grid;
-  grid-template-columns: auto auto;
-  gap: 2px 16px;
-  margin: 0;
-}
-
-.info-tip dt {
-  color: var(--text-2);
-}
-
-.info-tip dd {
-  margin: 0;
-}
-
-/* the report's list of updates: a gap over it, the new version in the warning colour */
-.info-tip__head--todo {
-  margin: 8px 0 4px;
-  color: var(--warn);
-}
-
-.info-tip__new {
-  color: var(--warn);
-}
-
-/* the report's tooltip: a header (when, what sent it), a line under it when more follows */
-.report-tip__title {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 16px;
-  padding-bottom: 6px;
-  margin-bottom: 2px;
-  border-bottom: 1px solid var(--line-strong);
-  white-space: nowrap;
-}
-
-.report-tip__title--alone {
-  padding-bottom: 0;
-  margin-bottom: 0;
-  border-bottom: 0;
-}
-
-.report-tip__row {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-/* the versions on the right edge */
-.info-tip--right dd {
-  text-align: right;
-}
-
-/* under a header's line */
-.info-tip--after {
-  margin-top: 6px;
-}
-
 .link {
   color: var(--text);
   text-decoration: underline;
@@ -1110,6 +1011,25 @@ tr:hover .row-grip {
   }
 }
 
+/* the menu: the summary with the tooltip's padding, a line, then the actions with room around them */
+.report-menu__summary {
+  padding: 6px 8px 8px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.report-menu__actions {
+  display: grid;
+  gap: 2px;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+}
+
+.report-menu__actions .menu__item {
+  height: 36px;
+}
+
 /* the dot as the menu's trigger – no button look */
 /* the dot is 8px – the area that shows its tooltip (and opens its menu) is much bigger, easy to hit */
 .center :deep(.report-hit) {
@@ -1127,26 +1047,6 @@ tr:hover .row-grip {
   border: 0;
   background: none;
   cursor: pointer;
-}
-
-.report-menu__head {
-  padding: 6px 10px 4px;
-  color: var(--warn);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.report-menu__head--ok {
-  color: var(--positive);
-}
-
-.report-menu__item {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 2px 10px;
-  font-size: 12px;
-  white-space: nowrap;
 }
 
 .report--ok::after,

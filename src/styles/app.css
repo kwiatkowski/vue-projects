@@ -764,3 +764,75 @@ input[type='checkbox']:disabled {
     transition-duration: 0s !important;
   }
 }
+
+/* ---------- tooltips with more in them (the report, the theme): a header, rows, values on the right ---------- */
+
+.info-tip__head {
+  margin-bottom: 6px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.info-tip {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 2px 16px;
+  margin: 0;
+}
+
+.info-tip dt {
+  color: var(--text-2);
+}
+
+.info-tip dd {
+  margin: 0;
+}
+
+/* the report's list of updates: a gap over it, the new version in the warning colour */
+.info-tip__head--todo {
+  margin: 8px 0 4px;
+  color: var(--warn);
+}
+
+.info-tip__new {
+  color: var(--warn);
+}
+
+.info-tip__head--ok {
+  margin: 8px 0 0;
+  color: var(--positive);
+}
+
+/* a header: the name / the report's time on the left, a version on the right, a line under it when more follows */
+.report-tip__title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding-bottom: 6px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--line-strong);
+  white-space: nowrap;
+}
+
+.report-tip__title--alone {
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: 0;
+}
+
+.report-tip__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* the versions on the right edge */
+.info-tip--right dd {
+  text-align: right;
+}
+
+/* under a header's line */
+.info-tip--after {
+  margin-top: 6px;
+}
