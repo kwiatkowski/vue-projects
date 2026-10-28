@@ -47,16 +47,17 @@
   /** the list checked the address (the staging) and it answered 200 – the icon in the accent colour */
   const up = computed(() => props.status?.code === 200)
 
-  const tipText = computed(() => {
+  /** the list's check, at the top of the menu (no tooltip on the icon) */
+  const statusText = computed(() => {
     const status = props.status
 
     if (!status) {
-      return `${props.label}: ${props.url}`
+      return ''
     }
 
-    const when = formatDateTime(status.checkedAt).slice(-5)
+    const answer = status.code === 200 ? 'odpowiada (200)' : (status.code ? `nie odpowiada (HTTP ${status.code})` : 'nie odpowiada')
 
-    return `${props.label}: ${props.url} · ${status.code === 200 ? 'odpowiada (200)' : (status.code ? `nie odpowiada (HTTP ${status.code})` : 'nie odpowiada')}, sprawdzono ${when}`
+    return `${answer}, sprawdzono ${formatDateTime(status.checkedAt).slice(-5)}`
   })
 
   const notify = useNotifyStore()
@@ -85,6 +86,16 @@
 .site-link svg {
   width: 16px;
   height: 16px;
+}
+
+.site-link__status {
+  padding: 0 10px 4px;
+  color: var(--text-3);
+  font-size: 11px;
+}
+
+.site-link__status--up {
+  color: var(--accent-text);
 }
 
 .site-link__head {
