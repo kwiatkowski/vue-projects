@@ -115,7 +115,7 @@
     const top = `${below ? anchor.bottom + 4 : anchor.top - 4 - height}px`
 
     if (props.matchWidth) {
-      // just under the trigger's focus ring (3px), as wide as the trigger
+      // just under the trigger, clear of its focus line, as wide as the trigger
       attachedBelow.value = below
       position.value = {
         top: `${below ? anchor.bottom + 3 : anchor.top - 3 - height}px`,

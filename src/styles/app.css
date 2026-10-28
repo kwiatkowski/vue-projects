@@ -38,8 +38,9 @@
 
   /* the positive case – online, the newest WordPress, a checkmark, a fresh report; the same green in both themes (as in Todo) */
   --positive: #7a9a3a;
-  /* the glow around a focused field (and an open select's list) – thin and faint */
-  --focus-ring: 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
+  /* nothing around a focused field (and an open select's list) – its green edge alone, the one 1px line every focused
+     or chosen control has */
+  --focus-ring: none;
   /* "nothing going on" – a suspended site, an unset report: a grey dot (the dark theme's strong line) */
   --off: #403e38;
 
@@ -171,9 +172,10 @@ a {
   text-decoration: none;
 }
 
+/* focus: one thin green line everywhere – as a focused field's edge, a pressed filter, an open select */
 :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  outline: 1px solid var(--accent);
+  outline-offset: 1px;
 }
 
 ::selection {
@@ -258,6 +260,12 @@ a {
 .btn--outline:hover {
   background: var(--surface);
   border-color: var(--text-3);
+}
+
+/* a bordered button shows the focus on its own edge, as a field does – not a second line around it */
+.btn--outline:focus-visible {
+  border-color: var(--accent);
+  outline: none;
 }
 
 .btn--primary {

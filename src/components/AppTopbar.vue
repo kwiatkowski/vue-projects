@@ -282,7 +282,7 @@
 
 /* the guest's view: the photo ringed in the warning colour */
 .top :deep(.top__me--preview .top__avatar) {
-  box-shadow: 0 0 0 2px var(--warn);
+  box-shadow: 0 0 0 1px var(--warn);
 }
 
 .top :deep(.top__me--viewer) {
