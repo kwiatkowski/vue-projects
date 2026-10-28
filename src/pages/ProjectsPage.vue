@@ -142,15 +142,16 @@
   onMounted(() => head.value && headObserver.observe(head.value))
   onBeforeUnmount(() => headObserver.disconnect())
 
-  // below 1500px the top bar gives way once the list is scrolled down – the header takes its place at the very top
-  // and the table its height; back at the top it returns (app.css: .topbar-away)
+  // below 1500px the top bar gives way once the list is scrolled down by its height – the header takes its place at the
+  // very top and the table its room; scrolled back above that, it returns (app.css: .topbar-away)
   const compact = window.matchMedia('(max-width: 1499px)')
+  const topbarSize = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--topbar-size')) || 52
 
   function onScroll (event: Event): void {
     const target = event.target
     const top = target instanceof HTMLElement && target.classList.contains('table-wrap') ? target.scrollTop : window.scrollY
 
-    document.documentElement.classList.toggle('topbar-away', compact.matches && top > 8)
+    document.documentElement.classList.toggle('topbar-away', compact.matches && top > topbarSize)
   }
 
   onMounted(() => {
