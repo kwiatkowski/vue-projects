@@ -426,6 +426,27 @@
                 <PasswordInput v-model="authPassword" v-model:shown="showAuthPassword" :loading="authPasswordLoading" what="Hasło Basic Auth" />
               </label>
             </div>
+
+            <!-- the staging behind HTTP Basic Auth: the list checks it with these (green Stage icon when it answers 200) -->
+            <div class="grid">
+              <label class="field">
+                <span>Staging – Basic Auth login</span>
+
+                <CopyInput
+                  v-model="form.stagingAuthUser"
+                  autocomplete="off"
+                  class="mono"
+                  tip="Kopiuj login Basic Auth stagingu"
+                  type="text"
+                  what="Login Basic Auth stagingu"
+                />
+              </label>
+
+              <label class="field">
+                <span>Staging – Basic Auth hasło</span>
+                <PasswordInput v-model="stagingPassword" v-model:shown="showStagingPassword" :loading="stagingPasswordLoading" what="Hasło Basic Auth stagingu" />
+              </label>
+            </div>
           </div>
         </div>
 
@@ -558,7 +579,7 @@
 
   const TEXT_FIELDS = [
     'server', 'serverUrl', 'serverAccount', 'php', 'engine', 'version', 'theme', 'repo', 'notes',
-    'adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login', 'authUser',
+    'adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login', 'authUser', 'stagingAuthUser',
   ] as const
 
   // ---- the dropdowns' options
@@ -587,7 +608,7 @@
     { key: 'report', label: 'Raport strony', icon: Activity, fields: [] },
     { key: 'server', label: 'Serwer', icon: Server, fields: ['server', 'serverUrl', 'serverAccount'] },
     { key: 'tech', label: 'Technologia', icon: Cpu, fields: ['engine', 'version', 'theme', 'php'] },
-    { key: 'access', label: 'Dostęp', icon: KeyRound, fields: ['adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login', 'authUser'] },
+    { key: 'access', label: 'Dostęp', icon: KeyRound, fields: ['adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login', 'authUser', 'stagingAuthUser'] },
     { key: 'todo', label: 'Todo', icon: ListChecks, fields: ['todoProject'] },
   ]
 
@@ -668,13 +689,14 @@
     initial.value = JSON.stringify(form.value)
     nameError.value = ''
     confirmDelete.value = confirmToken.value = false
-    showPassword.value = showAuthPassword.value = false
+    showPassword.value = showAuthPassword.value = showStagingPassword.value = false
     // a new project has no report yet – it starts on the server
     tab.value = editing === 'new' ? 'server' : 'report'
     envTarget.value = editing !== 'new' && !editing.bedrock ? 'wordpress' : 'bedrock'
 
     if (editing === 'new') {
       password.value = savedPassword.value = authPassword.value = savedAuthPassword.value = ''
+      stagingPassword.value = savedStagingPassword.value = ''
       void nextTick(() => nameInput.value?.focus())
     } else {
       void loadTasks(editing)
@@ -696,22 +718,31 @@
   const savedAuthPassword = ref('')
   const authPasswordLoading = ref(false)
   const showAuthPassword = ref(false)
+  const stagingPassword = ref('')
+  const savedStagingPassword = ref('')
+  const stagingPasswordLoading = ref(false)
+  const showStagingPassword = ref(false)
 
-  const passwordsChanged = computed(() => password.value !== savedPassword.value || authPassword.value !== savedAuthPassword.value)
+  const passwordsChanged = computed(() => password.value !== savedPassword.value || authPassword.value !== savedAuthPassword.value
+    || stagingPassword.value !== savedStagingPassword.value)
 
   async function loadPassword (project: Project): Promise<void> {
     password.value = savedPassword.value = authPassword.value = savedAuthPassword.value = ''
+    stagingPassword.value = savedStagingPassword.value = ''
     passwordLoading.value = !!project.hasPassword
     authPasswordLoading.value = !!project.hasAuthPassword
+    stagingPasswordLoading.value = !!project.hasStagingAuthPassword
 
-    const [panel, auth] = await Promise.all([
+    const [panel, auth, staging] = await Promise.all([
       project.hasPassword ? projectsApi.password(project.id).catch(() => null) : null,
       project.hasAuthPassword ? projectsApi.password(project.id, 'auth').catch(() => null) : null,
+      project.hasStagingAuthPassword ? projectsApi.password(project.id, 'staging').catch(() => null) : null,
     ])
 
     password.value = savedPassword.value = panel?.password ?? ''
     authPassword.value = savedAuthPassword.value = auth?.password ?? ''
-    passwordLoading.value = authPasswordLoading.value = false
+    stagingPassword.value = savedStagingPassword.value = staging?.password ?? ''
+    passwordLoading.value = authPasswordLoading.value = stagingPasswordLoading.value = false
   }
 
   async function copy (text: string | null | undefined, what: string): Promise<void> {
@@ -893,6 +924,11 @@
     if (saved && authPassword.value !== savedAuthPassword.value) {
       saved = await projects.setPassword(saved.id, authPassword.value || null, 'auth')
       savedAuthPassword.value = saved ? authPassword.value : savedAuthPassword.value
+    }
+
+    if (saved && stagingPassword.value !== savedStagingPassword.value) {
+      saved = await projects.setPassword(saved.id, stagingPassword.value || null, 'staging')
+      savedStagingPassword.value = saved ? stagingPassword.value : savedStagingPassword.value
     }
 
     busy.value = false

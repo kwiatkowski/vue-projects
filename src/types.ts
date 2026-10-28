@@ -72,6 +72,8 @@ export interface Project extends Record<Flag, boolean> {
   login: string | null
   /** HTTP Basic Auth in front of the site – the list fetches the report with it (the password apart, like the panel's) */
   authUser: string | null
+  /** the staging's HTTP Basic Auth – the list checks the staging with it */
+  stagingAuthUser: string | null
   /** RRRR-MM-DD */
   /** id of the linked Todo project */
   todoProject: number | null
@@ -84,6 +86,10 @@ export interface Project extends Record<Flag, boolean> {
   hasPassword?: boolean
   /** whether a Basic Auth password is kept */
   hasAuthPassword?: boolean
+  /** whether the staging's Basic Auth password is kept */
+  hasStagingAuthPassword?: boolean
+  /** what the staging answered at the list's last pull – 200 means it works */
+  staging?: { code: number, checkedAt: string } | null
   updatedAt: string | null
   /** from the last report (not on the public list): the parent theme, the themes' versions and authors, what sent it */
   parentTheme?: string | null
@@ -173,9 +179,9 @@ export interface SiteReport {
 }
 
 /** What the API takes: any field, null clears it. */
-export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter' | 'updates' | 'translationUpdates' | 'ssl'>>
+export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'hasStagingAuthPassword' | 'staging' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter' | 'updates' | 'translationUpdates' | 'ssl'>>
 
 /** the passwords kept encrypted: the panel's and HTTP Basic Auth's */
-export type PasswordKind = 'panel' | 'auth'
+export type PasswordKind = 'panel' | 'auth' | 'staging'
 
 export type SortKey = 'name' | 'status' | 'server' | 'php' | 'version' | 'theme' | 'reportedAt'

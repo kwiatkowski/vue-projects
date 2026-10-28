@@ -1,5 +1,5 @@
 <template>
-  <DropMenu align="start" :label="`${label}: ${url}`" tip trigger-class="menu__bare site-link">
+  <DropMenu align="start" :label="tipText" tip :trigger-class="`menu__bare site-link${up ? ' site-link--up' : ''}`">
     <template #trigger>
       <slot />
     </template>
@@ -35,11 +35,28 @@
 
 <script lang="ts" setup>
   import { Copy, LogIn, SquareArrowOutUpRight } from 'lucide-vue-next'
+  import { computed } from 'vue'
   import DropMenu from '@/components/ui/DropMenu.vue'
   import { useNotifyStore } from '@/stores/notify'
+  import { formatDateTime } from '@/utils/projects'
 
   /** An icon in the list (the local copy, staging) – a click opens a small menu: the site, its panel, copy the address. */
-  const props = defineProps<{ url: string, adminUrl?: string | null, label: string }>()
+  const props = defineProps<{ url: string, adminUrl?: string | null, label: string, status?: { code: number, checkedAt: string } | null }>()
+
+  /** the list checked the address (the staging) and it answered 200 – the icon in the accent colour */
+  const up = computed(() => props.status?.code === 200)
+
+  const tipText = computed(() => {
+    const status = props.status
+
+    if (!status) {
+      return `${props.label}: ${props.url}`
+    }
+
+    const when = formatDateTime(status.checkedAt).slice(-5)
+
+    return `${props.label}: ${props.url} · ${status.code === 200 ? 'odpowiada (200)' : (status.code ? `nie odpowiada (HTTP ${status.code})` : 'nie odpowiada')}, sprawdzono ${when}`
+  })
 
   const notify = useNotifyStore()
 
@@ -59,7 +76,8 @@
 }
 
 .site-link:hover,
-.site-link[aria-expanded='true'] {
+.site-link[aria-expanded='true'],
+.site-link--up {
   color: var(--accent-text);
 }
 

@@ -182,7 +182,13 @@
             </td>
 
             <td class="center" :class="cellChanged(project, 'stagingUrl', 'stagingAdminUrl')">
-              <SiteLinkMenu v-if="project.stagingUrl" :admin-url="project.stagingAdminUrl" label="Staging" :url="project.stagingUrl">
+              <SiteLinkMenu
+                v-if="project.stagingUrl"
+                :admin-url="project.stagingAdminUrl"
+                label="Staging"
+                :status="project.staging"
+                :url="project.stagingUrl"
+              >
                 <FlaskConical />
               </SiteLinkMenu>
             </td>
