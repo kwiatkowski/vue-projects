@@ -220,7 +220,7 @@
   ])
 
   /** the projects of the chosen category – or all of them */
-  /** WordPress, plugins or translations waiting – what the report's dot shows orange for */
+  /** WordPress, plugins or translations waiting – what the report's orange arrow counts */
   const hasUpdates = (project: Project) => updateScope(project, projects.latestWordpress) !== null
 
   // the reports' details – the owner's, a viewer's with the report column; a guest gets none of them

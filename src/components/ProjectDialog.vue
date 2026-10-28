@@ -1441,7 +1441,7 @@
   cursor: pointer;
 }
 
-/* the certificate under the server's fields; its state in the colour of the report's dot */
+/* the certificate under the server's fields; its state in the colour of the report's mark */
 .ssl {
   margin-top: 20px;
 }

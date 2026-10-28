@@ -472,7 +472,7 @@ export const useProjectsStore = defineStore('projects', () => {
         notify.show(state.state === 'nothing' ? `${name}: nic nowego do zainstalowania.` : `${name}: zaktualizowano.`)
       }
 
-      // the site has sent its new report – the dot and the list of updates follow
+      // the site has sent its new report – the mark and the list of updates follow
       await refresh()
     } catch (error) {
       notify.error(error)

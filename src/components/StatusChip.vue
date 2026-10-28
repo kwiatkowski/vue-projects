@@ -27,7 +27,7 @@
   color: var(--positive);
 }
 
-/* suspended – the dark dot of an unset report, no pulse, the label greyed */
+/* suspended – a dark dot, no pulse, the label greyed */
 .chip--off {
   color: var(--text-3);
 }

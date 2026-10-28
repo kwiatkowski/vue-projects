@@ -203,17 +203,28 @@
             <TodoChip v-if="project.todo" :todo="project.todo" />
           </td>
 
-          <!-- a click here works the dot's popup, not the row's dialog -->
+          <!-- a click here works the report's popup, not the row's dialog -->
           <td v-if="show('report')" class="center cell-link" :class="cellChanged(project, 'reportedAt', 'token')" @click.stop>
-            <!-- one popup for the dot: what the report says and, for a site that reports, what to do – it can be entered -->
+            <!-- one popup for the mark: what the report says and, for a site that reports, what to do – it can be entered -->
             <HoverTip anchor-class="report-hit" :interactive="full && Boolean(project.token)">
               <span
                 :aria-label="reportTitle(project)"
                 class="report"
-                :class="`report--${dotState(project)}`"
+                :class="`report--${reportMark(project)}`"
                 role="img"
                 tabindex="0"
-              />
+              >
+                <RefreshCw v-if="reportMark(project) === 'running'" />
+                <TriangleAlert v-else-if="reportMark(project) === 'failed'" />
+
+                <template v-else-if="reportMark(project) === 'todo'">
+                  <template v-if="updateCount(project) > 0"><ArrowUp /><span class="mono">{{ updateCount(project) }}</span></template>
+                  <Lock v-else />
+                </template>
+
+                <Check v-else-if="reportMark(project) === 'ok'" />
+                <Minus v-else />
+              </span>
 
               <template #tip="{ hide }">
                 <ReportSummary :menu="full && Boolean(project.token)" :project="project" :title="reportTitle(project)" />
@@ -313,7 +324,7 @@
 <script lang="ts" setup>
   import type { Category, Flag, Project, SortKey } from '@/types'
   import type { Group } from '@/utils/projects'
-  import { ArrowUpRight, Check, ChevronDown, FileText, FlaskConical, GripVertical, Laptop, RefreshCw } from 'lucide-vue-next'
+  import { ArrowUp, ArrowUpRight, Check, ChevronDown, FileText, FlaskConical, GripVertical, Laptop, Lock, Minus, RefreshCw, TriangleAlert } from 'lucide-vue-next'
   import { computed, ref } from 'vue'
   import CategoryMenu from '@/components/CategoryMenu.vue'
   import ReportSummary from '@/components/ReportSummary.vue'
@@ -326,7 +337,7 @@
   import { FLAGS } from '@/types'
   import { type ColumnKey, COLUMNS } from '@/utils/columns'
   import { dragId, dragKind, dropTarget, setDrag } from '@/utils/drag'
-  import { formatDateTime, latestWordpress, repoHost, reportState, siteUrl, sslState, UPDATE_LABELS, updateScope } from '@/utils/projects'
+  import { formatDateTime, latestWordpress, pendingUpdates, repoHost, reportState, siteUrl, sslState, UPDATE_LABELS, updateScope } from '@/utils/projects'
 
   const props = defineProps<{
     groups: Array<Group<Project>>
@@ -381,7 +392,7 @@
     return changed && (changed.has('*') || fields.some(field => changed.has(field))) ? 'cell--changed' : undefined
   }
 
-  /** the report dot's tooltip – when the site last reported, or why it doesn't */
+  /** the report mark's tooltip – when the site last reported, or why it doesn't */
   function reportTitle (project: Project): string {
     const last = formatDateTime(project.reportedAt)
 
@@ -414,8 +425,13 @@
 
   const scopeOf = (project: Project) => updateScope(project, projects.latestWordpress)
 
-  /** the report's dot: orange instead of green when the site reports, but has something to update */
-  function dotState (project: Project): string {
+  /** WordPress, plugins and translations waiting – the number next to the report's arrow */
+  function updateCount (project: Project) {
+    return pendingUpdates(project, projects.latestWordpress).length + (project.translationUpdates?.length ?? 0)
+  }
+
+  /** the report's mark: a tick when the site reports, an orange arrow (or lock) when it has something to update */
+  function reportMark (project: Project): string {
     if (projects.updating.has(project.id)) {
       return 'running'
     }
@@ -959,16 +975,22 @@ tr:hover .row-grip {
   color: var(--accent-text);
 }
 
-/* the site's report as one dot: green and pulsing like the status – it reports; red – set up, but no report;
-   dark – not set up. The date and time in the tooltip. */
+/* the site's report as an icon – not a dot, that is the status's: a green tick – it reports; an orange arrow with the
+   number of updates (a lock – only the certificate runs out soon); a red warning – no report or a bad certificate;
+   a grey dash – not set up. No pulse. The date and time in the tooltip. */
 .report {
-  position: relative;
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: currentcolor;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  font-size: 12px;
+  font-weight: 600;
   vertical-align: middle;
+}
+
+.report svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.5;
 }
 
 .report--ok {
@@ -979,19 +1001,32 @@ tr:hover .row-grip {
   color: var(--warn);
 }
 
-/* updating itself – a spinning ring in the info colour */
+.report--failed {
+  color: var(--danger);
+}
+
+.report--off {
+  color: var(--text-3);
+}
+
+/* updating itself – the refresh icon spinning, in the info colour */
 .report--running {
-  width: 10px;
-  height: 10px;
-  border: 2px solid var(--info);
-  border-right-color: transparent;
-  background: none;
+  color: var(--info);
+}
+
+.report--running svg {
   animation: spin 1s linear infinite;
 }
 
 @keyframes spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .report--running svg {
+    animation: none;
   }
 }
 
@@ -1028,48 +1063,11 @@ tr:hover .row-grip {
   border-radius: 0;
 }
 
-/* the dot is 8px – the area that shows its popup is much bigger, easy to hit */
+/* the icon is small – the area that shows its popup is much bigger, easy to hit */
 .center :deep(.report-hit) {
   justify-content: center;
   min-width: 36px;
   min-height: 36px;
-}
-
-.report--ok::after,
-.report--todo::after {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: currentcolor;
-  opacity: .75;
-  animation: ping 1s cubic-bezier(0, 0, .2, 1) infinite;
-  content: '';
-}
-
-.report--failed {
-  color: var(--danger);
-}
-
-/* a hairline keeps the dark dot visible on the dark background */
-.report--off {
-  color: var(--off);
-  box-shadow: 0 0 0 1px var(--line-strong);
-}
-
-@keyframes ping {
-  75%,
-  100% {
-    opacity: 0;
-    transform: scale(2);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .report--ok::after,
-  .report--todo::after {
-    animation: none;
-    opacity: 0;
-  }
 }
 
 /* ---- phones */

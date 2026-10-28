@@ -43,7 +43,7 @@
   import { formatDay, pendingUpdates, sslDaysLeft, sslState } from '@/utils/projects'
 
   /**
-   * What the report's dot says – the same in its tooltip and in its menu: when the site reported and what sent it, the
+   * What the report's mark says – the same in its tooltip and in its menu: when the site reported and what sent it, the
    * site's certificate, the plugins (and WordPress) and the translations waiting for an update. `menu` – says "all up to
    * date" too.
    */
