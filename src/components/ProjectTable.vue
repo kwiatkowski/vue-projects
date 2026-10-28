@@ -217,15 +217,15 @@
                     <span class="mono faint">{{ item.version }} → <span class="info-tip__new">{{ item.update }}</span></span>
                   </div>
 
+                  <!-- plugins, translations, the database; on Bedrock through Composer, committed and pushed -->
                   <button
-                    v-if="toDo(project).length > 0"
                     class="menu__item"
                     :disabled="projects.updating.has(project.id)"
                     role="menuitem"
                     type="button"
                     @click="projects.runUpdate(project.id)"
                   >
-                    <RefreshCw /> {{ projects.updating.has(project.id) ? 'Aktualizuję…' : project.bedrock ? 'Aktualizuj przez Composer' : 'Aktualizuj wtyczki' }}
+                    <RefreshCw /> {{ projects.updating.has(project.id) ? 'Aktualizuję…' : 'Aktualizuj' }}
                   </button>
 
                   <button class="menu__item" role="menuitem" type="button" @click="emit('open', project)">

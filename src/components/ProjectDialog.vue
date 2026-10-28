@@ -175,17 +175,17 @@
                   type="button"
                   @click="startUpdate"
                 >
-                  <RefreshCw :class="{ spin: updateRunning }" /> {{ updateRunning ? 'Aktualizuję…' : update.mode === 'wordpress' ? 'Aktualizuj wtyczki' : 'Aktualizuj przez Composer' }}
+                  <RefreshCw :class="{ spin: updateRunning }" /> {{ updateRunning ? 'Aktualizuję…' : 'Aktualizuj' }}
                 </button>
 
-                <span v-if="update.mode === 'wordpress'" class="faint">strona bez Bedrocka – wtyczki przez WP-CLI na produkcji (<code>wp plugin update --all</code>)</span>
-                <span v-else class="faint">composer update na produkcji, commit i push <code>composer.lock</code> – na innych środowiskach <code>git pull</code> i <code>composer install</code></span>
+                <span v-if="update.mode === 'wordpress'" class="faint">wtyczki, tłumaczenia i baza na produkcji (strona bez Bedrocka – jak „Aktualizuj” w panelu)</span>
+                <span v-else class="faint">na produkcji <code>composer update</code>, baza, tłumaczenia i cache (jak <code>www_update</code>), commit i push – na innych środowiskach <code>git pull</code> i <code>composer install</code></span>
               </div>
 
               <p v-if="!update.available" class="update__note faint">{{ update.reason }}</p>
               <p v-else-if="update.state === 'done' && update.mode === 'wordpress'" class="update__note update__note--ok">Zaktualizowano {{ formatDateTime(update.finishedAt) }}.</p>
-              <p v-else-if="update.state === 'done'" class="update__note update__note--ok">Zaktualizowano {{ formatDateTime(update.finishedAt) }} – <code>composer.lock</code> jest w repozytorium.</p>
-              <p v-else-if="update.state === 'nothing' && update.mode === 'wordpress'" class="update__note faint">{{ formatDateTime(update.finishedAt) }}: wszystkie wtyczki są aktualne.</p>
+              <p v-else-if="update.state === 'done'" class="update__note update__note--ok">Zaktualizowano {{ formatDateTime(update.finishedAt) }} – zmiany są w repozytorium.</p>
+              <p v-else-if="update.state === 'nothing' && update.mode === 'wordpress'" class="update__note faint">{{ formatDateTime(update.finishedAt) }}: wtyczki i tłumaczenia są aktualne.</p>
               <p v-else-if="update.state === 'nothing'" class="update__note faint">{{ formatDateTime(update.finishedAt) }}: Composer nie znalazł nowszych wersji w ramach wymagań z <code>composer.json</code> (np. <code>^4</code> nie weźmie 5.0, wtyczki z prywatnych repozytoriów trzeba najpierw podbić tam).</p>
               <p v-else-if="update.state === 'failed'" class="update__note update__note--failed">Aktualizacja się nie udała – szczegóły w logu.</p>
 
