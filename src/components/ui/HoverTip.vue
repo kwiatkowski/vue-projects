@@ -3,7 +3,7 @@
     ref="anchor"
     class="tip-anchor"
     :class="anchorClass"
-    @click="hide"
+    @click.capture="hide"
     @focusin="onFocus"
     @focusout="hide"
     @mouseenter="show"

@@ -24,7 +24,7 @@
       :aria-label="label"
       :class="triggerClass"
       :disabled="disabled"
-      :title="label"
+      :title="title ? label : undefined"
       type="button"
       @click="toggle"
     >
@@ -69,7 +69,9 @@
     disabled?: boolean
     /** the label in a HoverTip, not the browser's title */
     tip?: boolean
-  }>(), { label: 'Więcej', triggerClass: 'btn btn--icon btn--sm', align: 'end', matchWidth: false, disabled: false, tip: false })
+    /** the browser's title with the label – off when the trigger sits in a HoverTip of its own */
+    title?: boolean
+  }>(), { label: 'Więcej', triggerClass: 'btn btn--icon btn--sm', align: 'end', matchWidth: false, disabled: false, tip: false, title: true })
 
   const open = ref(false)
   const position = ref<Record<string, string>>({})

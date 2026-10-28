@@ -363,8 +363,43 @@ export const useProjectsStore = defineStore('projects', () => {
     }
   }
 
+  /** sites updating themselves (Composer / the plugins), started from the table – their dot spins until it ends */
+  const updating = ref<Set<number>>(new Set())
+
+  async function runUpdate (id: number): Promise<void> {
+    const name = items.value.find(item => item.id === id)?.name ?? ''
+
+    try {
+      let state = await projectsApi.startUpdate(id)
+      updating.value = new Set(updating.value).add(id)
+      notify.show(`${name}: aktualizacja uruchomiona.`)
+
+      while (state.state === 'running') {
+        await new Promise(resolve => setTimeout(resolve, 4000))
+        state = await projectsApi.updateState(id)
+      }
+
+      if (state.state === 'failed') {
+        notify.show(`${name}: aktualizacja się nie udała – log w oknie projektu (Raport strony).`, { tone: 'error' })
+      } else {
+        notify.show(state.state === 'nothing' ? `${name}: nic nowego do zainstalowania.` : `${name}: zaktualizowano.`)
+      }
+
+      // the site has sent its new report – the dot and the list of updates follow
+      await refresh()
+    } catch (error) {
+      notify.error(error)
+    } finally {
+      const next = new Set(updating.value)
+      next.delete(id)
+      updating.value = next
+    }
+  }
+
   return {
     items,
+    updating,
+    runUpdate,
     categories,
     sortedCategories,
     changed,

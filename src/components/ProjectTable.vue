@@ -195,7 +195,46 @@
 
             <td class="center" :class="cellChanged(project, 'reportedAt', 'token')">
               <HoverTip>
+                <!-- a site that reports: a click opens what to update and the button that does it -->
+                <DropMenu
+                  v-if="full && project.token"
+                  align="end"
+                  :label="reportTitle(project)"
+                  :title="false"
+                  trigger-class="menu__bare report-trigger"
+                >
+                  <template #trigger>
+                    <span class="report" :class="`report--${dotState(project)}`" />
+                  </template>
+
+                  <div class="report-menu__head">
+                    <template v-if="toDo(project).length > 0">Do aktualizacji: {{ toDo(project).length }}</template>
+                    <template v-else>Wszystko aktualne</template>
+                  </div>
+
+                  <div v-for="item in toDo(project)" :key="item.name" class="report-menu__item">
+                    <span>{{ item.name }}</span>
+                    <span class="mono faint">{{ item.version }} → <span class="info-tip__new">{{ item.update }}</span></span>
+                  </div>
+
+                  <button
+                    v-if="toDo(project).length > 0"
+                    class="menu__item"
+                    :disabled="projects.updating.has(project.id)"
+                    role="menuitem"
+                    type="button"
+                    @click="projects.runUpdate(project.id)"
+                  >
+                    <RefreshCw /> {{ projects.updating.has(project.id) ? 'Aktualizuję…' : project.bedrock ? 'Aktualizuj przez Composer' : 'Aktualizuj wtyczki' }}
+                  </button>
+
+                  <button class="menu__item" role="menuitem" type="button" @click="emit('open', project)">
+                    <FileText /> Szczegóły raportu
+                  </button>
+                </DropMenu>
+
                 <span
+                  v-else
                   :aria-label="reportTitle(project)"
                   class="report"
                   :class="`report--${dotState(project)}`"
@@ -299,12 +338,13 @@
 <script lang="ts" setup>
   import type { Category, Flag, PluginUpdate, Project, SortKey } from '@/types'
   import type { Group } from '@/utils/projects'
-  import { ArrowUpRight, Check, ChevronDown, FlaskConical, GripVertical, Laptop } from 'lucide-vue-next'
+  import { ArrowUpRight, Check, ChevronDown, FileText, FlaskConical, GripVertical, Laptop, RefreshCw } from 'lucide-vue-next'
   import { computed, ref } from 'vue'
   import CategoryMenu from '@/components/CategoryMenu.vue'
   import SiteLinkMenu from '@/components/SiteLinkMenu.vue'
   import StatusChip from '@/components/StatusChip.vue'
   import TodoChip from '@/components/TodoChip.vue'
+  import DropMenu from '@/components/ui/DropMenu.vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
   import { config } from '@/config'
   import { useProjectsStore } from '@/stores/projects'
@@ -409,6 +449,10 @@
 
   /** the report's dot: orange instead of green when the site reports, but has something to update */
   function dotState (project: Project): string {
+    if (projects.updating.has(project.id)) {
+      return 'running'
+    }
+
     const state = reportState(project)
 
     return state === 'ok' && toDo(project).length > 0 ? 'todo' : state
@@ -984,6 +1028,50 @@ tr:hover .row-grip {
 
 .report--todo {
   color: var(--warn);
+}
+
+/* updating itself – a spinning ring in the info colour */
+.report--running {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--info);
+  border-right-color: transparent;
+  background: none;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* the dot as the menu's trigger – no button look */
+.report-trigger {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.report-menu__head {
+  padding: 6px 10px 4px;
+  color: var(--warn);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.report-menu__item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 2px 10px;
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .report--ok::after,
