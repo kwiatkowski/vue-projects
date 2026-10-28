@@ -193,10 +193,13 @@
   align-items: center;
   gap: 6px;
   height: var(--topbar);
+  /* below 1500px it folds away while the list is scrolled (--topbar → 0, app.css) */
+  overflow: hidden;
   padding: 0 var(--edge);
   border-bottom: 1px solid var(--line);
   background: color-mix(in srgb, var(--bg) 88%, transparent);
   backdrop-filter: blur(8px);
+  transition: height .2s ease, border-color .2s;
 }
 
 .top__brand {

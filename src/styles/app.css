@@ -839,3 +839,16 @@ input[type='checkbox']:disabled {
 .info-tip--after {
   margin-top: 6px;
 }
+
+/* below 1500px a scrolled list takes the top bar's room – it folds away, the list's header sits at the very top
+   (ProjectsPage) */
+@media (max-width: 1499px) {
+  /* over :root's own value (and the themes') */
+  :root.topbar-away {
+    --topbar: 0px;
+  }
+
+  .topbar-away .top {
+    border-bottom-color: transparent;
+  }
+}

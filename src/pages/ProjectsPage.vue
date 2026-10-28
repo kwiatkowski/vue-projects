@@ -142,6 +142,27 @@
   onMounted(() => head.value && headObserver.observe(head.value))
   onBeforeUnmount(() => headObserver.disconnect())
 
+  // below 1500px the top bar gives way once the list is scrolled down – the header takes its place at the very top
+  // and the table its height; back at the top it returns (app.css: .topbar-away)
+  const compact = window.matchMedia('(max-width: 1499px)')
+
+  function onScroll (event: Event): void {
+    const target = event.target
+    const top = target instanceof HTMLElement && target.classList.contains('table-wrap') ? target.scrollTop : window.scrollY
+
+    document.documentElement.classList.toggle('topbar-away', compact.matches && top > 8)
+  }
+
+  onMounted(() => {
+    // the table scrolls itself (wide screens), the page with the cards (phones); scroll doesn't bubble – caught on the way down
+    document.addEventListener('scroll', onScroll, { capture: true, passive: true })
+  })
+
+  onBeforeUnmount(() => {
+    document.removeEventListener('scroll', onScroll, { capture: true })
+    document.documentElement.classList.remove('topbar-away')
+  })
+
   // filter and search in the address – a filtered list can be linked and survives a reload
   const filter = ref<Filter>((route.query.status as Filter) || 'all')
   const query = ref(typeof route.query.q === 'string' ? route.query.q : '')
