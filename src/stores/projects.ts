@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { categoriesApi, projectsApi, todoApi } from '@/api/projects'
 import { config } from '@/config'
-import { compareManual, moveId } from '@/utils/projects'
+import { compareManual, groupProjects, moveId } from '@/utils/projects'
 import { useNotifyStore } from './notify'
 
 /**
@@ -28,35 +28,83 @@ export const useProjectsStore = defineStore('projects', () => {
 
   /**
    * Projects a refresh found changed (or new) → the fields that changed ('*' – a new project). The table highlights
-   * the row and blurs those cells under a spinner for 3 s – counted while the tab is visible (a change that came in a
-   * background tab waits for it) – then the row is `fading` for the fade-out.
+   * the row and blurs those cells under a spinner for SHOW_MS, then the row is `fading` for the fade-out.
    */
   const changed = ref<Map<number, Set<string>>>(new Map())
   const fading = ref<Set<number>>(new Set())
-  let changedTimer: ReturnType<typeof setTimeout> | undefined
-  let fadingTimer: ReturnType<typeof setTimeout> | undefined
+  const settleTimers = new Map<number, ReturnType<typeof setTimeout>>()
 
-  const SHOW_MS = 3000
+  const SHOW_MS = 1000
   const FADE_MS = 1000
+  /** the next changed row comes in this much later – one under another, not the whole list at once */
+  const STEP_MS = 1000
 
-  function settleWhenSeen (): void {
-    clearTimeout(changedTimer)
-    document.removeEventListener('visibilitychange', settleWhenSeen)
+  function highlight (id: number, fields: Set<string>): void {
+    changed.value = new Map(changed.value).set(id, new Set([...changed.value.get(id) ?? [], ...fields]))
+    fading.value = new Set([...fading.value].filter(item => item !== id))
+    clearTimeout(settleTimers.get(id))
+    settleTimers.set(id, setTimeout(() => {
+      const rest = new Map(changed.value)
+      rest.delete(id)
+      changed.value = rest
+      fading.value = new Set(fading.value).add(id)
+      settleTimers.set(id, setTimeout(() => {
+        fading.value = new Set([...fading.value].filter(item => item !== id))
+        settleTimers.delete(id)
+      }, FADE_MS))
+    }, SHOW_MS))
+  }
+
+  /**
+   * The changed projects still waiting for their turn, in the list's order: the row keeps what it showed until then.
+   * One comes in every STEP_MS while the tab is visible (a change that came in a background tab waits for it).
+   */
+  let queue: Array<{ project: Project, fields: Set<string> }> = []
+  let stepTimer: ReturnType<typeof setTimeout> | undefined
+  /** a list a step made → the one before it: a refresh on the way still counts after the steps alone */
+  const steppedFrom = new WeakMap<Project[], Project[]>()
+
+  function step (): void {
+    stepTimer = undefined
+    document.removeEventListener('visibilitychange', step)
 
     if (document.hidden) {
-      document.addEventListener('visibilitychange', settleWhenSeen, { once: true })
+      if (queue.length > 0) {
+        document.addEventListener('visibilitychange', step, { once: true })
+      }
 
       return
     }
 
-    changedTimer = setTimeout(() => {
-      fading.value = new Set(changed.value.keys())
-      changed.value = new Map()
-      clearTimeout(fadingTimer)
-      fadingTimer = setTimeout(() => {
-        fading.value = new Set()
-      }, FADE_MS)
-    }, SHOW_MS)
+    const [entry, ...rest] = queue
+    queue = rest
+
+    if (!entry) {
+      return
+    }
+
+    const before = items.value
+    const shown = before.some(item => item.id === entry.project.id)
+
+    // a project removed meanwhile stays removed
+    if (shown || entry.fields.has('*')) {
+      items.value = shown ? before.map(item => item.id === entry.project.id ? entry.project : item) : [...before, entry.project]
+      steppedFrom.set(items.value, before)
+      highlight(entry.project.id, entry.fields)
+    }
+
+    stepTimer = setTimeout(step, STEP_MS)
+  }
+
+  /** whether only the queue's steps changed the list since `before` – no edit of the user's */
+  function onlySteps (before: Project[]): boolean {
+    let list: Project[] | undefined = items.value
+
+    while (list && list !== before) {
+      list = steppedFrom.get(list)
+    }
+
+    return list === before
   }
 
   /** when the server's list last changed (GET /changed) – as of the data shown */
@@ -117,7 +165,7 @@ export const useProjectsStore = defineStore('projects', () => {
       return false
     }
 
-    if (items.value !== itemsBefore || categories.value !== categoriesBefore) {
+    if (!onlySteps(itemsBefore) || categories.value !== categoriesBefore) {
       return false
     }
 
@@ -127,7 +175,10 @@ export const useProjectsStore = defineStore('projects', () => {
       categories.value = freshCategories
     }
 
-    const known = new Map(itemsBefore.map(item => [item.id, item]))
+    // compared with the list as it will be once the waiting rows come in
+    const waiting = new Map(queue.map(entry => [entry.project.id, entry]))
+    const shown = new Map(items.value.map(item => [item.id, item]))
+    const known = new Map([...shown, ...[...waiting].map(([id, entry]) => [id, entry.project] as const)])
     const found = new Map<number, Set<string>>()
 
     for (const item of freshItems) {
@@ -138,22 +189,32 @@ export const useProjectsStore = defineStore('projects', () => {
       }
     }
 
-    if (found.size === 0 && freshItems.length === itemsBefore.length) {
+    if (found.size === 0 && freshItems.length === known.size) {
       return true
     }
 
+    // the waiting ones and the new changes – the fresh version, every changed field, in the list's order
+    const freshById = new Map(freshItems.map(item => [item.id, item]))
+    const order = groupProjects(freshItems, categories.value).flatMap(group => group.projects.map(project => project.id))
+
+    for (const [id, fields] of found) {
+      waiting.set(id, { project: freshById.get(id)!, fields: new Set([...waiting.get(id)?.fields ?? [], ...fields]) })
+    }
+
+    queue = [...waiting.values()]
+      .filter(entry => freshById.has(entry.project.id))
+      .map(entry => ({ project: freshById.get(entry.project.id)!, fields: entry.fields }))
+      .toSorted((a, b) => order.indexOf(a.project.id) - order.indexOf(b.project.id))
+
+    // a waiting row keeps what it shows now; a new project comes in on its turn
+    const queued = new Set(queue.map(entry => entry.project.id))
+
     items.value = freshItems
+      .filter(item => !queued.has(item.id) || shown.has(item.id))
+      .map(item => queued.has(item.id) ? shown.get(item.id)! : item)
 
-    if (found.size > 0) {
-      // still unseen ones from an earlier refresh stay highlighted too
-      const merged = new Map(changed.value)
-
-      for (const [id, fields] of found) {
-        merged.set(id, new Set([...merged.get(id) ?? [], ...fields]))
-      }
-
-      changed.value = merged
-      settleWhenSeen()
+    if (stepTimer === undefined) {
+      step()
     }
 
     return true
