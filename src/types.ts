@@ -79,6 +79,8 @@ export interface Project extends Record<Flag, boolean> {
   todoProject: number | null
   todo?: TodoSummary | null
   notes: string | null
+  /** reCAPTCHA v3's site key – its secret apart, encrypted (projectsApi.password(id, 'recaptcha')) */
+  recaptchaSiteKey: string | null
   /** ISO 8601 – the last report the site sent about itself */
   reportedAt: string | null
   token: string | null
@@ -88,6 +90,8 @@ export interface Project extends Record<Flag, boolean> {
   hasAuthPassword?: boolean
   /** whether the staging's Basic Auth password is kept */
   hasStagingAuthPassword?: boolean
+  /** whether reCAPTCHA's secret key is kept */
+  hasRecaptchaSecret?: boolean
   /** what the staging answered at the list's last pull – 200 means it works */
   staging?: { code: number, checkedAt: string } | null
   updatedAt: string | null
@@ -179,9 +183,9 @@ export interface SiteReport {
 }
 
 /** What the API takes: any field, null clears it. */
-export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'hasStagingAuthPassword' | 'staging' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter' | 'updates' | 'translationUpdates' | 'ssl'>>
+export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'hasStagingAuthPassword' | 'hasRecaptchaSecret' | 'staging' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter' | 'updates' | 'translationUpdates' | 'ssl'>>
 
-/** the passwords kept encrypted: the panel's and HTTP Basic Auth's */
-export type PasswordKind = 'panel' | 'auth' | 'staging'
+/** the secrets kept encrypted: the panel's password, HTTP Basic Auth's, reCAPTCHA's secret key */
+export type PasswordKind = 'panel' | 'auth' | 'staging' | 'recaptcha'
 
 export type SortKey = 'name' | 'status' | 'server' | 'php' | 'version' | 'theme' | 'reportedAt'

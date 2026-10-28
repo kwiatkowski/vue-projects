@@ -496,6 +496,38 @@
             </a>
           </template>
         </div>
+
+        <div v-show="tab === 'notes'" class="tab-panel" role="tabpanel">
+          <!-- reCAPTCHA v3: the site key, and the secret one kept encrypted like the passwords -->
+          <fieldset class="group">
+            <legend class="eyebrow">reCAPTCHA v3</legend>
+
+            <div class="grid">
+              <label class="field">
+                <span>Klucz witryny</span>
+
+                <CopyInput
+                  v-model="form.recaptchaSiteKey"
+                  autocomplete="off"
+                  class="mono"
+                  tip="Kopiuj klucz witryny"
+                  type="text"
+                  what="Klucz witryny reCAPTCHA"
+                />
+              </label>
+
+              <label class="field">
+                <span>Klucz tajny</span>
+                <PasswordInput v-model="recaptchaSecret" v-model:shown="showRecaptchaSecret" :loading="recaptchaSecretLoading" what="Klucz tajny reCAPTCHA" />
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset class="group">
+            <legend class="eyebrow">Notatka</legend>
+            <NotesEditor :max-length="5000" :model-value="form.notes ?? ''" placeholder="Notatki" @update:model-value="form.notes = $event" />
+          </fieldset>
+        </div>
       </div>
     </div>
 
@@ -557,8 +589,8 @@
 
 <script lang="ts" setup>
   import type { Flag, Project, ProjectInput, ReportPlugin, SiteReport, Status, TodoTask, UpdateState } from '@/types'
-  import { Activity, AlertTriangle, ArrowUpRight, Check, Copy, Cpu, KeyRound, ListChecks, PenLine, Plus, RefreshCw, Server, Trash2, X } from 'lucide-vue-next'
-  import { type Component, computed, nextTick, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
+  import { Activity, AlertTriangle, ArrowUpRight, Check, Copy, Cpu, KeyRound, ListChecks, NotebookPen, PenLine, Plus, RefreshCw, Server, Trash2, X } from 'lucide-vue-next'
+  import { type Component, computed, defineAsyncComponent, nextTick, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
   import StatusChip from '@/components/StatusChip.vue'
   import BaseDialog from '@/components/ui/BaseDialog.vue'
@@ -574,6 +606,11 @@
 
   const projects = useProjectsStore()
   const notify = useNotifyStore()
+
+  // the notes' editor (Tiptap) comes in its own chunk – fetched a moment after the list, not with it
+  const loadNotesEditor = () => import('@/components/ui/NotesEditor.vue')
+  const NotesEditor = defineAsyncComponent(loadNotesEditor)
+  setTimeout(() => void loadNotesEditor().catch(() => {}), 3000)
 
   const FLAG_LABELS: Record<Flag, string> = {
     deploy: 'Deploy (git na produkcji)',
@@ -591,7 +628,7 @@
 
   const TEXT_FIELDS = [
     'server', 'serverUrl', 'serverAccount', 'php', 'engine', 'version', 'theme', 'repo', 'notes',
-    'adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login', 'authUser', 'stagingAuthUser',
+    'adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login', 'authUser', 'stagingAuthUser', 'recaptchaSiteKey',
   ] as const
 
   // ---- the dropdowns' options
@@ -613,7 +650,7 @@
   const versionOptions = computed(() => versions(config.latestWordpress, ...config.wordpressVersions, form.value.version, ...projects.items.map(item => item.version)))
   const phpOptions = computed(() => versions('7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5', form.value.php, ...projects.items.map(item => item.php)))
 
-  type Tab = 'report' | 'server' | 'tech' | 'access' | 'todo'
+  type Tab = 'report' | 'server' | 'tech' | 'access' | 'todo' | 'notes'
 
   /** the right column's tabs; `fields` – what a change there marks the tab with */
   const TABS: Array<{ key: Tab, label: string, icon: Component, fields: string[] }> = [
@@ -622,17 +659,18 @@
     { key: 'tech', label: 'Technologia', icon: Cpu, fields: ['engine', 'version', 'theme', 'php'] },
     { key: 'access', label: 'Dostęp', icon: KeyRound, fields: ['adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login', 'authUser', 'stagingAuthUser'] },
     { key: 'todo', label: 'Todo', icon: ListChecks, fields: ['todoProject'] },
+    { key: 'notes', label: 'Notatki', icon: NotebookPen, fields: ['recaptchaSiteKey', 'notes'] },
   ]
 
   const tab = ref<Tab>('report')
 
-  /** a tab with unsaved changes in its fields (the passwords count for "Dostęp") */
+  /** a tab with unsaved changes in its fields (the passwords count for "Dostęp", reCAPTCHA's secret for "Notatki") */
   function tabChanged (key: Tab): boolean {
     const before = JSON.parse(initial.value || '{}') as Record<string, unknown>
     const fields = TABS.find(item => item.key === key)?.fields ?? []
     const changed = fields.some(field => JSON.stringify((form.value as Record<string, unknown>)[field]) !== JSON.stringify(before[field]))
 
-    return changed || (key === 'access' && passwordsChanged.value)
+    return changed || (key === 'access' && accessPasswordsChanged.value) || (key === 'notes' && recaptchaSecret.value !== savedRecaptchaSecret.value)
   }
 
   /** the addresses under "Dostęp" – each with a button that opens it */
@@ -710,7 +748,7 @@
     initial.value = JSON.stringify(form.value)
     nameError.value = ''
     confirmDelete.value = confirmToken.value = false
-    showPassword.value = showAuthPassword.value = showStagingPassword.value = false
+    showPassword.value = showAuthPassword.value = showStagingPassword.value = showRecaptchaSecret.value = false
     // a new project has no report yet – it starts on the server
     tab.value = editing === 'new' ? 'server' : 'report'
     envTarget.value = editing !== 'new' && !editing.bedrock ? 'wordpress' : 'bedrock'
@@ -718,6 +756,7 @@
     if (editing === 'new') {
       password.value = savedPassword.value = authPassword.value = savedAuthPassword.value = ''
       stagingPassword.value = savedStagingPassword.value = ''
+      recaptchaSecret.value = savedRecaptchaSecret.value = ''
       void nextTick(() => nameInput.value?.focus())
     } else {
       void loadTasks(editing)
@@ -728,7 +767,7 @@
   })
 
   /**
-   * The passwords – the panel's and Basic Auth's – apart from the form: kept encrypted, fetched only when the dialog
+   * The passwords – the panel's and Basic Auth's – and reCAPTCHA's secret key apart from the form: kept encrypted, fetched only when the dialog
    * opens, saved on their own.
    */
   const password = ref('')
@@ -743,27 +782,36 @@
   const savedStagingPassword = ref('')
   const stagingPasswordLoading = ref(false)
   const showStagingPassword = ref(false)
+  const recaptchaSecret = ref('')
+  const savedRecaptchaSecret = ref('')
+  const recaptchaSecretLoading = ref(false)
+  const showRecaptchaSecret = ref(false)
 
-  const passwordsChanged = computed(() => password.value !== savedPassword.value || authPassword.value !== savedAuthPassword.value
+  const accessPasswordsChanged = computed(() => password.value !== savedPassword.value || authPassword.value !== savedAuthPassword.value
     || stagingPassword.value !== savedStagingPassword.value)
+
+  const passwordsChanged = computed(() => accessPasswordsChanged.value || recaptchaSecret.value !== savedRecaptchaSecret.value)
 
   async function loadPassword (project: Project): Promise<void> {
     password.value = savedPassword.value = authPassword.value = savedAuthPassword.value = ''
-    stagingPassword.value = savedStagingPassword.value = ''
+    stagingPassword.value = savedStagingPassword.value = recaptchaSecret.value = savedRecaptchaSecret.value = ''
     passwordLoading.value = !!project.hasPassword
     authPasswordLoading.value = !!project.hasAuthPassword
     stagingPasswordLoading.value = !!project.hasStagingAuthPassword
+    recaptchaSecretLoading.value = !!project.hasRecaptchaSecret
 
-    const [panel, auth, staging] = await Promise.all([
+    const [panel, auth, staging, recaptcha] = await Promise.all([
       project.hasPassword ? projectsApi.password(project.id).catch(() => null) : null,
       project.hasAuthPassword ? projectsApi.password(project.id, 'auth').catch(() => null) : null,
       project.hasStagingAuthPassword ? projectsApi.password(project.id, 'staging').catch(() => null) : null,
+      project.hasRecaptchaSecret ? projectsApi.password(project.id, 'recaptcha').catch(() => null) : null,
     ])
 
     password.value = savedPassword.value = panel?.password ?? ''
     authPassword.value = savedAuthPassword.value = auth?.password ?? ''
     stagingPassword.value = savedStagingPassword.value = staging?.password ?? ''
-    passwordLoading.value = authPasswordLoading.value = stagingPasswordLoading.value = false
+    recaptchaSecret.value = savedRecaptchaSecret.value = recaptcha?.password ?? ''
+    passwordLoading.value = authPasswordLoading.value = stagingPasswordLoading.value = recaptchaSecretLoading.value = false
   }
 
   async function copy (text: string | null | undefined, what: string): Promise<void> {
@@ -950,6 +998,11 @@
     if (saved && stagingPassword.value !== savedStagingPassword.value) {
       saved = await projects.setPassword(saved.id, stagingPassword.value || null, 'staging')
       savedStagingPassword.value = saved ? stagingPassword.value : savedStagingPassword.value
+    }
+
+    if (saved && recaptchaSecret.value !== savedRecaptchaSecret.value) {
+      saved = await projects.setPassword(saved.id, recaptchaSecret.value || null, 'recaptcha')
+      savedRecaptchaSecret.value = saved ? recaptchaSecret.value : savedRecaptchaSecret.value
     }
 
     busy.value = false
