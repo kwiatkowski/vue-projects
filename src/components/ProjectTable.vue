@@ -562,6 +562,8 @@
      keeps the column headers on top */
   max-height: calc(100dvh - var(--topbar) - var(--head, 0px) - 16px);
   overflow: auto;
+  /* with the top bar sliding away and back (below 1500px) */
+  transition: max-height .2s ease;
   /* no scrollbar – it would take width only on a long list and shift the columns between filters; it scrolls with
      the wheel, the trackpad and touch */
   scrollbar-width: none;

@@ -31,8 +31,10 @@
   --accent-ink: #fffefb;
   --accent-soft: #e6edd5;
   --accent-text: #45601a;
-  /* the sticky top bar – the list's header sticks right under it */
-  --topbar: 52px;
+  /* the sticky top bar's height; --topbar – the room it takes (0 while it is folded away, below 1500px) – the list's
+     header sticks right under it */
+  --topbar-size: 52px;
+  --topbar: var(--topbar-size);
 
   /* the positive case – online, the newest WordPress, a checkmark, a fresh report; the same green in both themes (as in Todo) */
   --positive: #7a9a3a;
@@ -846,9 +848,5 @@ input[type='checkbox']:disabled {
   /* over :root's own value (and the themes') */
   :root.topbar-away {
     --topbar: 0px;
-  }
-
-  .topbar-away .top {
-    border-bottom-color: transparent;
   }
 }

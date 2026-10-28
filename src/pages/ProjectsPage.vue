@@ -262,6 +262,8 @@
   position: sticky;
   z-index: 10;
   top: var(--topbar);
+  /* the phones' cards scroll the page – the header follows the top bar sliding away and back */
+  transition: top .2s ease;
   display: flex;
   align-items: flex-end;
   flex-wrap: wrap;

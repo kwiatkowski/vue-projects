@@ -192,14 +192,16 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  height: var(--topbar);
-  /* below 1500px it folds away while the list is scrolled (--topbar → 0, app.css) */
-  overflow: hidden;
+  height: var(--topbar-size);
+  /* below 1500px it slides up, whole, while the list is scrolled (--topbar → 0, app.css) – the margin gives its room to
+     the page at the same pace */
+  margin-bottom: calc(var(--topbar) - var(--topbar-size));
   padding: 0 var(--edge);
   border-bottom: 1px solid var(--line);
   background: color-mix(in srgb, var(--bg) 88%, transparent);
   backdrop-filter: blur(8px);
-  transition: height .2s ease, border-color .2s;
+  translate: 0 calc(var(--topbar) - var(--topbar-size));
+  transition: translate .2s ease, margin-bottom .2s ease;
 }
 
 .top__brand {
