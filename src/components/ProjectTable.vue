@@ -194,7 +194,7 @@
             </td>
 
             <td class="center" :class="cellChanged(project, 'reportedAt', 'token')">
-              <HoverTip>
+              <HoverTip anchor-class="report-hit">
                 <!-- a site that reports: a click opens what to update and the button that does it -->
                 <DropMenu
                   v-if="full && project.token"
@@ -1079,11 +1079,18 @@ tr:hover .row-grip {
 }
 
 /* the dot as the menu's trigger – no button look */
+/* the dot is 8px – the area that shows its tooltip (and opens its menu) is much bigger, easy to hit */
+.center :deep(.report-hit) {
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+}
+
 .report-trigger {
   display: inline-grid;
   place-items: center;
-  width: 20px;
-  height: 20px;
+  width: 36px;
+  height: 36px;
   padding: 0;
   border: 0;
   background: none;
