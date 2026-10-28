@@ -90,6 +90,15 @@ export interface Project extends Record<Flag, boolean> {
   themeDetails?: ThemeDetails | null
   /** "plugin_meden 1.10.0", "mk-core 2026.10.27" */
   reporter?: string | null
+  /** the plugins waiting for an update, from the last report */
+  updates?: PluginUpdate[]
+}
+
+/** A plugin the site could update: the installed version and the one waiting. */
+export interface PluginUpdate {
+  name: string
+  version: string
+  update: string
 }
 
 /** The theme's version and author – and its parent's – as the site reported them. */
@@ -127,7 +136,7 @@ export interface SiteReport {
 }
 
 /** What the API takes: any field, null clears it. */
-export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter'>>
+export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter' | 'updates'>>
 
 /** the passwords kept encrypted: the panel's and HTTP Basic Auth's */
 export type PasswordKind = 'panel' | 'auth'

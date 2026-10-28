@@ -198,7 +198,7 @@
                 <span
                   :aria-label="reportTitle(project)"
                   class="report"
-                  :class="`report--${reportState(project)}`"
+                  :class="`report--${dotState(project)}`"
                   role="img"
                   tabindex="0"
                 />
@@ -206,6 +206,18 @@
                 <template #tip>
                   {{ reportTitle(project) }}
                   <div v-if="project.reporter" class="info-tip__sub mono">{{ reporterLabel(project.reporter) }}</div>
+
+                  <!-- what's waiting on the site: WordPress and the plugins, installed → available -->
+                  <template v-if="toDo(project).length > 0">
+                    <div class="info-tip__head info-tip__head--todo">Do aktualizacji: {{ toDo(project).length }}</div>
+
+                    <dl class="info-tip">
+                      <template v-for="item in toDo(project)" :key="item.name">
+                        <dt>{{ item.name }}</dt>
+                        <dd class="mono">{{ item.version }} → <span class="info-tip__new">{{ item.update }}</span></dd>
+                      </template>
+                    </dl>
+                  </template>
                 </template>
               </HoverTip>
             </td>
@@ -285,7 +297,7 @@
 </template>
 
 <script lang="ts" setup>
-  import type { Category, Flag, Project, SortKey } from '@/types'
+  import type { Category, Flag, PluginUpdate, Project, SortKey } from '@/types'
   import type { Group } from '@/utils/projects'
   import { ArrowUpRight, Check, ChevronDown, FlaskConical, GripVertical, Laptop } from 'lucide-vue-next'
   import { computed, ref } from 'vue'
@@ -385,6 +397,23 @@
   }
 
   /** "mk-core 2026.10.27" → "MK Core 2026.10.27"; plugin_meden as it is */
+  /** what the site should update: WordPress (older than the newest) and the plugins its report lists */
+  function toDo (project: Project): PluginUpdate[] {
+    const latest = config.latestWordpress
+    const core = latest && project.engine === 'wordpress' && project.version && project.version !== latest
+      ? [{ name: 'WordPress', version: project.version, update: latest }]
+      : []
+
+    return [...core, ...(project.updates ?? [])]
+  }
+
+  /** the report's dot: orange instead of green when the site reports, but has something to update */
+  function dotState (project: Project): string {
+    const state = reportState(project)
+
+    return state === 'ok' && toDo(project).length > 0 ? 'todo' : state
+  }
+
   const reporterLabel = (reporter: string) => reporter.replace(/^mk-core\b/, 'MK Core')
 
   const isLatest = (project: Project) => latestWordpress(project, config.latestWordpress)
@@ -880,6 +909,16 @@ tr:hover .row-grip {
   margin: 0;
 }
 
+/* the report's list of updates: a gap over it, the new version in the warning colour */
+.info-tip__head--todo {
+  margin: 8px 0 4px;
+  color: var(--warn);
+}
+
+.info-tip__new {
+  color: var(--warn);
+}
+
 /* under the report's date: what sent it */
 .info-tip__sub {
   margin-top: 2px;
@@ -943,7 +982,12 @@ tr:hover .row-grip {
   color: var(--positive);
 }
 
-.report--ok::after {
+.report--todo {
+  color: var(--warn);
+}
+
+.report--ok::after,
+.report--todo::after {
   position: absolute;
   inset: 0;
   border-radius: 50%;
@@ -972,7 +1016,8 @@ tr:hover .row-grip {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .report--ok::after {
+  .report--ok::after,
+  .report--todo::after {
     animation: none;
     opacity: 0;
   }
