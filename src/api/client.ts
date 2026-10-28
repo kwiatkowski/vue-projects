@@ -48,6 +48,11 @@ export async function request<T> (method: Method, path: string, body?: unknown, 
     headers['X-WP-Nonce'] = nonce
   }
 
+  // the owner's preview: the server answers as it would a viewer or a guest
+  if (config.preview) {
+    headers['X-Projects-View'] = config.preview
+  }
+
   if (method === 'PATCH' || method === 'DELETE') {
     headers['X-HTTP-Method-Override'] = method
   }
@@ -59,8 +64,7 @@ export async function request<T> (method: Method, path: string, body?: unknown, 
       method: method === 'GET' ? 'GET' : 'POST',
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
-      // the guest's view (?podglad): without the login cookie too – exactly what everyone else gets
-      credentials: config.preview ? 'omit' : 'same-origin',
+      credentials: 'same-origin',
     })
   } catch {
     throw new ApiError('Brak połączenia z serwerem.', 0, 'network')

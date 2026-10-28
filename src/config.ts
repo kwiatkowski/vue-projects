@@ -1,4 +1,4 @@
-import { type ColumnKey, PUBLIC_DEFAULT } from '@/utils/columns'
+import { COLUMN_KEYS, type ColumnKey, PUBLIC_DEFAULT } from '@/utils/columns'
 
 /**
  * Runtime config. In production WordPress (wp-plugin-projects) injects `window.__PROJECTS__` into index.html,
@@ -12,8 +12,16 @@ export interface AppConfig {
   basePath: string
   /** the owner – every field, editing; everyone else sees the public list */
   canManage: boolean
-  /** the owner looks at the list as a guest (?podglad) – still logged in, but every request goes as a guest's */
-  preview: boolean
+  /** what this page shows: everything (the owner), a viewer's columns (the list's own account) or a guest's */
+  view: 'admin' | 'viewer' | 'guest'
+  /** the owner looks at the list as a viewer or a guest (?podglad) – still logged in; the requests say so */
+  preview: 'viewer' | 'guest' | null
+  /** logged in with the list's own account (not WordPress) – its login */
+  viewer: { login: string } | null
+  /** whether that account exists – the guest's "Zaloguj" offers it */
+  viewerAccount: boolean
+  /** for the owner: the account's login (the settings); null – none */
+  viewerLogin: string | null
   user: { name: string, avatar: string } | null
   loginUrl: string | null
   logoutUrl: string | null
@@ -21,8 +29,8 @@ export interface AppConfig {
   reportUrl: string
   todoUrl: string | null
   publicFields: string[]
-  /** the columns shown: the owner's own choice (null – all), the public list's */
-  columns: { mine: ColumnKey[] | null, public: ColumnKey[] }
+  /** the columns this page shows; for the owner also the viewers' and the guests' (the settings) */
+  columns: { visible: ColumnKey[], viewer: ColumnKey[] | null, guest: ColumnKey[] | null }
   /** the newest WordPress release – sites running it are marked; null when unknown */
   latestWordpress: string | null
   /** every WordPress release since 5.0, newest first – the version list (with a search) */
@@ -53,14 +61,18 @@ export const config: AppConfig = {
   basePath: injected.basePath ?? import.meta.env.BASE_URL,
   // dev server: the proxy adds the application password, so editing works
   canManage: injected.canManage ?? import.meta.env.DEV,
-  preview: injected.preview ?? false,
+  view: injected.view ?? (import.meta.env.DEV ? 'admin' : 'guest'),
+  preview: injected.preview ?? null,
+  viewer: injected.viewer ?? null,
+  viewerAccount: injected.viewerAccount ?? false,
+  viewerLogin: injected.viewerLogin ?? null,
   user: injected.user ?? null,
   loginUrl: injected.loginUrl ?? null,
   logoutUrl: injected.logoutUrl ?? null,
   reportUrl: injected.reportUrl ?? '/wp-json/projects/v1/report',
   todoUrl: injected.todoUrl ?? null,
   publicFields: injected.publicFields ?? ['domains', 'status', 'engine', 'version', 'theme'],
-  columns: injected.columns ?? { mine: null, public: PUBLIC_DEFAULT },
+  columns: injected.columns ?? { visible: [...COLUMN_KEYS], viewer: PUBLIC_DEFAULT, guest: PUBLIC_DEFAULT },
   latestWordpress: injected.latestWordpress ?? null,
   wordpressVersions: injected.wordpressVersions ?? [],
   siteName: injected.siteName ?? 'kwiatkowski.co',

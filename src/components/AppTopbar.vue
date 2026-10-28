@@ -20,15 +20,15 @@
       </button>
     </template>
 
-    <!-- the guest's view: says so, and leads back to the owner's -->
+    <!-- the owner's preview: says as whom, and leads back to the owner's view -->
     <button
       v-if="config.preview"
       class="btn btn--sm top__preview"
       title="Wróć do swojego widoku"
       type="button"
-      @click="preview(false)"
+      @click="viewAs('admin')"
     >
-      <EyeOff /> <span class="top__label">Podgląd jako gość ·</span> Wróć
+      <Eye /> <span class="top__label">Podgląd: {{ VIEW_LABELS[config.preview] }} ·</span> Wróć
     </button>
 
     <button
@@ -42,7 +42,7 @@
       <Moon v-else />
     </button>
 
-    <!-- the photo opens the account's menu: the guest's view (a switch) and logging out -->
+    <!-- the owner's photo opens the account's menu: whose view to look at, and logging out -->
     <DropMenu
       v-if="config.user"
       :label="`Konto: ${config.user.name}`"
@@ -64,35 +64,76 @@
 
       <div class="user-menu__head">
         <strong>{{ config.user.name }}</strong>
-        <span class="faint">{{ config.preview ? 'podgląd jako gość' : (config.canManage ? 'właściciel listy' : 'zalogowany') }}</span>
+        <span class="faint">{{ owner ? 'administrator listy' : 'zalogowany w WordPressie' }}</span>
       </div>
 
-      <!-- the list as everyone else sees it – without logging out -->
-      <button
-        v-if="config.canManage || config.preview"
-        :aria-checked="config.preview"
-        class="menu__item user-menu__switch"
-        role="menuitemcheckbox"
-        type="button"
-        @click="preview(!config.preview)"
-      >
-        <Eye /> Widok gościa
-        <span aria-hidden="true" class="switch" :class="{ 'switch--on': config.preview }" />
-      </button>
+      <!-- the list as a viewer or a guest sees it – without logging out -->
+      <template v-if="owner">
+        <div class="user-menu__label eyebrow">Widok jako</div>
+
+        <button
+          v-for="view in (['admin', 'viewer', 'guest'] as const)"
+          :key="view"
+          :aria-checked="current === view"
+          class="menu__item user-menu__view"
+          role="menuitemradio"
+          type="button"
+          @click="viewAs(view)"
+        >
+          <component :is="VIEW_ICONS[view]" /> {{ VIEW_LABELS[view] }}
+          <Check v-if="current === view" class="user-menu__tick" />
+        </button>
+
+        <div class="user-menu__sep" />
+      </template>
 
       <a v-if="config.logoutUrl" class="menu__item" :href="config.logoutUrl" role="menuitem">
         <LogOut /> Wyloguj
       </a>
     </DropMenu>
 
+    <!-- logged in with the list's own account: its name opens a menu with logging out -->
+    <DropMenu
+      v-else-if="config.viewer"
+      :label="`Konto: ${config.viewer.login}`"
+      panel-class="user-menu"
+      :title="false"
+      trigger-class="menu__bare top__me top__me--viewer"
+    >
+      <template #trigger>
+        <UserRound class="top__viewer-icon" />
+        <span class="top__label">{{ config.viewer.login }}</span>
+        <ChevronDown class="top__caret" />
+      </template>
+
+      <div class="user-menu__head">
+        <strong>{{ config.viewer.login }}</strong>
+        <span class="faint">zalogowany</span>
+      </div>
+
+      <button class="menu__item" role="menuitem" type="button" @click="viewerLogout">
+        <LogOut /> Wyloguj
+      </button>
+    </DropMenu>
+
+    <!-- a guest: the list's own account when there is one, otherwise WordPress's login -->
+    <button v-else-if="config.viewerAccount" class="btn btn--sm btn--outline" type="button" @click="loginOpen = true">
+      <LogIn /> <span class="top__label">Zaloguj</span>
+    </button>
+
     <a v-else-if="config.loginUrl" class="btn btn--sm btn--outline" :href="config.loginUrl">
       <LogIn /> <span class="top__label">Zaloguj</span>
     </a>
+
+    <LoginDialog v-if="config.viewerAccount && !config.user" v-model="loginOpen" />
   </header>
 </template>
 
 <script lang="ts" setup>
-  import { ChevronDown, Eye, EyeOff, FolderPlus, Layers, LogIn, LogOut, Moon, Plus, Sun } from 'lucide-vue-next'
+  import { Check, ChevronDown, Eye, FolderPlus, Layers, LogIn, LogOut, Moon, Plus, ShieldCheck, Sun, UserRound, Users } from 'lucide-vue-next'
+  import { computed, ref } from 'vue'
+  import { viewerApi } from '@/api/projects'
+  import LoginDialog from '@/components/LoginDialog.vue'
   import DropMenu from '@/components/ui/DropMenu.vue'
   import { useTheme } from '@/composables/theme'
   import { config } from '@/config'
@@ -101,17 +142,32 @@
   const projects = useProjectsStore()
   const { dark, toggleTheme } = useTheme()
 
-  /** the same page with ?podglad (the guest's view) or without it – the server decides what the page gets */
-  function preview (on: boolean): void {
+  type View = 'admin' | 'viewer' | 'guest'
+
+  const VIEW_LABELS: Record<View, string> = { admin: 'Admin – wszystko', viewer: 'Zalogowany', guest: 'Gość' }
+  const VIEW_ICONS = { admin: ShieldCheck, viewer: UserRound, guest: Users }
+
+  /** the owner – also while looking as someone else */
+  const owner = config.canManage || config.preview !== null
+  const current = computed<View>(() => config.preview ?? 'admin')
+  const loginOpen = ref(false)
+
+  /** the same page as the owner, a viewer or a guest sees it (?podglad) – the server decides what the page gets */
+  function viewAs (view: View): void {
     const url = new URL(window.location.href)
 
-    if (on) {
-      url.searchParams.set('podglad', '1')
-    } else {
+    if (view === 'admin') {
       url.searchParams.delete('podglad')
+    } else {
+      url.searchParams.set('podglad', view === 'viewer' ? 'zalogowany' : 'gosc')
     }
 
     window.location.assign(url)
+  }
+
+  async function viewerLogout (): Promise<void> {
+    await viewerApi.logout().catch(() => null)
+    window.location.reload()
   }
 </script>
 
@@ -171,7 +227,7 @@
   flex: 1;
 }
 
-/* the guest's view – in the warning colour, so it isn't mistaken for the owner's list */
+/* the owner's preview – in the warning colour, so it isn't mistaken for the owner's list */
 .top__preview {
   border: 1px solid var(--warn);
   background: var(--warn-soft);
@@ -211,6 +267,18 @@
   box-shadow: 0 0 0 2px var(--warn);
 }
 
+.top :deep(.top__me--viewer) {
+  gap: 6px;
+  padding: 4px 6px;
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.top__viewer-icon {
+  width: 16px;
+  height: 16px;
+}
+
 .top__caret {
   width: 14px;
   height: 14px;
@@ -242,38 +310,18 @@
   font-size: 12px;
 }
 
-/* the switch on the right of its item */
-.user-menu__switch .switch {
+.user-menu__label {
+  padding: 4px 10px 2px;
+}
+
+/* the chosen view – a tick on the right */
+.user-menu__tick {
   margin-left: auto;
+  color: var(--positive);
 }
 
-.switch {
-  position: relative;
-  flex: none;
-  width: 28px;
-  height: 16px;
-  border-radius: 999px;
-  background: var(--line-strong);
-  transition: background-color .15s;
-}
-
-.switch::after {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: var(--surface);
-  content: '';
-  transition: translate .15s;
-}
-
-.switch--on {
-  background: var(--warn);
-}
-
-.switch--on::after {
-  translate: 12px 0;
+.user-menu__sep {
+  margin: 4px 0;
+  border-top: 1px solid var(--line);
 }
 </style>

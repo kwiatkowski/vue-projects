@@ -40,8 +40,16 @@ export const categoriesApi = {
 }
 
 export const columnsApi = {
-  /** the owner's columns (null – all) and the public list's – saved together */
-  save: (mine: ColumnKey[] | null, publicColumns: ColumnKey[]) => request<{ mine: ColumnKey[] | null, public: ColumnKey[] }>('POST', 'columns', { mine, public: publicColumns }),
+  /** the viewers' and the guests' columns – saved together (the owner sees all of them) */
+  save: (viewer: ColumnKey[], guest: ColumnKey[]) => request<{ viewer: ColumnKey[], guest: ColumnKey[] }>('POST', 'columns', { viewer, guest }),
+}
+
+/** the list's own account (not WordPress) */
+export const viewerApi = {
+  login: (login: string, password: string) => request<{ ok: true }>('POST', 'viewer/login', { login, password }),
+  logout: () => request<{ ok: true }>('POST', 'viewer/logout'),
+  /** the owner sets it: a password only when it changes; an empty login removes the account */
+  account: (login: string, password: string | null) => request<{ login: string | null }>('POST', 'viewer/account', { login, password }),
 }
 
 export const todoApi = {

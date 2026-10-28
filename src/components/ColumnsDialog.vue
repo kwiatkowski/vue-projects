@@ -2,16 +2,46 @@
   <BaseDialog
     v-model="columns.dialogOpen"
     :can-close="() => !dirty"
-    title="Widoczne kolumny"
+    title="Ustawienia widoku"
     :width="560"
     @submit="save"
   >
+    <!-- the list's own account – not a WordPress one: whoever logs in with it sees the "Zalogowany" columns -->
+    <fieldset class="account">
+      <legend class="eyebrow">Konto dla zalogowanych <span class="account__note">– bez konta w WordPressie</span></legend>
+
+      <div class="account__grid">
+        <label class="field">
+          <span>Login</span>
+
+          <input
+            v-model.trim="login"
+            autocomplete="off"
+            class="input"
+            placeholder="np. klient"
+            type="text"
+          >
+        </label>
+
+        <label class="field">
+          <span>{{ columns.viewerLogin ? 'Nowe hasło' : 'Hasło' }}</span>
+          <PasswordInput v-model="password" v-model:shown="showPassword" what="Hasło zalogowanego" />
+        </label>
+      </div>
+
+      <p class="faint account__hint">
+        <template v-if="!login">Bez loginu nikt poza Tobą nie może się zalogować.</template>
+        <template v-else-if="columns.viewerLogin">Hasło jest ustawione – wpisz nowe, żeby je zmienić (wyloguje to osoby zalogowane starym).</template>
+        <template v-else>Ustaw hasło, żeby konto zadziałało.</template>
+      </p>
+    </fieldset>
+
     <table class="cols">
       <thead>
         <tr>
           <th scope="col"><span class="visually-hidden">Kolumna</span></th>
-          <th class="cols__who" scope="col">Dla mnie</th>
-          <th class="cols__who" scope="col">Publicznie</th>
+          <th class="cols__who" scope="col">Zalogowany</th>
+          <th class="cols__who" scope="col">Gość</th>
         </tr>
       </thead>
 
@@ -26,8 +56,8 @@
           <td class="cols__who">
             <span class="cols__check">
               <input
-                v-model="mine"
-                :aria-label="`${column.label} – dla mnie`"
+                v-model="viewer"
+                :aria-label="`${column.label} – zalogowany`"
                 :disabled="column.key === 'name'"
                 type="checkbox"
                 :value="column.key"
@@ -38,17 +68,17 @@
           </td>
 
           <td class="cols__who">
-            <HoverTip v-if="column.private" text="Tylko dla zalogowanych – dane dostępowe">
+            <HoverTip v-if="column.private" text="Nie dla gości – dane dostępowe">
               <span class="cols__check">
-                <input :aria-label="`${column.label} – publicznie (tylko dla zalogowanych)`" disabled type="checkbox">
+                <input :aria-label="`${column.label} – gość (niedostępne)`" disabled type="checkbox">
                 <Lock aria-hidden="true" class="cols__lock" />
               </span>
             </HoverTip>
 
             <span v-else class="cols__check">
               <input
-                v-model="publicColumns"
-                :aria-label="`${column.label} – publicznie`"
+                v-model="guest"
+                :aria-label="`${column.label} – gość`"
                 :disabled="column.key === 'name'"
                 type="checkbox"
                 :value="column.key"
@@ -64,7 +94,7 @@
     <template #note>
       <p class="cols__note">
         <Info />
-        <span>Niezalogowani widzą tylko kolumny z „Publicznie” – serwer wysyła im wyłącznie te dane.</span>
+        <span>Ty jako admin widzisz zawsze wszystko. Zalogowani i goście dostają z serwera tylko dane swoich kolumn.</span>
       </p>
     </template>
 
@@ -78,7 +108,7 @@
 
       <template v-else>
         <button class="btn btn--sm" :disabled="isDefault" type="button" @click="reset">
-          <RotateCcw /> Przywróć domyślne
+          <RotateCcw /> Przywróć domyślne kolumny
         </button>
 
         <span style="flex: 1" />
@@ -88,7 +118,7 @@
         </button>
       </template>
 
-      <button class="btn btn--accent btn--sm" :disabled="!dirty || busy" type="submit">
+      <button class="btn btn--accent btn--sm" :disabled="!dirty || busy || !accountReady" type="submit">
         <Check /> Zapisz
       </button>
     </template>
@@ -101,53 +131,62 @@
   import { computed, ref, watch } from 'vue'
   import BaseDialog from '@/components/ui/BaseDialog.vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
+  import PasswordInput from '@/components/ui/PasswordInput.vue'
   import { useColumnsStore } from '@/stores/columns'
   import { COLUMN_KEYS, COLUMNS, PUBLIC_DEFAULT } from '@/utils/columns'
 
   /**
-   * "Wyświetl": which columns the list shows – for the owner (kept on their account) and for everyone else (the server
-   * sends them only those columns' data). The private ones can't go public; the project's name is always there.
+   * "Wyświetl": the list's viewer account (login, password) and which columns a viewer and a guest see – the server
+   * sends them only those columns' data. The private ones never go to guests; the project's name is always there.
    */
   const columns = useColumnsStore()
 
   const SECTIONS = [...new Set(COLUMNS.map(column => column.section))]
     .map(name => ({ name, columns: COLUMNS.filter(column => column.section === name) as ColumnDef[] }))
 
-  const mine = ref<ColumnKey[]>([])
-  const publicColumns = ref<ColumnKey[]>([])
+  const viewer = ref<ColumnKey[]>([])
+  const guest = ref<ColumnKey[]>([])
+  const login = ref('')
+  const password = ref('')
+  const showPassword = ref(false)
   const busy = ref(false)
 
   /** in the list's order – so "the same set" compares equal however it was ticked */
   const ordered = (keys: ColumnKey[]) => COLUMN_KEYS.filter(key => keys.includes(key))
-  const saved = () => JSON.stringify([ordered(columns.mine ?? [...COLUMN_KEYS]), ordered(columns.publicColumns)])
+  const same = (a: ColumnKey[], b: ColumnKey[]) => JSON.stringify(ordered(a)) === JSON.stringify(ordered(b))
 
-  const dirty = computed(() => JSON.stringify([ordered(mine.value), ordered(publicColumns.value)]) !== saved())
-  const isDefault = computed(() => ordered(mine.value).length === COLUMN_KEYS.length && JSON.stringify(ordered(publicColumns.value)) === JSON.stringify(PUBLIC_DEFAULT))
+  const accountChanged = computed(() => login.value !== (columns.viewerLogin ?? '') || password.value !== '')
+  /** a new account needs a password */
+  const accountReady = computed(() => !login.value || Boolean(columns.viewerLogin) || password.value !== '')
+  const dirty = computed(() => !same(viewer.value, columns.viewerColumns) || !same(guest.value, columns.guestColumns) || accountChanged.value)
+  const isDefault = computed(() => same(viewer.value, PUBLIC_DEFAULT) && same(guest.value, PUBLIC_DEFAULT))
 
   // every opening starts from what is saved
   watch(() => columns.dialogOpen, open => {
     if (open) {
-      mine.value = [...(columns.mine ?? COLUMN_KEYS)]
-      publicColumns.value = [...columns.publicColumns]
+      viewer.value = [...columns.viewerColumns]
+      guest.value = [...columns.guestColumns]
+      login.value = columns.viewerLogin ?? ''
+      password.value = ''
+      showPassword.value = false
     }
   })
 
-  /** every column for me, the public list as it always was – still to be saved */
+  /** both as the public list always was – still to be saved */
   function reset (): void {
-    mine.value = [...COLUMN_KEYS]
-    publicColumns.value = [...PUBLIC_DEFAULT]
+    viewer.value = [...PUBLIC_DEFAULT]
+    guest.value = [...PUBLIC_DEFAULT]
   }
 
   async function save (): Promise<void> {
-    if (!dirty.value) {
+    if (!dirty.value || !accountReady.value) {
       return
     }
 
     busy.value = true
-    const all = ordered(mine.value).length === COLUMN_KEYS.length
+    const account = accountChanged.value ? { login: login.value, password: password.value || null } : undefined
 
-    // all of them is no choice at all – a column added later shows up by itself
-    if (await columns.save(all ? null : ordered(mine.value), ordered(publicColumns.value))) {
+    if (await columns.save(ordered(viewer.value), ordered(guest.value), account)) {
       columns.dialogOpen = false
     }
 
@@ -156,6 +195,44 @@
 </script>
 
 <style scoped>
+/* the account over the columns, as a section of the project's dialog */
+.account {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 18px;
+  padding: 0;
+  border: 0;
+}
+
+.account legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+.account__note {
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.account__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.account__hint {
+  margin: 0;
+  font-size: 12px;
+}
+
+@media (max-width: 520px) {
+  .account__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .cols {
   width: 100%;
   border-collapse: collapse;
@@ -203,7 +280,7 @@
   vertical-align: middle;
 }
 
-/* the lock beside a box that can't change – the name always, the private columns never public */
+/* the lock beside a box that can't change – the name always, the private columns never for guests */
 .cols__lock {
   width: 13px;
   height: 13px;
