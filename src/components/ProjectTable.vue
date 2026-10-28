@@ -127,8 +127,12 @@
           </td>
 
           <td class="cell-theme" :class="cellChanged(project, 'theme')">
-            <HoverTip v-if="project.themeDetails?.version || themeRows(project).length > 0">
-              <span class="has-tip" tabindex="0">{{ project.theme }}</span>
+            <!-- the name and its version together – one bigger area for the tooltip, shaded on hover -->
+            <HoverTip v-if="project.themeDetails?.version || themeRows(project).length > 0" anchor-class="theme-hit">
+              <span class="theme-hit__body" tabindex="0">
+                <span class="has-tip">{{ project.theme }}</span>
+                <span v-if="project.themeDetails?.version" class="cell-sub mono">{{ project.themeDetails.version }}</span>
+              </span>
 
               <!-- as the report's: a header – the name, its version on the right – then the rest, values on the right -->
               <template #tip>
@@ -147,7 +151,6 @@
             </HoverTip>
 
             <template v-else>{{ project.theme }}</template>
-            <span v-if="project.theme && project.themeDetails?.version" class="cell-sub mono">{{ project.themeDetails.version }}</span>
           </td>
 
           <template v-if="full">
@@ -936,6 +939,27 @@ tr:hover .row-grip {
   display: block;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* the name and the version as one area, a little past the text on every side, shaded on hover */
+.cell-theme :deep(.theme-hit) {
+  margin: -6px -8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  transition: background-color .12s;
+}
+
+/* the row is already shaded with --hover under the pointer – one step darker, so the area stands out */
+.cell-theme :deep(.theme-hit:hover),
+.cell-theme :deep(.theme-hit:focus-within) {
+  background: var(--press);
+}
+
+.theme-hit__body {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  outline: none;
 }
 
 /* the theme with more in its tooltip (version, author, parent) */
