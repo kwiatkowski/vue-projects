@@ -175,14 +175,17 @@
                   type="button"
                   @click="startUpdate"
                 >
-                  <RefreshCw :class="{ spin: updateRunning }" /> {{ updateRunning ? 'Aktualizuję…' : 'Aktualizuj przez Composer' }}
+                  <RefreshCw :class="{ spin: updateRunning }" /> {{ updateRunning ? 'Aktualizuję…' : update.mode === 'wordpress' ? 'Aktualizuj wtyczki' : 'Aktualizuj przez Composer' }}
                 </button>
 
-                <span class="faint">composer update na produkcji, commit i push <code>composer.lock</code> – na innych środowiskach <code>git pull</code> i <code>composer install</code></span>
+                <span v-if="update.mode === 'wordpress'" class="faint">strona bez Bedrocka – wtyczki przez WP-CLI na produkcji (<code>wp plugin update --all</code>)</span>
+                <span v-else class="faint">composer update na produkcji, commit i push <code>composer.lock</code> – na innych środowiskach <code>git pull</code> i <code>composer install</code></span>
               </div>
 
               <p v-if="!update.available" class="update__note faint">{{ update.reason }}</p>
+              <p v-else-if="update.state === 'done' && update.mode === 'wordpress'" class="update__note update__note--ok">Zaktualizowano {{ formatDateTime(update.finishedAt) }}.</p>
               <p v-else-if="update.state === 'done'" class="update__note update__note--ok">Zaktualizowano {{ formatDateTime(update.finishedAt) }} – <code>composer.lock</code> jest w repozytorium.</p>
+              <p v-else-if="update.state === 'nothing' && update.mode === 'wordpress'" class="update__note faint">{{ formatDateTime(update.finishedAt) }}: wszystkie wtyczki są aktualne.</p>
               <p v-else-if="update.state === 'nothing'" class="update__note faint">{{ formatDateTime(update.finishedAt) }}: Composer nie znalazł nowszych wersji w ramach wymagań z <code>composer.json</code> (np. <code>^4</code> nie weźmie 5.0, wtyczki z prywatnych repozytoriów trzeba najpierw podbić tam).</p>
               <p v-else-if="update.state === 'failed'" class="update__note update__note--failed">Aktualizacja się nie udała – szczegóły w logu.</p>
 
@@ -735,7 +738,7 @@
     }
   }
 
-  /** the site's Composer update – a Bedrock project with a token; polled while it runs */
+  /** the site's update – Composer on Bedrock, the plugins through WP-CLI elsewhere; a project with a token; polled while it runs */
   const update = ref<UpdateState | null>(null)
   const updateRunning = computed(() => update.value?.state === 'running')
   let updateTimer: ReturnType<typeof setTimeout> | undefined
@@ -744,7 +747,7 @@
     clearTimeout(updateTimer)
     update.value = null
 
-    if (!target.token || !target.bedrock) {
+    if (!target.token) {
       return
     }
 

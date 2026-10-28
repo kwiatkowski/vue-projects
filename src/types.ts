@@ -99,6 +99,8 @@ export interface UpdateState {
   /** a Bedrock site with git where PHP may run Composer – reason says why not */
   available: boolean
   reason: string | null
+  /** composer – Bedrock: composer update, commit and push of composer.lock; wordpress – the plugins through WP-CLI */
+  mode?: 'composer' | 'wordpress'
   /** nothing – Composer found no newer versions; done – composer.lock committed and pushed */
   state: 'idle' | 'running' | 'done' | 'nothing' | 'failed'
   startedAt: string | null
