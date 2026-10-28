@@ -175,13 +175,13 @@
               <Check v-if="project[flag]" :aria-label="FLAG_LABELS[flag]" class="yes" />
             </td>
 
-            <td class="center" :class="cellChanged(project, 'localUrl', 'localAdminUrl')">
+            <td class="center cell-link" :class="cellChanged(project, 'localUrl', 'localAdminUrl')">
               <SiteLinkMenu v-if="project.localUrl" :admin-url="project.localAdminUrl" label="Lokalnie" :url="project.localUrl">
                 <Laptop />
               </SiteLinkMenu>
             </td>
 
-            <td class="center" :class="cellChanged(project, 'stagingUrl', 'stagingAdminUrl')">
+            <td class="center cell-link" :class="cellChanged(project, 'stagingUrl', 'stagingAdminUrl')">
               <SiteLinkMenu
                 v-if="project.stagingUrl"
                 :admin-url="project.stagingAdminUrl"
@@ -1019,6 +1019,24 @@ tr:hover .row-grip {
 
 .report-actions .menu__item:hover {
   background: color-mix(in srgb, var(--tip-bg) 85%, var(--text));
+}
+
+/* Local and Stage: the icon's button covers the whole cell – anywhere in it opens the menu */
+.cell-link {
+  position: relative;
+}
+
+.cell-link :deep(.site-link) {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+
+.cell-link :deep(.site-link:hover),
+.cell-link :deep(.site-link[aria-expanded='true']) {
+  background: var(--press);
 }
 
 /* the dot is 8px – the area that shows its popup is much bigger, easy to hit */
