@@ -1,34 +1,30 @@
 <template>
-  <BaseDialog v-model="columns.viewOpen" title="Wyświetl" :width="380" @submit="columns.viewOpen = false">
+  <BaseDialog v-model="columns.viewOpen" title="Wyświetl kolumny" :width="560" @submit="columns.viewOpen = false">
+    <!-- the sections side by side, two columns; the project's name is always there, so it isn't offered -->
     <div class="view">
       <fieldset v-for="section in sections" :key="section.name" class="view__section">
         <legend class="eyebrow">{{ section.name }}</legend>
 
-        <label v-for="column in section.columns" :key="column.key" class="check">
+        <label v-for="column in section.columns" :key="column.key" class="view__item">
           <input
             :checked="columns.visible.has(column.key)"
-            :disabled="column.key === 'name'"
             type="checkbox"
             @change="columns.setHidden(column.key, !($event.target as HTMLInputElement).checked)"
           >
-          {{ column.label }}
+
+          <span>{{ column.label }}</span>
         </label>
       </fieldset>
     </div>
 
-    <template #note>
-      <p class="view__note">
-        <Monitor />
-        <span>Zapamiętane w tej przeglądarce – inne urządzenia mają swój wybór.</span>
-      </p>
-    </template>
-
     <template #actions>
+      <span class="view__note"><Monitor /> Zapamiętane w tej przeglądarce</span>
+
+      <span style="flex: 1" />
+
       <button class="btn btn--sm" :disabled="columns.hidden.length === 0" type="button" @click="columns.showAll()">
         <RotateCcw /> Pokaż wszystkie
       </button>
-
-      <span style="flex: 1" />
 
       <button class="btn btn--accent btn--sm" type="submit">
         <Check /> Gotowe
@@ -50,22 +46,24 @@
    */
   const columns = useColumnsStore()
 
-  /** the columns one may see, by section – a section with none of them isn't there */
+  /** the columns one may see, by section, without the always-shown name – a section with none of them isn't there */
   const sections = computed(() => [...new Set(COLUMNS.map(column => column.section))]
-    .map(name => ({ name, columns: COLUMNS.filter(column => column.section === name && columns.available.includes(column.key)) }))
+    .map(name => ({ name, columns: COLUMNS.filter(column => column.section === name && column.key !== 'name' && columns.available.includes(column.key)) }))
     .filter(section => section.columns.length > 0))
 </script>
 
 <style scoped>
+/* two columns of sections, each kept whole – balanced by height */
 .view {
-  display: grid;
-  gap: 16px;
+  columns: 2;
+  column-gap: 28px;
 }
 
 .view__section {
   display: grid;
-  gap: 8px;
-  margin: 0;
+  gap: 2px;
+  break-inside: avoid;
+  margin: 0 0 18px;
   padding: 0;
   border: 0;
 }
@@ -73,35 +71,42 @@
 .view__section legend {
   float: left;
   width: 100%;
-  margin-bottom: 2px;
+  margin: 0 0 6px;
+  padding: 0 8px;
 }
 
-/* a column: its box and name, as "Konfiguracja" in the project's dialog */
-.check {
-  display: inline-flex;
+/* a column: a full-width row – the box and its name, the whole row clickable */
+.view__item {
+  display: flex;
   align-items: center;
-  gap: 8px;
-  justify-self: start;
+  gap: 10px;
+  padding: 7px 8px;
+  border-radius: var(--radius-sm);
   font-size: 14px;
   cursor: pointer;
+  transition: background-color .12s;
 }
 
-.check:has(input:disabled) {
-  cursor: default;
+.view__item:hover {
+  background: var(--hover);
 }
 
 .view__note {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  margin: 0;
-  color: var(--text-2);
-  font-size: 13px;
+  gap: 6px;
+  color: var(--text-3);
+  font-size: 12px;
 }
 
 .view__note svg {
-  flex: none;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
+}
+
+@media (max-width: 520px) {
+  .view {
+    columns: 1;
+  }
 }
 </style>
