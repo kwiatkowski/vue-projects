@@ -12,8 +12,7 @@
     <span v-if="ssl === 'bad'">{{ project.ssl.error }}<template v-if="project.ssl.validTo"> · <span class="mono">{{ formatDay(project.ssl.validTo) }}</span></template></span>
 
     <span v-else>
-      do <span class="mono">{{ formatDay(project.ssl.validTo) }}</span>
-      <span class="faint">({{ daysLeft }} dni<template v-if="project.ssl.issuer">, {{ project.ssl.issuer }}</template>)</span>
+      do <span class="mono">{{ formatDay(project.ssl.validTo) }}</span>{{ ' ' }}<span class="faint">({{ daysLeft }} dni<template v-if="project.ssl.issuer">, {{ project.ssl.issuer }}</template>)</span>
     </span>
   </div>
 
