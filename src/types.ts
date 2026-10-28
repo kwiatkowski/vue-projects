@@ -1,7 +1,7 @@
 export type Status = 'online' | 'dev' | 'suspended' | 'offline'
 
 /** Yes/no fields of a project – the checkmark columns. */
-export const FLAGS = ['deploy', 'dev', 'bedrock', 'security', 'acf', 'miModal'] as const
+export const FLAGS = ['deploy', 'bedrock', 'security', 'acf', 'miModal'] as const
 
 export type Flag = typeof FLAGS[number]
 

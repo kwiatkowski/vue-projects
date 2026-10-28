@@ -360,14 +360,11 @@
   })
 
   /** the flags a card shows – DEV is left out, the Stage address says the same */
-  const CARD_FLAGS = FLAGS.filter((flag): flag is Exclude<Flag, 'dev'> => flag !== 'dev')
-
   /** a card's flags: those set, of the columns shown */
-  const cardFlags = (project: Project) => CARD_FLAGS.filter(flag => show(flag) && project[flag])
+  const cardFlags = (project: Project) => FLAGS.filter(flag => show(flag) && project[flag])
 
   const FLAG_LABELS: Record<Flag, string> = {
     deploy: 'Deploy',
-    dev: 'DEV',
     bedrock: 'Bedrock',
     security: 'Wordfence',
     acf: 'ACF',

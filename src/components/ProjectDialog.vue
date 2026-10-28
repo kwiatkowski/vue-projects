@@ -677,7 +677,6 @@
 
   const FLAG_LABELS: Record<Flag, string> = {
     deploy: 'Deploy (git na produkcji)',
-    dev: 'DEV (stage)',
     bedrock: 'Bedrock',
     security: 'Wordfence',
     acf: 'ACF',
