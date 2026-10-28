@@ -521,6 +521,17 @@
                 <PasswordInput v-model="recaptchaSecret" v-model:shown="showRecaptchaSecret" :loading="recaptchaSecretLoading" what="Klucz tajny reCAPTCHA" />
               </label>
             </div>
+
+            <!-- where the site uses reCAPTCHA (the last report) – and whether with these keys -->
+            <ul v-if="recaptchaPlaces.length > 0" class="recaptcha-places">
+              <li v-for="item in recaptchaPlaces" :key="item.place" :class="`recaptcha-places__item--${item.tone}`">
+                <component :is="item.tone === 'ok' ? Check : (item.tone === 'bad' ? X : Minus)" />
+                <span>{{ item.label }}</span>
+                <span class="faint">{{ item.text }}</span>
+              </li>
+            </ul>
+
+            <p v-else-if="project?.reportedAt" class="faint recaptcha-places__none">Raport nie widzi na stronie Contact Form 7 ani Wordfence.</p>
           </fieldset>
 
           <fieldset class="group">
@@ -589,7 +600,7 @@
 
 <script lang="ts" setup>
   import type { Flag, Project, ProjectInput, ReportPlugin, SiteReport, Status, TodoTask, UpdateState } from '@/types'
-  import { Activity, AlertTriangle, ArrowUpRight, Check, Copy, Cpu, KeyRound, ListChecks, NotebookPen, PenLine, Plus, RefreshCw, Server, Trash2, X } from 'lucide-vue-next'
+  import { Activity, AlertTriangle, ArrowUpRight, Check, Copy, Cpu, KeyRound, ListChecks, Minus, PenLine, Plus, Puzzle, RefreshCw, Server, Trash2, X } from 'lucide-vue-next'
   import { type Component, computed, defineAsyncComponent, nextTick, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
   import StatusChip from '@/components/StatusChip.vue'
@@ -658,13 +669,13 @@
     { key: 'server', label: 'Serwer', icon: Server, fields: ['server', 'serverUrl', 'serverAccount'] },
     { key: 'tech', label: 'Technologia', icon: Cpu, fields: ['engine', 'version', 'theme', 'php'] },
     { key: 'access', label: 'Dostęp', icon: KeyRound, fields: ['adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login', 'authUser', 'stagingAuthUser'] },
-    { key: 'notes', label: 'Notatki', icon: NotebookPen, fields: ['recaptchaSiteKey', 'notes'] },
+    { key: 'notes', label: 'Integracje', icon: Puzzle, fields: ['recaptchaSiteKey', 'notes'] },
     { key: 'todo', label: 'Todo', icon: ListChecks, fields: ['todoProject'] },
   ]
 
   const tab = ref<Tab>('report')
 
-  /** a tab with unsaved changes in its fields (the passwords count for "Dostęp", reCAPTCHA's secret for "Notatki") */
+  /** a tab with unsaved changes in its fields (the passwords count for "Dostęp", reCAPTCHA's secret for "Integracje") */
   function tabChanged (key: Tab): boolean {
     const before = JSON.parse(initial.value || '{}') as Record<string, unknown>
     const fields = TABS.find(item => item.key === key)?.fields ?? []
@@ -791,6 +802,45 @@
     || stagingPassword.value !== savedStagingPassword.value)
 
   const passwordsChanged = computed(() => accessPasswordsChanged.value || recaptchaSecret.value !== savedRecaptchaSecret.value)
+
+  /** the typed secret's SHA-256 – the report has the site's only so; '' – none typed */
+  const recaptchaSecretHash = ref('')
+
+  watch(recaptchaSecret, async secret => {
+    const value = secret.trim()
+    const digest = value ? new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))) : null
+    // a newer one typed meanwhile wins
+    if (secret === recaptchaSecret.value) {
+      recaptchaSecretHash.value = digest ? [...digest].map(byte => byte.toString(16).padStart(2, '0')).join('') : ''
+    }
+  })
+
+  const RECAPTCHA_PLACES: Record<string, string> = { cf7: 'Contact Form 7', wordfence: 'Wordfence – logowanie' }
+
+  /** where the site uses reCAPTCHA (the last report) – a tick when with the keys above, a cross when with others */
+  const recaptchaPlaces = computed(() => (project.value?.recaptcha ?? []).map(place => {
+    const siteKey = (form.value.recaptchaSiteKey ?? '').trim()
+    const off = place.enabled ? '' : ' – wyłączone'
+    const label = RECAPTCHA_PLACES[place.place] ?? place.place
+
+    if (!place.siteKey) {
+      return { place: place.place, label, tone: 'none', text: 'bez kluczy' }
+    }
+
+    if (!siteKey) {
+      return { place: place.place, label, tone: 'none', text: `klucz witryny ${place.siteKey.slice(0, 10)}…${off}` }
+    }
+
+    if (place.siteKey !== siteKey) {
+      return { place: place.place, label, tone: 'bad', text: `inny klucz witryny${off}` }
+    }
+
+    if (recaptchaSecretHash.value && place.secretHash && place.secretHash !== recaptchaSecretHash.value) {
+      return { place: place.place, label, tone: 'bad', text: `inny klucz tajny${off}` }
+    }
+
+    return { place: place.place, label, tone: place.enabled ? 'ok' : 'none', text: (recaptchaSecretHash.value && place.secretHash ? 'klucze zgodne' : 'klucz witryny zgodny') + off }
+  }))
 
   async function loadPassword (project: Project): Promise<void> {
     password.value = savedPassword.value = authPassword.value = savedAuthPassword.value = ''
@@ -1509,6 +1559,42 @@ code {
 }
 
 /* open tasks of the linked Todo project – the circle in the priority colour, as in Todo */
+/* where the site uses reCAPTCHA – a tick with the project's keys, a cross with others, a dash otherwise */
+.recaptcha-places {
+  display: grid;
+  gap: 4px;
+  margin: 12px 0 0;
+  padding: 0;
+  font-size: 13px;
+  list-style: none;
+}
+
+.recaptcha-places li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.recaptcha-places svg {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  color: var(--text-3);
+}
+
+.recaptcha-places__item--ok svg {
+  color: var(--positive);
+}
+
+.recaptcha-places__item--bad svg {
+  color: var(--danger);
+}
+
+.recaptcha-places__none {
+  margin: 12px 0 0;
+  font-size: 13px;
+}
+
 .tasks {
   display: grid;
   margin: 0;

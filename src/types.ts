@@ -104,8 +104,19 @@ export interface Project extends Record<Flag, boolean> {
   updates?: PluginUpdate[]
   /** the translations waiting for an update (core, plugins, themes), from the last report */
   translationUpdates?: TranslationUpdate[]
+  /** where the site uses reCAPTCHA (CF7, Wordfence's login), from the last report */
+  recaptcha?: RecaptchaPlace[]
   /** the TLS certificate as the list saw it at its last pull */
   ssl?: SslState | null
+}
+
+/** Where the site uses reCAPTCHA (from the report): the site key, the secret only as its SHA-256. */
+export interface RecaptchaPlace {
+  place: 'cf7' | 'wordfence' | string
+  /** CF7's integration active / Wordfence's login CAPTCHA on */
+  enabled: boolean
+  siteKey: string | null
+  secretHash: string | null
 }
 
 /** The site's TLS certificate: fine (ok), or why not (error); until when, who issued it. */
@@ -183,7 +194,7 @@ export interface SiteReport {
 }
 
 /** What the API takes: any field, null clears it. */
-export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'hasStagingAuthPassword' | 'hasRecaptchaSecret' | 'staging' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter' | 'updates' | 'translationUpdates' | 'ssl'>>
+export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'hasStagingAuthPassword' | 'hasRecaptchaSecret' | 'staging' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter' | 'updates' | 'translationUpdates' | 'recaptcha' | 'ssl'>>
 
 /** the secrets kept encrypted: the panel's password, HTTP Basic Auth's, reCAPTCHA's secret key */
 export type PasswordKind = 'panel' | 'auth' | 'staging' | 'recaptcha'
