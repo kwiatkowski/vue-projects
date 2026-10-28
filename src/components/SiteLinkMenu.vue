@@ -7,41 +7,44 @@
     <div class="site-link__head faint mono">{{ url }}</div>
     <div v-if="statusText" class="site-link__status" :class="{ 'site-link__status--up': up }">{{ statusText }}</div>
 
-    <a
-      class="menu__item"
-      :href="url"
-      rel="noopener"
-      role="menuitem"
-      target="_blank"
-    >
-      <SquareArrowOutUpRight /> Otwórz stronę
-    </a>
+    <!-- the site and its panel: the name opens it, the icons beside open it or copy the address -->
+    <div v-for="row in rows" :key="row.url" class="site-link__row">
+      <a
+        class="menu__item site-link__name"
+        :href="row.url"
+        rel="noopener"
+        role="menuitem"
+        target="_blank"
+      >
+        <component :is="row.icon" /> {{ row.label }}
+      </a>
 
-    <a
-      v-if="adminUrl"
-      class="menu__item"
-      :href="adminUrl"
-      rel="noopener"
-      role="menuitem"
-      target="_blank"
-    >
-      <LogIn /> Otwórz panel
-    </a>
+      <a
+        :aria-label="`Otwórz: ${row.label}`"
+        class="btn btn--icon btn--sm"
+        :href="row.url"
+        rel="noopener"
+        target="_blank"
+      ><SquareArrowOutUpRight /></a>
 
-    <button class="menu__item" role="menuitem" type="button" @click="copy">
-      <Copy /> Kopiuj adres
-    </button>
+      <button :aria-label="`Kopiuj adres: ${row.label}`" class="btn btn--icon btn--sm" type="button" @click="copy(row.url)">
+        <Copy />
+      </button>
+    </div>
   </DropMenu>
 </template>
 
 <script lang="ts" setup>
-  import { Copy, LogIn, SquareArrowOutUpRight } from 'lucide-vue-next'
+  import { Copy, Globe, LogIn, SquareArrowOutUpRight } from 'lucide-vue-next'
   import { computed } from 'vue'
   import DropMenu from '@/components/ui/DropMenu.vue'
   import { useNotifyStore } from '@/stores/notify'
   import { formatDateTime } from '@/utils/projects'
 
-  /** An icon in the list (the local copy, staging) – a click opens a small menu: the site, its panel, copy the address. */
+  /**
+   * An icon in the list (the local copy, staging) – a click opens a small menu: the site and its panel, each with
+   * "open" and "copy" beside it.
+   */
   const props = defineProps<{ url: string, adminUrl?: string | null, label: string, status?: { code: number, checkedAt: string } | null }>()
 
   /** the list checked the address (the staging) and it answered 200 – the icon in the accent colour */
@@ -60,11 +63,16 @@
     return `${answer}, sprawdzono ${formatDateTime(status.checkedAt).slice(-5)}`
   })
 
+  const rows = computed(() => [
+    { label: props.label, url: props.url, icon: Globe },
+    ...(props.adminUrl ? [{ label: 'Panel', url: props.adminUrl, icon: LogIn }] : []),
+  ])
+
   const notify = useNotifyStore()
 
-  async function copy (): Promise<void> {
+  async function copy (url: string): Promise<void> {
     try {
-      await navigator.clipboard.writeText(props.url)
+      await navigator.clipboard.writeText(url)
       notify.show('Adres skopiowany do schowka.')
     } catch {
       notify.show('Nie udało się skopiować.', { tone: 'error' })
@@ -105,6 +113,26 @@
   font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* a row: the name (it opens too) and the two icons */
+.site-link__row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.site-link__name {
+  flex: 1;
+  min-width: 150px;
+}
+
+.site-link__row .btn--icon {
+  color: var(--text-2);
+}
+
+.site-link__row .btn--icon:hover {
+  color: var(--text);
 }
 
 /* the items are links here too – the same look as the buttons */
