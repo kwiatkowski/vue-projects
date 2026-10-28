@@ -70,8 +70,8 @@
           </template>
         </SelectField>
 
-        <!-- which columns show – mine and the public list's -->
-        <button v-if="config.canManage" class="btn btn--outline toolbar__columns" type="button" @click="columns.dialogOpen = true">
+        <!-- which columns this browser shows – of those one may see -->
+        <button class="btn btn--outline toolbar__columns" type="button" @click="columns.viewOpen = true">
           <Columns3 /> Wyświetl
         </button>
 

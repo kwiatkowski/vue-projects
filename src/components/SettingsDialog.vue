@@ -1,8 +1,8 @@
 <template>
   <BaseDialog
-    v-model="columns.dialogOpen"
+    v-model="columns.settingsOpen"
     :can-close="() => !dirty"
-    title="Ustawienia widoku"
+    title="Ustawienia"
     :width="560"
     @submit="save"
   >
@@ -103,7 +103,7 @@
       <template v-if="dirty">
         <span class="unsaved"><AlertTriangle /> Niezapisane zmiany</span>
         <span style="flex: 1" />
-        <button class="btn btn--danger btn--sm" type="button" @click="columns.dialogOpen = false">Zamknij bez zapisywania</button>
+        <button class="btn btn--danger btn--sm" type="button" @click="columns.settingsOpen = false">Zamknij bez zapisywania</button>
       </template>
 
       <template v-else>
@@ -113,7 +113,7 @@
 
         <span style="flex: 1" />
 
-        <button class="btn btn--sm" type="button" @click="columns.dialogOpen = false">
+        <button class="btn btn--sm" type="button" @click="columns.settingsOpen = false">
           <X /> Anuluj
         </button>
       </template>
@@ -136,7 +136,8 @@
   import { COLUMN_KEYS, COLUMNS, PUBLIC_DEFAULT } from '@/utils/columns'
 
   /**
-   * "Wyświetl": the list's viewer account (login, password) and which columns a viewer and a guest see – the server
+   * "Ustawienia" (the owner's, under the photo): the list's viewer account (login, password) and which columns a viewer
+   * and a guest may see – the server
    * sends them only those columns' data. The private ones never go to guests; the project's name is always there.
    */
   const columns = useColumnsStore()
@@ -162,7 +163,7 @@
   const isDefault = computed(() => same(viewer.value, PUBLIC_DEFAULT) && same(guest.value, PUBLIC_DEFAULT))
 
   // every opening starts from what is saved
-  watch(() => columns.dialogOpen, open => {
+  watch(() => columns.settingsOpen, open => {
     if (open) {
       viewer.value = [...columns.viewerColumns]
       guest.value = [...columns.guestColumns]
@@ -187,7 +188,7 @@
     const account = accountChanged.value ? { login: login.value, password: password.value || null } : undefined
 
     if (await columns.save(ordered(viewer.value), ordered(guest.value), account)) {
-      columns.dialogOpen = false
+      columns.settingsOpen = false
     }
 
     busy.value = false

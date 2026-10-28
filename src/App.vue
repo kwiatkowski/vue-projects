@@ -9,8 +9,10 @@
     <template v-if="config.canManage">
       <ProjectDialog />
       <CategoryDialog />
-      <ColumnsDialog />
+      <SettingsDialog />
     </template>
+
+    <ViewDialog />
 
     <ToastHost />
   </div>
@@ -20,9 +22,10 @@
   import { onBeforeUnmount, onMounted } from 'vue'
   import AppTopbar from '@/components/AppTopbar.vue'
   import CategoryDialog from '@/components/CategoryDialog.vue'
-  import ColumnsDialog from '@/components/ColumnsDialog.vue'
   import ProjectDialog from '@/components/ProjectDialog.vue'
+  import SettingsDialog from '@/components/SettingsDialog.vue'
   import ToastHost from '@/components/ui/ToastHost.vue'
+  import ViewDialog from '@/components/ViewDialog.vue'
   import { config } from '@/config'
   import { useProjectsStore } from '@/stores/projects'
 

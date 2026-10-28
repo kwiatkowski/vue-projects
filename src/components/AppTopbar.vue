@@ -87,6 +87,17 @@
         <div class="user-menu__sep" />
       </template>
 
+      <!-- the account for viewers, and who may see which columns -->
+      <button
+        v-if="config.canManage"
+        class="menu__item"
+        role="menuitem"
+        type="button"
+        @click="columns.settingsOpen = true"
+      >
+        <Settings /> Ustawienia
+      </button>
+
       <a v-if="config.logoutUrl" class="menu__item" :href="config.logoutUrl" role="menuitem">
         <LogOut /> Wyloguj
       </a>
@@ -130,16 +141,18 @@
 </template>
 
 <script lang="ts" setup>
-  import { Check, ChevronDown, Eye, FolderPlus, Layers, LogIn, LogOut, Moon, Plus, ShieldCheck, Sun, UserRound, Users } from 'lucide-vue-next'
+  import { Check, ChevronDown, Eye, FolderPlus, Layers, LogIn, LogOut, Moon, Plus, Settings, ShieldCheck, Sun, UserRound, Users } from 'lucide-vue-next'
   import { computed, ref } from 'vue'
   import { viewerApi } from '@/api/projects'
   import LoginDialog from '@/components/LoginDialog.vue'
   import DropMenu from '@/components/ui/DropMenu.vue'
   import { useTheme } from '@/composables/theme'
   import { config } from '@/config'
+  import { useColumnsStore } from '@/stores/columns'
   import { useProjectsStore } from '@/stores/projects'
 
   const projects = useProjectsStore()
+  const columns = useColumnsStore()
   const { dark, toggleTheme } = useTheme()
 
   type View = 'admin' | 'viewer' | 'guest'
