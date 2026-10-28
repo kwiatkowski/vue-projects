@@ -325,7 +325,7 @@
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
   import { dragId, dragKind, dropTarget, setDrag } from '@/utils/drag'
-  import { formatDateTime, latestWordpress, repoHost, reportState, siteUrl, UPDATE_LABELS, updateScope } from '@/utils/projects'
+  import { formatDateTime, latestWordpress, repoHost, reportState, siteUrl, sslState, UPDATE_LABELS, updateScope } from '@/utils/projects'
 
   const props = defineProps<{
     groups: Array<Group<Project>>
@@ -420,7 +420,12 @@
 
     const state = reportState(project)
 
-    return state === 'ok' && scopeOf(project) ? 'todo' : state
+    // a certificate that is not fine – red; one that runs out soon – orange, as something to do
+    if (state !== 'off' && sslState(project) === 'bad') {
+      return 'failed'
+    }
+
+    return state === 'ok' && (scopeOf(project) || sslState(project) === 'soon') ? 'todo' : state
   }
 
   const isLatest = (project: Project) => latestWordpress(project, config.latestWordpress)

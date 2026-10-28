@@ -217,3 +217,28 @@ export const UPDATE_LABELS: Record<UpdateScope, string> = {
   all: 'Aktualizuj',
   translations: 'Aktualizuj tłumaczenia',
 }
+
+/** a certificate that runs out within this many days is shown as a warning */
+export const SSL_WARN_DAYS = 14
+
+/** The certificate at a glance: ok, soon (runs out within SSL_WARN_DAYS), bad (expired, foreign, untrusted, none), null – not checked. */
+export function sslState (project: Pick<Project, 'ssl'>, now: Date = new Date()): 'ok' | 'soon' | 'bad' | null {
+  const ssl = project.ssl
+
+  if (!ssl) {
+    return null
+  }
+
+  if (!ssl.ok) {
+    return 'bad'
+  }
+
+  const days = ssl.validTo ? (new Date(ssl.validTo).getTime() - now.getTime()) / 86_400_000 : Infinity
+
+  return days <= SSL_WARN_DAYS ? 'soon' : 'ok'
+}
+
+/** days left on the certificate (whole, not below 0) */
+export function sslDaysLeft (project: Pick<Project, 'ssl'>, now: Date = new Date()): number | null {
+  return project.ssl?.validTo ? Math.max(0, Math.floor((new Date(project.ssl.validTo).getTime() - now.getTime()) / 86_400_000)) : null
+}

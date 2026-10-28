@@ -94,6 +94,17 @@ export interface Project extends Record<Flag, boolean> {
   updates?: PluginUpdate[]
   /** the translations waiting for an update (core, plugins, themes), from the last report */
   translationUpdates?: TranslationUpdate[]
+  /** the TLS certificate as the list saw it at its last pull */
+  ssl?: SslState | null
+}
+
+/** The site's TLS certificate: fine (ok), or why not (error); until when, who issued it. */
+export interface SslState {
+  ok: boolean
+  error: string | null
+  validTo: string | null
+  issuer: string | null
+  checkedAt: string
 }
 
 /** A translation WordPress offers an update for – "Update translations" in the panel. */
@@ -162,7 +173,7 @@ export interface SiteReport {
 }
 
 /** What the API takes: any field, null clears it. */
-export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter' | 'updates' | 'translationUpdates'>>
+export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter' | 'updates' | 'translationUpdates' | 'ssl'>>
 
 /** the passwords kept encrypted: the panel's and HTTP Basic Auth's */
 export type PasswordKind = 'panel' | 'auth'
