@@ -1,4 +1,4 @@
-import type { Category, Project, SortKey, Status } from '@/types'
+import type { Category, PluginUpdate, Project, SortKey, Status, UpdateScope } from '@/types'
 
 /** in this order in the filters and the status select: online, offline, in progress, suspended */
 export const STATUS_LABELS: Record<Status, string> = {
@@ -193,4 +193,27 @@ export function reportState (project: Pick<Project, 'token' | 'reportedAt'>, now
   }
 
   return reportStale(project.reportedAt, now) ? 'failed' : 'ok'
+}
+
+/** What the site should update: WordPress (older than the newest) and the plugins its report lists. */
+export function pendingUpdates (project: Project, latest: string | null): PluginUpdate[] {
+  const core = latest && project.engine === 'wordpress' && project.version && project.version !== latest
+    ? [{ name: 'WordPress', version: project.version, update: latest }]
+    : []
+
+  return [...core, ...(project.updates ?? [])]
+}
+
+/** "Aktualizuj" – WordPress or plugins wait (translations come along); "translations" – they are all there is; null – nothing */
+export function updateScope (project: Project, latest: string | null): UpdateScope | null {
+  if (pendingUpdates(project, latest).length > 0) {
+    return 'all'
+  }
+
+  return (project.translationUpdates?.length ?? 0) > 0 ? 'translations' : null
+}
+
+export const UPDATE_LABELS: Record<UpdateScope, string> = {
+  all: 'Aktualizuj',
+  translations: 'Aktualizuj tłumaczenia',
 }

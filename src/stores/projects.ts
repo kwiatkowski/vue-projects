@@ -1,4 +1,4 @@
-import type { Category, PasswordKind, Project, ProjectInput, TodoProject } from '@/types'
+import type { Category, PasswordKind, Project, ProjectInput, TodoProject, UpdateScope } from '@/types'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { categoriesApi, projectsApi, todoApi } from '@/api/projects'
@@ -366,11 +366,11 @@ export const useProjectsStore = defineStore('projects', () => {
   /** sites updating themselves (Composer / the plugins), started from the table – their dot spins until it ends */
   const updating = ref<Set<number>>(new Set())
 
-  async function runUpdate (id: number): Promise<void> {
+  async function runUpdate (id: number, scope: UpdateScope = 'all'): Promise<void> {
     const name = items.value.find(item => item.id === id)?.name ?? ''
 
     try {
-      let state = await projectsApi.startUpdate(id)
+      let state = await projectsApi.startUpdate(id, scope)
       updating.value = new Set(updating.value).add(id)
       notify.show(`${name}: aktualizacja uruchomiona.`)
 

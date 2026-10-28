@@ -1,4 +1,4 @@
-import type { Category, PasswordKind, Project, ProjectInput, SiteReport, TodoProject, TodoSummary, TodoTask, UpdateState } from '@/types'
+import type { Category, PasswordKind, Project, ProjectInput, SiteReport, TodoProject, TodoSummary, TodoTask, UpdateScope, UpdateState } from '@/types'
 import { request } from './client'
 
 export const projectsApi = {
@@ -18,7 +18,7 @@ export const projectsApi = {
   token: (id: number) => request<Project>('POST', `projects/${id}/token`),
   /** the site's Composer update: how it goes, and start it (composer update, commit and push on production) */
   updateState: (id: number) => request<UpdateState>('GET', `projects/${id}/update`),
-  startUpdate: (id: number) => request<UpdateState>('POST', `projects/${id}/update`),
+  startUpdate: (id: number, scope: UpdateScope = 'all') => request<UpdateState>('POST', `projects/${id}/update`, { scope }),
   /** no token – the site stops reporting; the last report stays */
   removeToken: (id: number) => request<Project>('DELETE', `projects/${id}/token`),
   /** open tasks of the linked Todo project */

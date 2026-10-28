@@ -92,7 +92,19 @@ export interface Project extends Record<Flag, boolean> {
   reporter?: string | null
   /** the plugins waiting for an update, from the last report */
   updates?: PluginUpdate[]
+  /** the translations waiting for an update (core, plugins, themes), from the last report */
+  translationUpdates?: TranslationUpdate[]
 }
+
+/** A translation WordPress offers an update for – "Update translations" in the panel. */
+export interface TranslationUpdate {
+  type: string
+  slug: string
+  language: string
+}
+
+/** what the site's "Aktualizuj" does: everything, or the translations alone */
+export type UpdateScope = 'all' | 'translations'
 
 /** The site's Composer update (plugin_meden's Updater) – asked through the list. */
 export interface UpdateState {
@@ -150,7 +162,7 @@ export interface SiteReport {
 }
 
 /** What the API takes: any field, null clears it. */
-export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter' | 'updates'>>
+export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter' | 'updates' | 'translationUpdates'>>
 
 /** the passwords kept encrypted: the panel's and HTTP Basic Auth's */
 export type PasswordKind = 'panel' | 'auth'

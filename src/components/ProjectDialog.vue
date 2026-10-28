@@ -171,11 +171,11 @@
               <div class="update__head">
                 <button
                   class="btn btn--sm btn--accent"
-                  :disabled="!update.available || updateRunning || busy"
+                  :disabled="!update.available || updateRunning || busy || !scope"
                   type="button"
                   @click="startUpdate"
                 >
-                  <RefreshCw :class="{ spin: updateRunning }" /> {{ updateRunning ? 'Aktualizuję…' : 'Aktualizuj' }}
+                  <RefreshCw :class="{ spin: updateRunning }" /> {{ updateRunning ? 'Aktualizuję…' : scope ? UPDATE_LABELS[scope] : 'Wszystko aktualne' }}
                 </button>
 
                 <span v-if="update.mode === 'wordpress'" class="faint">wtyczki, tłumaczenia i baza na produkcji (strona bez Bedrocka – jak „Aktualizuj” w panelu)</span>
@@ -537,7 +537,7 @@
   import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
-  import { ago, bareDomain, formatDateTime, formatDay, STATUS_LABELS } from '@/utils/projects'
+  import { ago, bareDomain, formatDateTime, formatDay, STATUS_LABELS, UPDATE_LABELS, updateScope } from '@/utils/projects'
 
   const projects = useProjectsStore()
   const notify = useNotifyStore()
@@ -778,6 +778,9 @@
     }
   }
 
+  /** all, the translations alone, or nothing to do – from the last report */
+  const scope = computed(() => project.value ? updateScope(project.value, config.latestWordpress) : null)
+
   async function startUpdate (): Promise<void> {
     const target = project.value
 
@@ -786,7 +789,7 @@
     }
 
     try {
-      update.value = await projectsApi.startUpdate(target.id)
+      update.value = await projectsApi.startUpdate(target.id, scope.value ?? 'all')
       followUpdate(target)
     } catch (error) {
       notify.error(error)

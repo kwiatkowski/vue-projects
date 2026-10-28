@@ -207,8 +207,9 @@
                     <span class="report" :class="`report--${dotState(project)}`" />
                   </template>
 
-                  <div class="report-menu__head">
+                  <div class="report-menu__head" :class="{ 'report-menu__head--ok': !scopeOf(project) }">
                     <template v-if="toDo(project).length > 0">Do aktualizacji: {{ toDo(project).length }}</template>
+                    <template v-else-if="scopeOf(project)">Tłumaczenia do aktualizacji</template>
                     <template v-else>Wszystko aktualne</template>
                   </div>
 
@@ -217,15 +218,22 @@
                     <span class="mono faint">{{ item.version }} → <span class="info-tip__new">{{ item.update }}</span></span>
                   </div>
 
-                  <!-- plugins, translations, the database; on Bedrock through Composer, committed and pushed -->
+                  <div v-if="project.translationUpdates?.length" class="report-menu__item">
+                    <span>Tłumaczenia</span>
+                    <span class="mono info-tip__new">{{ project.translationUpdates.length }}</span>
+                  </div>
+
+                  <!-- everything (plugins, translations, the database; on Bedrock through Composer, committed and pushed),
+                       or the translations alone – only when something waits -->
                   <button
+                    v-if="scopeOf(project)"
                     class="menu__item"
                     :disabled="projects.updating.has(project.id)"
                     role="menuitem"
                     type="button"
-                    @click="projects.runUpdate(project.id)"
+                    @click="projects.runUpdate(project.id, scopeOf(project) ?? 'all')"
                   >
-                    <RefreshCw /> {{ projects.updating.has(project.id) ? 'Aktualizuję…' : 'Aktualizuj' }}
+                    <RefreshCw /> {{ projects.updating.has(project.id) ? 'Aktualizuję…' : UPDATE_LABELS[scopeOf(project) ?? 'all'] }}
                   </button>
 
                   <button class="menu__item" role="menuitem" type="button" @click="emit('open', project)">
@@ -257,6 +265,10 @@
                       </template>
                     </dl>
                   </template>
+
+                  <div v-if="project.translationUpdates?.length" class="info-tip__head info-tip__head--todo">
+                    Tłumaczenia do aktualizacji: {{ project.translationUpdates.length }}
+                  </div>
                 </template>
               </HoverTip>
             </td>
@@ -336,7 +348,7 @@
 </template>
 
 <script lang="ts" setup>
-  import type { Category, Flag, PluginUpdate, Project, SortKey } from '@/types'
+  import type { Category, Flag, Project, SortKey } from '@/types'
   import type { Group } from '@/utils/projects'
   import { ArrowUpRight, Check, ChevronDown, FileText, FlaskConical, GripVertical, Laptop, RefreshCw } from 'lucide-vue-next'
   import { computed, ref } from 'vue'
@@ -350,7 +362,7 @@
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
   import { dragId, dragKind, dropTarget, setDrag } from '@/utils/drag'
-  import { formatDateTime, latestWordpress, repoHost, reportState, siteUrl } from '@/utils/projects'
+  import { formatDateTime, latestWordpress, pendingUpdates, repoHost, reportState, siteUrl, UPDATE_LABELS, updateScope } from '@/utils/projects'
 
   const props = defineProps<{
     groups: Array<Group<Project>>
@@ -438,14 +450,8 @@
 
   /** "mk-core 2026.10.27" → "MK Core 2026.10.27"; plugin_meden as it is */
   /** what the site should update: WordPress (older than the newest) and the plugins its report lists */
-  function toDo (project: Project): PluginUpdate[] {
-    const latest = config.latestWordpress
-    const core = latest && project.engine === 'wordpress' && project.version && project.version !== latest
-      ? [{ name: 'WordPress', version: project.version, update: latest }]
-      : []
-
-    return [...core, ...(project.updates ?? [])]
-  }
+  const toDo = (project: Project) => pendingUpdates(project, config.latestWordpress)
+  const scopeOf = (project: Project) => updateScope(project, config.latestWordpress)
 
   /** the report's dot: orange instead of green when the site reports, but has something to update */
   function dotState (project: Project): string {
@@ -455,7 +461,7 @@
 
     const state = reportState(project)
 
-    return state === 'ok' && toDo(project).length > 0 ? 'todo' : state
+    return state === 'ok' && scopeOf(project) ? 'todo' : state
   }
 
   const reporterLabel = (reporter: string) => reporter.replace(/^mk-core\b/, 'MK Core')
@@ -1063,6 +1069,10 @@ tr:hover .row-grip {
   color: var(--warn);
   font-size: 12px;
   font-weight: 600;
+}
+
+.report-menu__head--ok {
+  color: var(--positive);
 }
 
 .report-menu__item {
