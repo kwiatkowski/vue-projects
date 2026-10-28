@@ -207,6 +207,7 @@
                   v-if="full && project.token"
                   align="end"
                   :label="reportTitle(project)"
+                  panel-class="menu__panel--tip"
                   :title="false"
                   trigger-class="menu__bare report-trigger"
                 >

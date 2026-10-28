@@ -121,9 +121,6 @@
 }
 
 .tip {
-  /* a shade lifted from the table it floats over (lighter in the dark theme, darker in the light one) */
-  --tip-bg: color-mix(in srgb, var(--surface) 88%, var(--text));
-
   position: fixed;
   z-index: 60;
   /* as wide as its content – near the screen's right edge a fixed box would otherwise squeeze and wrap */

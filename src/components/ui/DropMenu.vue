@@ -37,7 +37,7 @@
           v-if="open"
           ref="panel"
           class="menu__panel"
-          :class="matchWidth && `menu__panel--attached menu__panel--${attachedBelow ? 'below' : 'above'}`"
+          :class="[panelClass, matchWidth && `menu__panel--attached menu__panel--${attachedBelow ? 'below' : 'above'}`]"
           role="menu"
           :style="position"
           @click="pick"
@@ -71,7 +71,9 @@
     tip?: boolean
     /** the browser's title with the label – off when the trigger sits in a HoverTip of its own */
     title?: boolean
-  }>(), { label: 'Więcej', triggerClass: 'btn btn--icon btn--sm', align: 'end', matchWidth: false, disabled: false, tip: false, title: true })
+    /** a class for the panel (it is rendered in <body>, out of the caller's scoped styles) */
+    panelClass?: string
+  }>(), { label: 'Więcej', triggerClass: 'btn btn--icon btn--sm', align: 'end', matchWidth: false, disabled: false, tip: false, title: true, panelClass: '' })
 
   const open = ref(false)
   const position = ref<Record<string, string>>({})
