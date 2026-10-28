@@ -94,6 +94,18 @@ export interface Project extends Record<Flag, boolean> {
   updates?: PluginUpdate[]
 }
 
+/** The site's Composer update (plugin_meden's Updater) – asked through the list. */
+export interface UpdateState {
+  /** a Bedrock site with git where PHP may run Composer – reason says why not */
+  available: boolean
+  reason: string | null
+  /** nothing – Composer found no newer versions; done – composer.lock committed and pushed */
+  state: 'idle' | 'running' | 'done' | 'nothing' | 'failed'
+  startedAt: string | null
+  finishedAt: string | null
+  log: string
+}
+
 /** A plugin the site could update: the installed version and the one waiting. */
 export interface PluginUpdate {
   name: string

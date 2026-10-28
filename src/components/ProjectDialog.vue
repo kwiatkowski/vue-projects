@@ -166,6 +166,32 @@
               </template>
             </dl>
 
+            <!-- composer update on production, composer.lock committed and pushed – the other environments pull it -->
+            <div v-if="update" class="update">
+              <div class="update__head">
+                <button
+                  class="btn btn--sm btn--accent"
+                  :disabled="!update.available || updateRunning || busy"
+                  type="button"
+                  @click="startUpdate"
+                >
+                  <RefreshCw :class="{ spin: updateRunning }" /> {{ updateRunning ? 'Aktualizuję…' : 'Aktualizuj przez Composer' }}
+                </button>
+
+                <span class="faint">composer update na produkcji, commit i push <code>composer.lock</code> – na innych środowiskach <code>git pull</code> i <code>composer install</code></span>
+              </div>
+
+              <p v-if="!update.available" class="update__note faint">{{ update.reason }}</p>
+              <p v-else-if="update.state === 'done'" class="update__note update__note--ok">Zaktualizowano {{ formatDateTime(update.finishedAt) }} – <code>composer.lock</code> jest w repozytorium.</p>
+              <p v-else-if="update.state === 'nothing'" class="update__note faint">{{ formatDateTime(update.finishedAt) }}: Composer nie znalazł nowszych wersji w ramach wymagań z <code>composer.json</code> (np. <code>^4</code> nie weźmie 5.0, wtyczki z prywatnych repozytoriów trzeba najpierw podbić tam).</p>
+              <p v-else-if="update.state === 'failed'" class="update__note update__note--failed">Aktualizacja się nie udała – szczegóły w logu.</p>
+
+              <details v-if="update.log" :open="update.state === 'failed' || updateRunning">
+                <summary class="faint">Log</summary>
+                <pre class="update__log mono">{{ update.log }}</pre>
+              </details>
+            </div>
+
             <template v-if="project.token">
               <!-- Bedrock reads .env, a plain WordPress the constant in wp-config.php -->
               <div class="env-head">
@@ -494,9 +520,9 @@
 </template>
 
 <script lang="ts" setup>
-  import type { Flag, Project, ProjectInput, ReportPlugin, SiteReport, Status, TodoTask } from '@/types'
-  import { Activity, AlertTriangle, ArrowUpRight, Check, Copy, Cpu, KeyRound, ListChecks, PenLine, Plus, Server, Trash2, X } from 'lucide-vue-next'
-  import { type Component, computed, nextTick, ref, useTemplateRef, watch } from 'vue'
+  import type { Flag, Project, ProjectInput, ReportPlugin, SiteReport, Status, TodoTask, UpdateState } from '@/types'
+  import { Activity, AlertTriangle, ArrowUpRight, Check, Copy, Cpu, KeyRound, ListChecks, PenLine, Plus, RefreshCw, Server, Trash2, X } from 'lucide-vue-next'
+  import { type Component, computed, nextTick, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
   import StatusChip from '@/components/StatusChip.vue'
   import BaseDialog from '@/components/ui/BaseDialog.vue'
@@ -650,6 +676,7 @@
     } else {
       void loadTasks(editing)
       void loadReport(editing)
+      void loadUpdate(editing)
       void loadPassword(editing)
     }
   })
@@ -707,6 +734,63 @@
       siteReport.value = (await projectsApi.report(project.id).catch(() => null))?.report ?? null
     }
   }
+
+  /** the site's Composer update – a Bedrock project with a token; polled while it runs */
+  const update = ref<UpdateState | null>(null)
+  const updateRunning = computed(() => update.value?.state === 'running')
+  let updateTimer: ReturnType<typeof setTimeout> | undefined
+
+  async function loadUpdate (target: Project): Promise<void> {
+    clearTimeout(updateTimer)
+    update.value = null
+
+    if (!target.token || !target.bedrock) {
+      return
+    }
+
+    try {
+      update.value = await projectsApi.updateState(target.id)
+    } catch (error) {
+      // an older plugin_meden, a site that doesn't answer – the reason instead of the button
+      update.value = { available: false, reason: error instanceof Error ? error.message : String(error), state: 'idle', startedAt: null, finishedAt: null, log: '' }
+    }
+
+    followUpdate(target)
+  }
+
+  /** while it runs: ask again in 3 s; at the end the new report (the site sends it) comes with the list's refresh */
+  function followUpdate (target: Project): void {
+    if (update.value?.state === 'running' && project.value?.id === target.id) {
+      updateTimer = setTimeout(async () => {
+        const was = update.value?.state
+        update.value = await projectsApi.updateState(target.id).catch(() => update.value)
+
+        if (was === 'running' && update.value?.state !== 'running') {
+          void projects.load()
+          void loadReport(target)
+        }
+
+        followUpdate(target)
+      }, 3000)
+    }
+  }
+
+  async function startUpdate (): Promise<void> {
+    const target = project.value
+
+    if (!target) {
+      return
+    }
+
+    try {
+      update.value = await projectsApi.startUpdate(target.id)
+      followUpdate(target)
+    } catch (error) {
+      notify.error(error)
+    }
+  }
+
+  onBeforeUnmount(() => clearTimeout(updateTimer))
 
   /** the site reports – the fields it fills are read-only (the status too: online / offline from its home page);
    * the repository only when the report brings one (git) */
@@ -1153,6 +1237,57 @@ code {
   align-items: center;
   gap: 6px 10px;
   margin: 0;
+}
+
+/* the Composer update: the button, what came of it, the log */
+.update {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.update__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  font-size: 12px;
+}
+
+.update__note {
+  margin: 0;
+  font-size: 13px;
+}
+
+.update__note--ok {
+  color: var(--positive);
+}
+
+.update__note--failed {
+  color: var(--danger);
+}
+
+.update__log {
+  max-height: 240px;
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  overflow: auto;
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .site__online,
