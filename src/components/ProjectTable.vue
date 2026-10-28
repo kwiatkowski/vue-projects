@@ -207,7 +207,7 @@
             </td>
 
             <!-- a click here works the dot's popup, not the row's dialog -->
-            <td class="center" :class="cellChanged(project, 'reportedAt', 'token')" @click.stop>
+            <td class="center cell-link" :class="cellChanged(project, 'reportedAt', 'token')" @click.stop>
               <!-- one popup for the dot: what the report says and, for a site that reports, what to do – it can be entered -->
               <HoverTip anchor-class="report-hit" :interactive="full && Boolean(project.token)">
                 <span
@@ -1021,22 +1021,19 @@ tr:hover .row-grip {
   background: color-mix(in srgb, var(--tip-bg) 85%, var(--text));
 }
 
-/* Local and Stage: the icon's button covers the whole cell – anywhere in it opens the menu */
+/* Local and Stage: the icon's button covers the whole cell – anywhere in it opens the menu; the report: anywhere in
+   its cell shows the popup */
 .cell-link {
   position: relative;
 }
 
-.cell-link :deep(.site-link) {
+.cell-link :deep(.site-link),
+.cell-link :deep(.report-hit) {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   border-radius: 0;
-}
-
-.cell-link :deep(.site-link:hover),
-.cell-link :deep(.site-link[aria-expanded='true']) {
-  background: var(--press);
 }
 
 /* the dot is 8px – the area that shows its popup is much bigger, easy to hit */
