@@ -318,7 +318,7 @@
 
             <div v-if="project.ssl" class="grid">
               <label class="field">
-                <span>Stan</span>
+                <span>Stan <span class="reported-mark">*</span></span>
 
                 <input
                   class="input"
@@ -330,17 +330,17 @@
               </label>
 
               <label class="field">
-                <span>Ważny do</span>
+                <span>Ważny do <span class="reported-mark">*</span></span>
                 <input class="input mono" disabled type="text" :value="sslInfo?.validTo">
               </label>
 
               <label class="field">
-                <span>Wystawca</span>
+                <span>Wystawca <span class="reported-mark">*</span></span>
                 <input class="input" disabled type="text" :value="project.ssl.issuer ?? '–'">
               </label>
 
               <label class="field">
-                <span>Sprawdzono</span>
+                <span>Sprawdzono <span class="reported-mark">*</span></span>
                 <input class="input mono" disabled type="text" :value="formatDateTime(project.ssl.checkedAt)">
               </label>
             </div>
