@@ -180,16 +180,20 @@ export const useProjectsStore = defineStore('projects', () => {
     const shown = new Map(items.value.map(item => [item.id, item]))
     const known = new Map([...shown, ...[...waiting].map(([id, entry]) => [id, entry.project] as const)])
     const found = new Map<number, Set<string>>()
+    let anyChange = false
 
     for (const item of freshItems) {
       const fields = changedFields(known.get(item.id), item)
+      anyChange ||= fields.size > 0
 
-      if (fields.size > 0) {
+      // a project without a token (the report not configured) changes only by the list's own checks (the certificate,
+      // the staging) – it comes in quietly, without a highlight and without taking a turn; a new one is shown anyway
+      if (fields.size > 0 && (!unconfigured(item) || fields.has('*'))) {
         found.set(item.id, fields)
       }
     }
 
-    if (found.size === 0 && freshItems.length === known.size) {
+    if (!anyChange && freshItems.length === known.size) {
       return true
     }
 
@@ -218,6 +222,11 @@ export const useProjectsStore = defineStore('projects', () => {
     }
 
     return true
+  }
+
+  /** the owner's list without the project's token – the public one has no `token` at all */
+  function unconfigured (project: Project): boolean {
+    return 'token' in project && !project.token
   }
 
   /** The fields of `before` and `after` that differ; '*' when there was no `before` (a new project). */

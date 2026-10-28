@@ -120,6 +120,19 @@ describe('refresh', () => {
     expect(store.changed.size).toBe(0)
   })
 
+  it('brings a project without a token in quietly – no highlight, no turn', async () => {
+    const store = useProjectsStore()
+    api.projects = [{ id: 1, name: 'a.pl', token: null, ssl: null }, { id: 2, name: 'b.pl', token: 'x', php: '8.2' }]
+    await store.load()
+    api.projects[0]!.ssl = { ok: true, error: null, validTo: null, issuer: null, checkedAt: '2026-10-28 12:00:00' }
+    api.projects[1]!.php = '8.4'
+
+    await store.refresh()
+
+    expect([...store.changed.keys()]).toEqual([2])
+    expect(store.items.find(item => item.id === 1)?.ssl?.ok).toBe(true)
+  })
+
   it('keeps the changes while the tab is in the background, until it is shown', async () => {
     const store = useProjectsStore()
     await store.load()
