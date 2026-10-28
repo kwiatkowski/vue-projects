@@ -127,13 +127,17 @@
           </td>
 
           <td class="cell-theme" :class="cellChanged(project, 'theme')">
-            <HoverTip v-if="themeRows(project).length > 0">
+            <HoverTip v-if="project.themeDetails?.version || themeRows(project).length > 0">
               <span class="has-tip" tabindex="0">{{ project.theme }}</span>
 
+              <!-- as the report's: a header – the name, its version on the right – then the rest, values on the right -->
               <template #tip>
-                <div class="info-tip__head">{{ project.theme }}</div>
+                <div class="report-tip__title" :class="{ 'report-tip__title--alone': themeRows(project).length === 0 }">
+                  <strong>{{ project.theme }}</strong>
+                  <span v-if="project.themeDetails?.version" class="mono faint">{{ project.themeDetails.version }}</span>
+                </div>
 
-                <dl class="info-tip">
+                <dl v-if="themeRows(project).length > 0" class="info-tip info-tip--right info-tip--after">
                   <template v-for="row in themeRows(project)" :key="row.label">
                     <dt>{{ row.label }}</dt>
                     <dd>{{ row.value }}</dd>
@@ -437,7 +441,7 @@
     }
   }
 
-  /** the theme's tooltip: what the report knows beyond the name – empty, no tooltip */
+  /** the theme's tooltip under its header (name, version): author, parent theme and its author */
   function themeRows (project: Project): Array<{ label: string, value: string }> {
     const details = project.themeDetails
     const parent = project.parentTheme
@@ -445,14 +449,12 @@
       : null
 
     return [
-      { label: 'Wersja', value: details?.version },
       { label: 'Autor', value: details?.author },
       { label: 'Motyw nadrzędny', value: parent },
       { label: 'Autor nadrzędnego', value: parent ? details?.parentAuthor : null },
     ].filter((row): row is { label: string, value: string } => Boolean(row.value))
   }
 
-  /** "mk-core 2026.10.27" → "MK Core 2026.10.27"; plugin_meden as it is */
   /** what the site should update: WordPress (older than the newest) and the plugins its report lists */
   const toDo = (project: Project) => pendingUpdates(project, config.latestWordpress)
   const scopeOf = (project: Project) => updateScope(project, config.latestWordpress)
@@ -468,6 +470,7 @@
     return state === 'ok' && scopeOf(project) ? 'todo' : state
   }
 
+  /** "mk-core 2026.10.27" → "MK Core 2026.10.27"; plugin_meden as it is */
   const reporterLabel = (reporter: string) => reporter.replace(/^mk-core\b/, 'MK Core')
 
   const isLatest = (project: Project) => latestWordpress(project, config.latestWordpress)
@@ -1000,6 +1003,11 @@ tr:hover .row-grip {
 /* the versions on the right edge */
 .info-tip--right dd {
   text-align: right;
+}
+
+/* under a header's line */
+.info-tip--after {
+  margin-top: 6px;
 }
 
 .link {
