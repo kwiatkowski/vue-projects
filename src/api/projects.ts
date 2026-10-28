@@ -25,6 +25,8 @@ export const projectsApi = {
   tasks: (id: number) => request<{ todo: TodoSummary | null, tasks: TodoTask[] }>('GET', `projects/${id}/tasks`),
   /** the last report of the site, as it came */
   report: (id: number) => request<{ reportedAt: string | null, report: SiteReport | null }>('GET', `projects/${id}/report`),
+  /** the list fetches the site's report now – whether it came (error: why not) and the project after it */
+  pullReport: (id: number) => request<{ ok: boolean | null, error: string | null, project: Project }>('POST', `projects/${id}/report`),
 }
 
 export const categoriesApi = {

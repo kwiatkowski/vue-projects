@@ -117,13 +117,26 @@
         <div v-show="tab === 'report'" class="tab-panel" role="tabpanel">
           <template v-if="project">
 
-            <p class="muted report__state">
-              <template v-if="project.reportedAt">
-                Ostatni: <strong class="mono">{{ formatDateTime(project.reportedAt) }}</strong> <span class="faint">{{ ago(project.reportedAt) }}</span>
-              </template>
+            <div class="report__head">
+              <p class="muted report__state">
+                <template v-if="project.reportedAt">
+                  Ostatni: <strong class="mono">{{ formatDateTime(project.reportedAt) }}</strong> <span class="faint">{{ ago(project.reportedAt) }}</span>
+                </template>
 
-              <template v-else>Strona jeszcze nic nie wysłała.</template>
-            </p>
+                <template v-else>Strona jeszcze nic nie wysłała.</template>
+              </p>
+
+              <!-- the list asks the site for its report now, without waiting for the cron -->
+              <button
+                v-if="project.token"
+                class="btn btn--sm btn--outline"
+                :disabled="pulling"
+                type="button"
+                @click="pullReport"
+              >
+                <component :is="pulling ? RefreshCw : Download" :class="{ spin: pulling }" /> {{ pulling ? 'Pobieram…' : 'Pobierz raport' }}
+              </button>
+            </div>
 
             <dl v-if="siteReport?.users || siteReport?.plugins" class="site">
               <template v-if="siteReport.users">
@@ -603,7 +616,7 @@
 
 <script lang="ts" setup>
   import type { Flag, Project, ProjectInput, ReportPlugin, SiteReport, Status, TodoTask, UpdateState } from '@/types'
-  import { Activity, AlertTriangle, ArrowUpRight, Check, Copy, Cpu, KeyRound, ListChecks, Minus, NotebookPen, PenLine, Plus, Puzzle, RefreshCw, Server, Trash2, X } from 'lucide-vue-next'
+  import { Activity, AlertTriangle, ArrowUpRight, Check, Copy, Cpu, Download, KeyRound, ListChecks, Minus, NotebookPen, PenLine, Plus, Puzzle, RefreshCw, Server, Trash2, X } from 'lucide-vue-next'
   import { type Component, computed, defineAsyncComponent, nextTick, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
   import StatusChip from '@/components/StatusChip.vue'
@@ -1128,6 +1141,46 @@
     }
   }
 
+  /** the reported fields – a fetched report brings them in, unless they were typed over in the form */
+  const REPORTED_FIELDS = ['status', 'repo', 'php', 'engine', 'version', 'theme', ...REPORTED_FLAGS] as const
+
+  const pulling = ref(false)
+
+  async function pullReport (): Promise<void> {
+    if (!project.value) {
+      return
+    }
+
+    pulling.value = true
+    const result = await projects.pullReport(project.value.id)
+    pulling.value = false
+
+    if (!result) {
+      return
+    }
+
+    // the fields the report fills take the fresh values; the rest of the form stays as typed
+    const fresh = fromProject(result.project) as Record<string, unknown>
+    const current = form.value as Record<string, unknown>
+    const before = JSON.parse(initial.value || '{}') as Record<string, unknown>
+
+    for (const field of REPORTED_FIELDS) {
+      if (JSON.stringify(current[field]) === JSON.stringify(before[field])) {
+        current[field] = before[field] = fresh[field]
+      }
+    }
+
+    initial.value = JSON.stringify(before)
+    projects.editing = result.project
+    void loadReport(result.project)
+
+    if (result.error) {
+      notify.show(`Raport nie przyszedł: ${result.error}.`, { tone: 'error' })
+    } else {
+      notify.show('Raport pobrany.')
+    }
+  }
+
   async function deleteToken (): Promise<void> {
     if (!project.value) {
       return
@@ -1330,6 +1383,18 @@
   align-items: center;
   gap: 7px;
   cursor: pointer;
+}
+
+.report__head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.report__head .report__state {
+  margin: 0;
 }
 
 .report__state strong {

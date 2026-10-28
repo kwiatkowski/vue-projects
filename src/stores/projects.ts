@@ -303,6 +303,20 @@ export const useProjectsStore = defineStore('projects', () => {
     }
   }
 
+  /** Fetches the site's report now; resolves to the project after it and why the report didn't come (null – it did). */
+  async function pullReport (id: number): Promise<{ project: Project, error: string | null } | null> {
+    try {
+      const result = await projectsApi.pullReport(id)
+      replace(result.project)
+
+      return { project: result.project, error: result.ok === false ? (result.error ?? 'brak raportu') : null }
+    } catch (error) {
+      notify.error(error)
+
+      return null
+    }
+  }
+
   async function regenerateToken (id: number): Promise<Project | null> {
     try {
       const project = await projectsApi.token(id)
@@ -486,6 +500,7 @@ export const useProjectsStore = defineStore('projects', () => {
     update,
     remove,
     regenerateToken,
+    pullReport,
     removeToken,
     setPassword,
     moveProject,
