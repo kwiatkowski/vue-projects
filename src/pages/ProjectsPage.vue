@@ -70,6 +70,11 @@
           </template>
         </SelectField>
 
+        <!-- which columns show – mine and the public list's -->
+        <button v-if="config.canManage" class="btn btn--outline toolbar__columns" type="button" @click="columns.dialogOpen = true">
+          <Columns3 /> Wyświetl
+        </button>
+
         <button v-if="sort" class="btn btn--sm toolbar__order" type="button" @click="sort = null">
           <ListOrdered /> Własna kolejność
         </button>
@@ -110,17 +115,19 @@
 <script lang="ts" setup>
   import type { Category, Project, SortKey, Status } from '@/types'
   import type { Filter, Group } from '@/utils/projects'
-  import { ListFilter, ListOrdered, Search, SearchX } from 'lucide-vue-next'
+  import { Columns3, ListFilter, ListOrdered, Search, SearchX } from 'lucide-vue-next'
   import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import ProjectTable from '@/components/ProjectTable.vue'
   import StatusChip from '@/components/StatusChip.vue'
   import SelectField from '@/components/ui/SelectField.vue'
   import { config } from '@/config'
+  import { useColumnsStore } from '@/stores/columns'
   import { useProjectsStore } from '@/stores/projects'
   import { groupProjects, matches, sortProjects, STATUS_LABELS, STATUS_TONES } from '@/utils/projects'
 
   const projects = useProjectsStore()
+  const columns = useColumnsStore()
   const route = useRoute()
   const router = useRouter()
 
@@ -350,6 +357,12 @@
   display: none;
 }
 
+/* as tall as the search and the filters */
+.toolbar__columns {
+  flex: none;
+  height: 36px;
+}
+
 .toolbar__toggle {
   position: relative;
   flex: none;
@@ -400,6 +413,17 @@
   .toolbar--open .toolbar__status {
     display: block;
     flex: 1 1 100%;
+  }
+
+  /* phones: under the category and the status, folded with them */
+  .toolbar__columns {
+    display: none;
+  }
+
+  .toolbar--open .toolbar__columns {
+    display: inline-flex;
+    flex: 1 1 100%;
+    justify-content: center;
   }
 }
 </style>

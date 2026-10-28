@@ -1,3 +1,5 @@
+import { type ColumnKey, PUBLIC_DEFAULT } from '@/utils/columns'
+
 /**
  * Runtime config. In production WordPress (wp-plugin-projects) injects `window.__PROJECTS__` into index.html,
  * so the bundle itself holds no URLs, nonces or secrets. In `npm run dev` the defaults below apply.
@@ -17,6 +19,8 @@ export interface AppConfig {
   reportUrl: string
   todoUrl: string | null
   publicFields: string[]
+  /** the columns shown: the owner's own choice (null – all), the public list's */
+  columns: { mine: ColumnKey[] | null, public: ColumnKey[] }
   /** the newest WordPress release – sites running it are marked; null when unknown */
   latestWordpress: string | null
   /** every WordPress release since 5.0, newest first – the version list (with a search) */
@@ -53,6 +57,7 @@ export const config: AppConfig = {
   reportUrl: injected.reportUrl ?? '/wp-json/projects/v1/report',
   todoUrl: injected.todoUrl ?? null,
   publicFields: injected.publicFields ?? ['domains', 'status', 'engine', 'version', 'theme'],
+  columns: injected.columns ?? { mine: null, public: PUBLIC_DEFAULT },
   latestWordpress: injected.latestWordpress ?? null,
   wordpressVersions: injected.wordpressVersions ?? [],
   siteName: injected.siteName ?? 'kwiatkowski.co',

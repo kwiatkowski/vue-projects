@@ -1,4 +1,5 @@
 import type { Category, PasswordKind, Project, ProjectInput, SiteReport, TodoProject, TodoSummary, TodoTask, UpdateScope, UpdateState } from '@/types'
+import type { ColumnKey } from '@/utils/columns'
 import { request } from './client'
 
 export const projectsApi = {
@@ -36,6 +37,11 @@ export const categoriesApi = {
   remove: (id: number) => request<{ deleted: boolean }>('DELETE', `categories/${id}`),
   /** every category once, in the new order; answers with the list */
   reorder: (ids: number[]) => request<Category[]>('POST', 'categories/order', { ids }),
+}
+
+export const columnsApi = {
+  /** the owner's columns (null – all) and the public list's – saved together */
+  save: (mine: ColumnKey[] | null, publicColumns: ColumnKey[]) => request<{ mine: ColumnKey[] | null, public: ColumnKey[] }>('POST', 'columns', { mine, public: publicColumns }),
 }
 
 export const todoApi = {
