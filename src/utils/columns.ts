@@ -1,5 +1,5 @@
 /**
- * The list's columns, in its order, by section – for the table and the "Wyświetl" dialog. `private` ones never go to
+ * The list's columns, in the table's order (its cells follow it – keep the two the same), with their section – for the table and the "Wyświetl" dialog. `private` ones never go to
  * the public list (access data, the owner's own work): the server doesn't send their data to anyone else.
  */
 export const COLUMN_KEYS = [
@@ -28,10 +28,10 @@ export const COLUMNS: ColumnDef[] = [
   { key: 'deploy', label: 'Deploy', section: 'Konfiguracja' },
   { key: 'bedrock', label: 'Bedrock', section: 'Konfiguracja' },
   { key: 'security', label: 'Security', section: 'Konfiguracja' },
-  { key: 'acf', label: 'ACF', section: 'Konfiguracja' },
-  { key: 'miModal', label: 'MI Modal', section: 'Konfiguracja' },
   { key: 'local', label: 'Local', section: 'Środowiska', private: true },
   { key: 'stage', label: 'Stage', section: 'Środowiska', private: true },
+  { key: 'acf', label: 'ACF', section: 'Konfiguracja' },
+  { key: 'miModal', label: 'MI Modal', section: 'Konfiguracja' },
   { key: 'todo', label: 'Todo', section: 'Praca', private: true },
   { key: 'report', label: 'Raport', section: 'Praca', private: true },
 ]
