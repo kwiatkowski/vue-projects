@@ -407,11 +407,10 @@
   height: 36px;
 }
 
-/* on – in the colour of the report's dot that has something to do */
+/* on – as the other buttons of the toolbar that are on (the phones' filter toggle) */
 .toolbar__updates[aria-pressed='true'] {
-  border-color: var(--warn);
-  background: var(--warn-soft);
-  color: var(--warn);
+  border-color: var(--accent);
+  color: var(--text);
 }
 
 .toolbar__toggle {
