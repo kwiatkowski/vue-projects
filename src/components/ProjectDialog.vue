@@ -502,7 +502,7 @@
           <fieldset class="group">
             <legend class="eyebrow">reCAPTCHA v3</legend>
 
-            <div class="grid">
+            <div class="stack">
               <label class="field">
                 <span>Klucz witryny</span>
 
