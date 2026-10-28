@@ -311,6 +311,42 @@
               />
             </label>
           </div>
+
+          <!-- the TLS certificate as the list saw it at its last pull – read only -->
+          <fieldset v-if="project?.domains.length" class="group ssl">
+            <legend class="eyebrow">Certyfikat SSL <span class="access__note">– sprawdza lista przy pobieraniu raportów</span></legend>
+
+            <div v-if="project.ssl" class="grid">
+              <label class="field">
+                <span>Stan</span>
+
+                <input
+                  class="input"
+                  :class="`ssl__state--${sslInfo?.state}`"
+                  disabled
+                  type="text"
+                  :value="sslInfo?.text"
+                >
+              </label>
+
+              <label class="field">
+                <span>Ważny do</span>
+                <input class="input mono" disabled type="text" :value="sslInfo?.validTo">
+              </label>
+
+              <label class="field">
+                <span>Wystawca</span>
+                <input class="input" disabled type="text" :value="project.ssl.issuer ?? '–'">
+              </label>
+
+              <label class="field">
+                <span>Sprawdzono</span>
+                <input class="input mono" disabled type="text" :value="formatDateTime(project.ssl.checkedAt)">
+              </label>
+            </div>
+
+            <p v-else class="faint">Lista jeszcze nie sprawdzała certyfikatu – sprawdzi go przy najbliższym pobieraniu raportów.</p>
+          </fieldset>
         </div>
 
         <div v-show="tab === 'tech'" class="tab-panel" role="tabpanel">
@@ -629,7 +665,7 @@
   import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
-  import { ago, bareDomain, formatDateTime, formatDay, STATUS_LABELS, UPDATE_LABELS, updateScope } from '@/utils/projects'
+  import { ago, bareDomain, formatDateTime, formatDay, sslDaysLeft, sslState, STATUS_LABELS, UPDATE_LABELS, updateScope } from '@/utils/projects'
 
   const projects = useProjectsStore()
   const notify = useNotifyStore()
@@ -1141,6 +1177,24 @@
     }
   }
 
+  /** the certificate in the Server tab: fine, running out soon, or why not; until when and how long still */
+  const sslInfo = computed(() => {
+    const ssl = project.value?.ssl
+
+    if (!project.value || !ssl) {
+      return null
+    }
+
+    const state = sslState(project.value)
+    const days = sslDaysLeft(project.value)
+
+    return {
+      state,
+      text: state === 'bad' ? (ssl.error ?? 'błąd') : (state === 'soon' ? `ważny, wygasa za ${days} dni` : 'ważny'),
+      validTo: ssl.validTo ? `${formatDay(ssl.validTo)}${days === null ? '' : ` (${days} dni)`}` : '–',
+    }
+  })
+
   /** the reported fields – a fetched report brings them in, unless they were typed over in the form */
   const REPORTED_FIELDS = ['status', 'repo', 'php', 'engine', 'version', 'theme', ...REPORTED_FLAGS] as const
 
@@ -1383,6 +1437,23 @@
   align-items: center;
   gap: 7px;
   cursor: pointer;
+}
+
+/* the certificate under the server's fields; its state in the colour of the report's dot */
+.ssl {
+  margin-top: 20px;
+}
+
+.ssl .input.ssl__state--ok {
+  color: var(--positive);
+}
+
+.ssl .input.ssl__state--soon {
+  color: var(--warn);
+}
+
+.ssl .input.ssl__state--bad {
+  color: var(--danger);
 }
 
 .report__head {
