@@ -16,7 +16,7 @@
           >
         </label>
 
-        <!-- phones: category and status fold under this button; the dot – a filter is on -->
+        <!-- phones: category, status and "Do aktualizacji" fold under this button; the dot – a filter is on -->
         <button
           :aria-expanded="filtersOpen"
           aria-label="Kategorie i statusy"
@@ -25,7 +25,7 @@
           @click="filtersOpen = !filtersOpen"
         >
           <ListFilter />
-          <span v-if="category || filter !== 'all'" class="toolbar__dot" />
+          <span v-if="category || filter !== 'all' || onlyUpdates" class="toolbar__dot" />
         </button>
 
         <SelectField
@@ -38,6 +38,17 @@
           :options="categoryOptions"
           @update:model-value="setCategory($event ?? '')"
         />
+
+        <!-- only the projects with something to update – WordPress, plugins, translations (from the reports) -->
+        <button
+          v-if="canFilterUpdates"
+          :aria-pressed="onlyUpdates"
+          class="btn btn--outline toolbar__updates"
+          type="button"
+          @click="onlyUpdates = !onlyUpdates"
+        >
+          <RefreshCw /> Do aktualizacji <span class="mono faint">{{ updatesCount }}</span>
+        </button>
 
         <div aria-label="Status" class="seg toolbar__filters" role="radiogroup">
           <button
@@ -115,7 +126,7 @@
 <script lang="ts" setup>
   import type { Category, Project, SortKey, Status } from '@/types'
   import type { Filter, Group } from '@/utils/projects'
-  import { Columns3, ListFilter, ListOrdered, Search, SearchX } from 'lucide-vue-next'
+  import { Columns3, ListFilter, ListOrdered, RefreshCw, Search, SearchX } from 'lucide-vue-next'
   import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import ProjectTable from '@/components/ProjectTable.vue'
@@ -124,7 +135,7 @@
   import { config } from '@/config'
   import { useColumnsStore } from '@/stores/columns'
   import { useProjectsStore } from '@/stores/projects'
-  import { groupProjects, matches, sortProjects, STATUS_LABELS, STATUS_TONES } from '@/utils/projects'
+  import { groupProjects, matches, sortProjects, STATUS_LABELS, STATUS_TONES, updateScope } from '@/utils/projects'
 
   const projects = useProjectsStore()
   const columns = useColumnsStore()
@@ -167,9 +178,11 @@
   const filter = ref<Filter>((route.query.status as Filter) || 'all')
   const query = ref(typeof route.query.q === 'string' ? route.query.q : '')
   const filtersOpen = ref(false)
+  /** only the projects with something to update (?aktualizacje) */
+  const onlyUpdates = ref(route.query.aktualizacje !== undefined)
 
-  watch([filter, query], ([status, q]) => {
-    void router.replace({ query: { ...(status === 'all' ? {} : { status }), ...(q ? { q } : {}) } })
+  watch([filter, query, onlyUpdates], ([status, q, updates]) => {
+    void router.replace({ query: { ...(status === 'all' ? {} : { status }), ...(q ? { q } : {}), ...(updates ? { aktualizacje: null } : {}) } })
   })
 
   // the category is the path – /projects/meden lists only the projects of "Meden"
@@ -207,7 +220,14 @@
   ])
 
   /** the projects of the chosen category – or all of them */
-  const scoped = computed(() => category.value ? projects.items.filter(project => project.categoryId === category.value?.id) : projects.items)
+  /** WordPress, plugins or translations waiting – what the report's dot shows orange for */
+  const hasUpdates = (project: Project) => updateScope(project, projects.latestWordpress) !== null
+
+  // the reports' details – the owner's, a viewer's with the report column; a guest gets none of them
+  const canFilterUpdates = computed(() => columns.available.includes('report'))
+  const inCategory = computed(() => category.value ? projects.items.filter(project => project.categoryId === category.value?.id) : projects.items)
+  const updatesCount = computed(() => inCategory.value.filter(project => hasUpdates(project)).length)
+  const scoped = computed(() => onlyUpdates.value && canFilterUpdates.value ? inCategory.value.filter(project => hasUpdates(project)) : inCategory.value)
 
   /** null – the user's own order, grouped by category; a column – a flat list sorted by it */
   const sort = ref<SortKey | null>(null)
@@ -218,7 +238,7 @@
     sort.value = key
   }
 
-  const filtered = computed(() => category.value !== null || filter.value !== 'all' || query.value.trim() !== '')
+  const filtered = computed(() => category.value !== null || filter.value !== 'all' || query.value.trim() !== '' || onlyUpdates.value)
 
   /** dragging changes the order of whole categories – only when all of them are shown */
   const canDrag = computed(() => config.canManage && sort.value === null && !filtered.value)
@@ -381,9 +401,17 @@
 }
 
 /* as tall as the search and the filters */
-.toolbar__columns {
+.toolbar__columns,
+.toolbar__updates {
   flex: none;
   height: 36px;
+}
+
+/* on – in the colour of the report's dot that has something to do */
+.toolbar__updates[aria-pressed='true'] {
+  border-color: var(--warn);
+  background: var(--warn-soft);
+  color: var(--warn);
 }
 
 .toolbar__toggle {
@@ -439,11 +467,13 @@
   }
 
   /* phones: under the category and the status, folded with them */
-  .toolbar__columns {
+  .toolbar__columns,
+  .toolbar__updates {
     display: none;
   }
 
-  .toolbar--open .toolbar__columns {
+  .toolbar--open .toolbar__columns,
+  .toolbar--open .toolbar__updates {
     display: inline-flex;
     flex: 1 1 100%;
     justify-content: center;
