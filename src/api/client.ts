@@ -59,7 +59,8 @@ export async function request<T> (method: Method, path: string, body?: unknown, 
       method: method === 'GET' ? 'GET' : 'POST',
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
-      credentials: 'same-origin',
+      // the guest's view (?podglad): without the login cookie too – exactly what everyone else gets
+      credentials: config.preview ? 'omit' : 'same-origin',
     })
   } catch {
     throw new ApiError('Brak połączenia z serwerem.', 0, 'network')

@@ -18,7 +18,23 @@
       <button class="btn btn--sm btn--accent" title="Nowy projekt" type="button" @click="projects.editing = 'new'">
         <Plus /> <span class="top__label">Nowy projekt</span>
       </button>
+
+      <!-- the list as everyone else sees it – without logging out -->
+      <button class="btn btn--sm btn--outline" title="Zobacz listę tak, jak widzą ją niezalogowani" type="button" @click="preview(true)">
+        <Eye /> <span class="top__label">Widok gościa</span>
+      </button>
     </template>
+
+    <!-- the guest's view: says so, and leads back to the owner's -->
+    <button
+      v-if="config.preview"
+      class="btn btn--sm top__preview"
+      title="Wróć do swojego widoku"
+      type="button"
+      @click="preview(false)"
+    >
+      <EyeOff /> <span class="top__label">Podgląd jako gość ·</span> Wróć
+    </button>
 
     <button
       :aria-label="dark ? 'Jasny motyw' : 'Ciemny motyw'"
@@ -54,13 +70,26 @@
 </template>
 
 <script lang="ts" setup>
-  import { FolderPlus, Layers, LogIn, LogOut, Moon, Plus, Sun } from 'lucide-vue-next'
+  import { Eye, EyeOff, FolderPlus, Layers, LogIn, LogOut, Moon, Plus, Sun } from 'lucide-vue-next'
   import { useTheme } from '@/composables/theme'
   import { config } from '@/config'
   import { useProjectsStore } from '@/stores/projects'
 
   const projects = useProjectsStore()
   const { dark, toggleTheme } = useTheme()
+
+  /** the same page with ?podglad (the guest's view) or without it – the server decides what the page gets */
+  function preview (on: boolean): void {
+    const url = new URL(window.location.href)
+
+    if (on) {
+      url.searchParams.set('podglad', '1')
+    } else {
+      url.searchParams.delete('podglad')
+    }
+
+    window.location.assign(url)
+  }
 </script>
 
 <style scoped>
@@ -117,6 +146,18 @@
 
 .top__space {
   flex: 1;
+}
+
+/* the guest's view – in the warning colour, so it isn't mistaken for the owner's list */
+.top__preview {
+  border: 1px solid var(--warn);
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+.top__preview:hover {
+  background: var(--warn-soft);
+  color: var(--text);
 }
 
 .top__avatar {

@@ -12,6 +12,8 @@ export interface AppConfig {
   basePath: string
   /** the owner – every field, editing; everyone else sees the public list */
   canManage: boolean
+  /** the owner looks at the list as a guest (?podglad) – still logged in, but every request goes as a guest's */
+  preview: boolean
   user: { name: string, avatar: string } | null
   loginUrl: string | null
   logoutUrl: string | null
@@ -51,6 +53,7 @@ export const config: AppConfig = {
   basePath: injected.basePath ?? import.meta.env.BASE_URL,
   // dev server: the proxy adds the application password, so editing works
   canManage: injected.canManage ?? import.meta.env.DEV,
+  preview: injected.preview ?? false,
   user: injected.user ?? null,
   loginUrl: injected.loginUrl ?? null,
   logoutUrl: injected.logoutUrl ?? null,
