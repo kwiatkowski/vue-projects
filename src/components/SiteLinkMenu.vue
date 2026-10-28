@@ -1,10 +1,11 @@
 <template>
-  <DropMenu align="start" :label="tipText" tip :trigger-class="`menu__bare site-link${up ? ' site-link--up' : ''}`">
+  <DropMenu align="start" :label="`${label}: ${url}`" :title="false" :trigger-class="`menu__bare site-link${up ? ' site-link--up' : ''}`">
     <template #trigger>
       <slot />
     </template>
 
     <div class="site-link__head faint mono">{{ url }}</div>
+    <div v-if="statusText" class="site-link__status" :class="{ 'site-link__status--up': up }">{{ statusText }}</div>
 
     <a
       class="menu__item"
