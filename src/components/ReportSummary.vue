@@ -39,7 +39,7 @@
 <script lang="ts" setup>
   import type { Project } from '@/types'
   import { computed } from 'vue'
-  import { config } from '@/config'
+  import { useProjectsStore } from '@/stores/projects'
   import { formatDay, pendingUpdates, sslDaysLeft, sslState } from '@/utils/projects'
 
   /**
@@ -49,7 +49,9 @@
    */
   const props = defineProps<{ project: Project, title: string, menu?: boolean }>()
 
-  const plugins = computed(() => pendingUpdates(props.project, config.latestWordpress))
+  const projects = useProjectsStore()
+
+  const plugins = computed(() => pendingUpdates(props.project, projects.latestWordpress))
   const translations = computed(() => props.project.translationUpdates?.length ?? 0)
   const ssl = computed(() => sslState(props.project))
   const daysLeft = computed(() => sslDaysLeft(props.project))

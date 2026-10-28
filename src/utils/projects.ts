@@ -128,9 +128,27 @@ export function repoHost (url: string | null | undefined): string | null {
   return url.includes('gitlab') ? 'GL' : 'git'
 }
 
-/** A WordPress site on the newest release. */
+/** Dotted versions compared as numbers: "7.1.10" is newer than "7.1.4" – negative, 0 or positive. */
+export function compareVersions (a: string, b: string): number {
+  return a.localeCompare(b, undefined, { numeric: true })
+}
+
+/** a release, not a beta or an RC – only such a site's version may stand for the newest */
+const STABLE = /^\d+\.\d+(?:\.\d+)?$/
+
+/**
+ * The newest WordPress: wordpress.org's (as the page got it, cached on the server) or a newer stable one a site already
+ * runs – a page opened before a release would otherwise take the sites already on it for outdated.
+ */
+export function newestWordpress (latest: string | null, projects: Array<Partial<Project>>): string | null {
+  return projects
+    .filter(project => project.engine === 'wordpress' && STABLE.test(project.version ?? ''))
+    .reduce<string | null>((newest, project) => newest === null || compareVersions(project.version!, newest) > 0 ? project.version! : newest, latest)
+}
+
+/** A WordPress site on the newest release (or past it). */
 export function latestWordpress (project: Partial<Project>, latest: string | null): boolean {
-  return Boolean(latest) && project.engine === 'wordpress' && project.version === latest
+  return Boolean(latest) && project.engine === 'wordpress' && Boolean(project.version) && compareVersions(project.version!, latest!) >= 0
 }
 
 /** "https://Example.pl/x" → "example.pl" – how domains are kept. */
@@ -197,7 +215,7 @@ export function reportState (project: Pick<Project, 'token' | 'reportedAt'>, now
 
 /** What the site should update: WordPress (older than the newest) and the plugins its report lists. */
 export function pendingUpdates (project: Project, latest: string | null): PluginUpdate[] {
-  const core = latest && project.engine === 'wordpress' && project.version && project.version !== latest
+  const core = latest && project.engine === 'wordpress' && project.version && compareVersions(project.version, latest) < 0
     ? [{ name: 'WordPress', version: project.version, update: latest }]
     : []
 

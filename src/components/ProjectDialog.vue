@@ -710,7 +710,7 @@
 
   const engineOptions = computed(() => versions('wordpress', form.value.engine).toSorted((a, b) => a.value === 'wordpress' ? -1 : (b.value === 'wordpress' ? 1 : 0)))
   // every WordPress since 5.0, plus what the projects run (an older one isn't lost)
-  const versionOptions = computed(() => versions(config.latestWordpress, ...config.wordpressVersions, form.value.version, ...projects.items.map(item => item.version)))
+  const versionOptions = computed(() => versions(projects.latestWordpress, ...config.wordpressVersions, form.value.version, ...projects.items.map(item => item.version)))
   const phpOptions = computed(() => versions('7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5', form.value.php, ...projects.items.map(item => item.php)))
 
   type Tab = 'report' | 'server' | 'tech' | 'access' | 'integrations' | 'notes' | 'todo'
@@ -982,7 +982,7 @@
   }
 
   /** all, the translations alone, or nothing to do – from the last report */
-  const scope = computed(() => project.value ? updateScope(project.value, config.latestWordpress) : null)
+  const scope = computed(() => project.value ? updateScope(project.value, projects.latestWordpress) : null)
 
   async function startUpdate (): Promise<void> {
     const target = project.value

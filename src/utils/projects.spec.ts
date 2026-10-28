@@ -1,6 +1,6 @@
 import type { Project } from '@/types'
 import { describe, expect, it } from 'vitest'
-import { ago, bareDomain, compareManual, formatDateTime, formatDay, groupProjects, latestWordpress, matches, moveId, repoHost, reportStale, reportState, siteUrl, sortProjects } from './projects'
+import { ago, bareDomain, compareManual, compareVersions, formatDateTime, formatDay, groupProjects, latestWordpress, matches, moveId, newestWordpress, pendingUpdates, repoHost, reportStale, reportState, siteUrl, sortProjects } from './projects'
 
 const p = (name: string, extra: Partial<Project> = {}): Partial<Project> => ({ name, domains: [name], status: 'online', ...extra })
 
@@ -82,6 +82,8 @@ describe('helpers', () => {
     expect(latestWordpress(p('a', { engine: 'wordpress', version: '7.1.2' }), '7.1.3')).toBe(false)
     expect(latestWordpress(p('a', { engine: 'vue', version: '7.1.3' }), '7.1.3')).toBe(false)
     expect(latestWordpress(p('a', { engine: 'wordpress', version: '7.1.3' }), null)).toBe(false)
+    // a site already past what the page knows as the newest is on it, not outdated
+    expect(latestWordpress(p('a', { engine: 'wordpress', version: '7.1.4' }), '7.1.3')).toBe(true)
   })
 
   it('formats days and links', () => {
@@ -120,5 +122,28 @@ describe('helpers', () => {
     expect(reportState({ token: 'x', reportedAt: '2026-10-20T08:00:00Z' }, now)).toBe('failed')
     expect(reportState({ token: 'x', reportedAt: null }, now)).toBe('failed')
     expect(reportState({ token: null, reportedAt: '2026-10-26T11:55:00Z' }, now)).toBe('off')
+  })
+})
+
+describe('WordPress versions', () => {
+  it('compares them as numbers', () => {
+    expect(compareVersions('7.1.10', '7.1.4')).toBeGreaterThan(0)
+    expect(compareVersions('7.1.3', '7.1.4')).toBeLessThan(0)
+    expect(compareVersions('7.1', '7.1')).toBe(0)
+  })
+
+  it('takes a newer stable release a site runs for the newest – not a beta', () => {
+    const sites = [p('a', { engine: 'wordpress', version: '7.1.4' }), p('b', { engine: 'wordpress', version: '7.2-RC1' }), p('c', { engine: 'vue', version: '9.0' })]
+
+    expect(newestWordpress('7.1.3', sites)).toBe('7.1.4')
+    expect(newestWordpress('7.1.5', sites)).toBe('7.1.5')
+    expect(newestWordpress(null, sites)).toBe('7.1.4')
+  })
+
+  it('counts WordPress as an update only when the site is behind', () => {
+    const site = (version: string) => ({ ...p('a', { engine: 'wordpress', version }), updates: [] }) as unknown as Project
+
+    expect(pendingUpdates(site('7.1.3'), '7.1.4')).toEqual([{ name: 'WordPress', version: '7.1.3', update: '7.1.4' }])
+    expect(pendingUpdates(site('7.1.4'), '7.1.3')).toEqual([])
   })
 })

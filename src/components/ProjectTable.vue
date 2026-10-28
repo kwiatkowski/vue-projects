@@ -321,7 +321,6 @@
   import StatusChip from '@/components/StatusChip.vue'
   import TodoChip from '@/components/TodoChip.vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
-  import { config } from '@/config'
   import { useColumnsStore } from '@/stores/columns'
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
@@ -416,7 +415,7 @@
     ].filter((row): row is { label: string, value: string } => Boolean(row.value))
   }
 
-  const scopeOf = (project: Project) => updateScope(project, config.latestWordpress)
+  const scopeOf = (project: Project) => updateScope(project, projects.latestWordpress)
 
   /** the report's dot: orange instead of green when the site reports, but has something to update */
   function dotState (project: Project): string {
@@ -434,8 +433,8 @@
     return state === 'ok' && (scopeOf(project) || sslState(project) === 'soon') ? 'todo' : state
   }
 
-  const isLatest = (project: Project) => latestWordpress(project, config.latestWordpress)
-  const latestTitle = config.latestWordpress ? `Najnowszy WordPress (${config.latestWordpress})` : undefined
+  const isLatest = (project: Project) => latestWordpress(project, projects.latestWordpress)
+  const latestTitle = computed(() => projects.latestWordpress ? `Najnowszy WordPress (${projects.latestWordpress})` : undefined)
 
   interface Column {
     key: ColumnKey

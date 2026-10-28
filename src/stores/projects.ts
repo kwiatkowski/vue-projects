@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { categoriesApi, projectsApi, todoApi } from '@/api/projects'
 import { config } from '@/config'
-import { compareManual, groupProjects, moveId } from '@/utils/projects'
+import { compareManual, groupProjects, moveId, newestWordpress } from '@/utils/projects'
 import { useNotifyStore } from './notify'
 
 /**
@@ -25,6 +25,9 @@ export const useProjectsStore = defineStore('projects', () => {
   const editingCategory = ref<Category | 'new' | null>(null)
 
   const sortedCategories = computed(() => categories.value.toSorted(compareManual))
+
+  /** the newest WordPress – wordpress.org's, or a newer one a site already reports */
+  const latestWordpress = computed(() => newestWordpress(config.latestWordpress, items.value))
 
   /**
    * Projects a refresh found changed (or new) → the fields that changed ('*' – a new project). The table highlights
@@ -482,6 +485,7 @@ export const useProjectsStore = defineStore('projects', () => {
 
   return {
     items,
+    latestWordpress,
     updating,
     runUpdate,
     categories,
