@@ -531,7 +531,10 @@
               </li>
             </ul>
 
-            <p v-else-if="project?.reportedAt" class="faint recaptcha-places__none">Raport nie widzi na stronie Contact Form 7 ani Wordfence.</p>
+            <template v-else-if="project?.reportedAt">
+              <p v-if="project.recaptcha" class="faint recaptcha-places__none">Raport nie widzi na stronie Contact Form 7 ani Wordfence.</p>
+              <p v-else class="faint recaptcha-places__none">Raport strony jeszcze tego nie sprawdza ({{ project.reporter ?? 'starsza wersja' }}) – potrzebny plugin_meden 1.15.0.</p>
+            </template>
           </fieldset>
 
           <fieldset class="group">

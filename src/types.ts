@@ -104,8 +104,8 @@ export interface Project extends Record<Flag, boolean> {
   updates?: PluginUpdate[]
   /** the translations waiting for an update (core, plugins, themes), from the last report */
   translationUpdates?: TranslationUpdate[]
-  /** where the site uses reCAPTCHA (CF7, Wordfence's login), from the last report */
-  recaptcha?: RecaptchaPlace[]
+  /** where the site uses reCAPTCHA (CF7, Wordfence's login), from the last report; null – the report doesn't look */
+  recaptcha?: RecaptchaPlace[] | null
   /** the TLS certificate as the list saw it at its last pull */
   ssl?: SslState | null
 }
