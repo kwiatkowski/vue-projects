@@ -44,6 +44,9 @@
    */
   const props = defineProps<{ text?: string, anchorClass?: string, interactive?: boolean }>()
 
+  /** it opens – e.g. to fetch what it will need */
+  const emit = defineEmits<{ show: [] }>()
+
   /** an interactive tip waits this long before closing – the pointer crosses the gap to it */
   const LINGER = 200
   let hideTimer: ReturnType<typeof setTimeout> | undefined
@@ -69,6 +72,7 @@
     layer.value = anchor.value?.closest('dialog') ?? 'body'
     position.value = { visibility: 'hidden', left: '0px', top: '0px' }
     open.value = true
+    emit('show')
     window.addEventListener('scroll', hide, { capture: true, passive: true })
     // leaving the tab (a link opened Todo in another one) fires no mouseleave – close it then
     window.addEventListener('blur', hide)

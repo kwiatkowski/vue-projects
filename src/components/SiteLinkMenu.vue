@@ -1,72 +1,67 @@
 <template>
-  <!-- opening the menu fetches the Basic Auth password – it is ready when the lock is clicked -->
-  <DropMenu
-    align="start"
-    :label="`${label}: ${url}`"
-    :title="false"
-    :trigger-class="`menu__bare site-link${up ? ' site-link--up' : ''}`"
-    @click.capture="loadPassword"
-  >
-    <template #trigger>
+  <!-- a popup on hover, as the report's – it can be entered; showing it fetches the Basic Auth password, ready for the lock -->
+  <HoverTip :anchor-class="`site-link${up ? ' site-link--up' : ''}`" interactive @show="loadPassword">
+    <span :aria-label="`${label}: ${url}`" class="site-link__icon" role="button" tabindex="0">
       <slot />
-    </template>
+    </span>
 
-    <div class="site-link__head faint mono">{{ url }}</div>
-    <div v-if="statusText" class="site-link__status" :class="{ 'site-link__status--up': up }">{{ statusText }}</div>
+    <template #tip>
+      <div class="site-link__head faint mono">{{ url }}</div>
+      <div v-if="statusText" class="site-link__status" :class="{ 'site-link__status--up': up }">{{ statusText }}</div>
 
-    <!-- the site and its panel: the name opens it; behind Basic Auth the lock opens it with the login and password in the
+      <!-- the site and its panel: the name opens it; behind Basic Auth the lock opens it with the login and password in the
          address, and copy takes that address – else the icons beside open it or copy it -->
-    <div v-for="row in rows" :key="row.url" class="site-link__row">
-      <a
-        class="menu__item site-link__name"
-        :href="row.url"
-        rel="noopener"
-        role="menuitem"
-        target="_blank"
-      >
-        <component :is="row.icon" /> {{ row.label }}
-      </a>
+      <div v-for="row in rows" :key="row.url" class="site-link__row">
+        <a
+          class="menu__item site-link__name"
+          :href="row.url"
+          rel="noopener"
+          target="_blank"
+        >
+          <component :is="row.icon" /> {{ row.label }}
+        </a>
 
-      <button
-        v-if="auth"
-        :aria-label="`Otwórz z loginem i hasłem: ${row.label}`"
-        class="btn btn--icon btn--sm"
-        type="button"
-        @click="openWithAuth(row.url)"
-      >
-        <LockKeyhole />
-      </button>
+        <button
+          v-if="auth"
+          :aria-label="`Otwórz z loginem i hasłem: ${row.label}`"
+          class="btn btn--icon btn--sm"
+          type="button"
+          @click="openWithAuth(row.url)"
+        >
+          <LockKeyhole />
+        </button>
 
-      <a
-        v-else
-        :aria-label="`Otwórz: ${row.label}`"
-        class="btn btn--icon btn--sm"
-        :href="row.url"
-        rel="noopener"
-        target="_blank"
-      ><SquareArrowOutUpRight /></a>
+        <a
+          v-else
+          :aria-label="`Otwórz: ${row.label}`"
+          class="btn btn--icon btn--sm"
+          :href="row.url"
+          rel="noopener"
+          target="_blank"
+        ><SquareArrowOutUpRight /></a>
 
-      <button
-        :aria-label="auth ? `Kopiuj adres z loginem i hasłem: ${row.label}` : `Kopiuj adres: ${row.label}`"
-        class="btn btn--icon btn--sm"
-        type="button"
-        @click="copy(row.url)"
-      >
-        <Copy />
-      </button>
-    </div>
-  </DropMenu>
+        <button
+          :aria-label="auth ? `Kopiuj adres z loginem i hasłem: ${row.label}` : `Kopiuj adres: ${row.label}`"
+          class="btn btn--icon btn--sm"
+          type="button"
+          @click="copy(row.url)"
+        >
+          <Copy />
+        </button>
+      </div>
+    </template>
+  </HoverTip>
 </template>
 
 <script lang="ts" setup>
   import { Copy, Globe, LockKeyhole, LogIn, SquareArrowOutUpRight } from 'lucide-vue-next'
   import { computed } from 'vue'
-  import DropMenu from '@/components/ui/DropMenu.vue'
+  import HoverTip from '@/components/ui/HoverTip.vue'
   import { useNotifyStore } from '@/stores/notify'
   import { formatDateTime } from '@/utils/projects'
 
   /**
-   * An icon in the list (the local copy, staging) – a click opens a small menu: the site and its panel, each with
+   * An icon in the list (the local copy, staging) – hovering it shows a popup: the site and its panel, each with
    * "open" and "copy" beside it.
    */
   const props = defineProps<{
@@ -160,11 +155,11 @@
 
 <style>
 .site-link {
+  justify-content: center;
   color: var(--text-2);
 }
 
 .site-link:hover,
-.site-link[aria-expanded='true'],
 .site-link--up {
   color: var(--accent-text);
 }
@@ -175,7 +170,7 @@
 }
 
 .site-link__status {
-  padding: 0 10px 4px;
+  padding: 0 4px 4px;
   color: var(--text-3);
   font-size: 11px;
 }
@@ -186,23 +181,32 @@
 
 .site-link__head {
   max-width: 260px;
-  padding: 6px 10px 4px;
+  padding: 0 4px 4px;
   overflow: hidden;
   font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* a row: the name (it opens too) and the two icons – the hover over all of it */
+/* a row: the name (it opens too) and the two icons – the hover over all of it, as on the report's actions */
 .site-link__row {
   display: flex;
   align-items: center;
   gap: 2px;
+  margin: 0 -6px;
   border-radius: var(--radius-sm);
 }
 
+.site-link__row:last-child {
+  margin-bottom: -3px;
+}
+
 .site-link__row:hover {
-  background: var(--hover);
+  background: color-mix(in srgb, var(--tip-bg) 85%, var(--text));
+}
+
+.site-link__row .menu__item {
+  color: var(--text);
 }
 
 .site-link__row .site-link__name:hover {

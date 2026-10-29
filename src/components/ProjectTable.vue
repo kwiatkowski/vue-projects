@@ -176,13 +176,13 @@
             <Check v-if="project[flag]" :aria-label="FLAG_LABELS[flag]" class="yes" />
           </td>
 
-          <td v-if="show('local')" class="center cell-link" :class="cellChanged(project, 'localUrl', 'localAdminUrl')">
+          <td v-if="show('local')" class="center cell-link" :class="cellChanged(project, 'localUrl', 'localAdminUrl')" @click.stop>
             <SiteLinkMenu v-if="project.localUrl" :admin-url="project.localAdminUrl" label="Lokalnie" :url="project.localUrl">
               <Laptop />
             </SiteLinkMenu>
           </td>
 
-          <td v-if="show('stage')" class="center cell-link" :class="cellChanged(project, 'stagingUrl', 'stagingAdminUrl')">
+          <td v-if="show('stage')" class="center cell-link" :class="cellChanged(project, 'stagingUrl', 'stagingAdminUrl')" @click.stop>
             <SiteLinkMenu
               v-if="project.stagingUrl"
               :admin-url="project.stagingAdminUrl"
@@ -1116,8 +1116,7 @@ tr:hover .row-grip {
   background: color-mix(in srgb, var(--tip-bg) 85%, var(--text));
 }
 
-/* Local and Stage: the icon's button covers the whole cell – anywhere in it opens the menu; the report: anywhere in
-   its cell shows the popup */
+/* Local, Stage and the report: anywhere in the cell shows the popup */
 .cell-link {
   position: relative;
 }
