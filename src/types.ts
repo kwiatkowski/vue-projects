@@ -100,6 +100,8 @@ export interface Project extends Record<Flag, boolean> {
   responseMs?: number | null
   /** the plugins' known vulnerabilities (WPVulnerability) – null: not scanned yet */
   vulnerabilities?: Vulnerability[] | null
+  /** what has no translation for the site's language at all – WordPress, plugins, the theme; null: not reported */
+  missingTranslations?: { locale: string, items: MissingTranslation[] } | null
   /** the alerts muted until – null: not muted (the owner's) */
   mutedUntil?: string | null
   updatedAt: string | null
@@ -217,6 +219,12 @@ export interface StagingCheck {
   code: number
   checkedAt: string
   error?: 'dns' | 'refused' | 'timeout' | 'ssl' | 'redirects' | 'other'
+}
+
+export interface MissingTranslation {
+  type: 'core' | 'plugin' | 'theme'
+  slug: string
+  name: string
 }
 
 /** a known vulnerability of an installed plugin – or the plugin closed on wordpress.org */

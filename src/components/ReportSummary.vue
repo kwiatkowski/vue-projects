@@ -1,6 +1,6 @@
 <template>
   <!-- a header: when (or why not), and what sent it on the right -->
-  <div class="report-tip__title" :class="{ 'report-tip__title--alone': plugins.length === 0 && !translations && !menu && !project.ssl }">
+  <div class="report-tip__title" :class="{ 'report-tip__title--alone': plugins.length === 0 && !translations && !menu && !project.ssl && vulnerabilities.length === 0 && missing.length === 0 }">
     <strong>{{ title }}</strong>
     <span v-if="project.reporter" class="mono faint">{{ reporterLabel(project.reporter) }}</span>
   </div>
@@ -50,6 +50,12 @@
     <span class="mono">{{ translations }}</span>
   </div>
 
+  <!-- no translation for the site's language at all – WordPress, plugins, the theme -->
+  <template v-if="missing.length > 0">
+    <div class="info-tip__head info-tip__head--todo">Brak tłumaczeń ({{ project.missingTranslations?.locale }}): {{ missing.length }}</div>
+    <div class="missing">{{ missing.map(item => item.name).join(', ') }}</div>
+  </template>
+
   <div v-if="menu && plugins.length === 0 && !translations" class="info-tip__head info-tip__head--ok">Wszystko aktualne</div>
 </template>
 
@@ -57,7 +63,7 @@
   import type { Project } from '@/types'
   import { computed } from 'vue'
   import { useProjectsStore } from '@/stores/projects'
-  import { formatDay, pendingUpdates, SEVERITY_LABELS, sslDaysLeft, sslState, vulnerabilityTone } from '@/utils/projects'
+  import { formatDay, missingTranslations, pendingUpdates, SEVERITY_LABELS, sslDaysLeft, sslState, vulnerabilityTone } from '@/utils/projects'
 
   /**
    * What the report's mark says – the same in its tooltip and in its menu: when the site reported and what sent it, the
@@ -71,6 +77,7 @@
   const plugins = computed(() => pendingUpdates(props.project, projects.latestWordpress))
   const translations = computed(() => props.project.translationUpdates?.length ?? 0)
   const vulnerabilities = computed(() => props.project.vulnerabilities ?? [])
+  const missing = computed(() => missingTranslations(props.project))
   const ssl = computed(() => sslState(props.project))
   const daysLeft = computed(() => sslDaysLeft(props.project))
 
@@ -79,6 +86,13 @@
 </script>
 
 <style scoped>
+/* what has no translation – the names in one wrapped line */
+.missing {
+  max-width: 320px;
+  color: var(--text-2);
+  white-space: normal;
+}
+
 /* the vulnerabilities: red with a high or critical one, else orange; their severity – the same */
 .info-tip__head--bad,
 .info-tip__head--warn {

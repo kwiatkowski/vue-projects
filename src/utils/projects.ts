@@ -1,4 +1,4 @@
-import type { Category, PluginUpdate, Project, SortKey, StagingCheck, Status, UpdateScope } from '@/types'
+import type { Category, MissingTranslation, PluginUpdate, Project, SortKey, StagingCheck, Status, UpdateScope } from '@/types'
 
 /** in this order in the filters and the status select: online, offline, in progress, suspended */
 export const STATUS_LABELS: Record<Status, string> = {
@@ -338,4 +338,14 @@ export function ownTheme (project: Pick<Project, 'themeDetails'>): boolean {
 
     return OWN_THEME_HOSTS.some(own => host === own || host.endsWith(`.${own}`))
   })
+}
+
+/**
+ * What has no translation for the site's language – the theme left out when made in-house (written in that language,
+ * nothing to translate).
+ */
+export function missingTranslations (project: Pick<Project, 'missingTranslations' | 'themeDetails'>): MissingTranslation[] {
+  const own = ownTheme(project)
+
+  return (project.missingTranslations?.items ?? []).filter(item => !(own && item.type === 'theme'))
 }

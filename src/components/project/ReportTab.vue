@@ -82,6 +82,17 @@
       </ul>
     </div>
 
+    <!-- no translation for the site's language at all: WordPress, plugins, the theme (one made in-house left out) -->
+    <div v-if="missing.length > 0" class="missing">
+      <div class="missing__head">Brak tłumaczeń ({{ project.missingTranslations?.locale }}): {{ missing.length }}</div>
+
+      <ul class="missing__list">
+        <li v-for="item in missing" :key="`${item.type}-${item.slug}`">
+          {{ item.name }} <span class="faint">{{ MISSING_TYPES[item.type] }}</span>
+        </li>
+      </ul>
+    </div>
+
     <!-- composer update on production, composer.lock committed and pushed – the other environments pull it -->
     <div v-if="update" class="update">
       <div class="update__head">
@@ -185,7 +196,7 @@
   import { vTip } from '@/directives/tip'
   import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
-  import { ago, formatDateTime, SEVERITY_LABELS, UPDATE_LABELS, updateScope, vulnerabilityTone } from '@/utils/projects'
+  import { ago, formatDateTime, missingTranslations, SEVERITY_LABELS, UPDATE_LABELS, updateScope, vulnerabilityTone } from '@/utils/projects'
 
   /** "Raport strony": what the site last sent, updating it, the report's settings and token */
   const { form, initial, project, busy, siteReport, loadReport } = useProjectForm()
@@ -193,6 +204,10 @@
   const notify = useNotifyStore()
 
   const confirmToken = ref(false)
+
+  /** no translation for the site's language */
+  const missing = computed(() => project.value ? missingTranslations(project.value) : [])
+  const MISSING_TYPES = { core: 'WordPress', plugin: 'wtyczka', theme: 'motyw' }
 
   /** the plugins' known vulnerabilities – critical first */
   const SEVERITY_RANK = { c: 0, h: 1, m: 2, l: 3 }
@@ -527,6 +542,27 @@
 .vuln-severity--m,
 .vuln-severity--l {
   color: var(--warn);
+}
+
+/* no translation: an orange head, the names with what they are */
+.missing {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.missing__head {
+  color: var(--warn);
+  font-weight: 600;
+}
+
+.missing__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 /* the Composer update: the button, what came of it, the log */
