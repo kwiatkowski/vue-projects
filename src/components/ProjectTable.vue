@@ -114,6 +114,13 @@
               </a>
 
               <span v-else class="site site--plain">{{ project.name }}</span>
+
+              <BellOff
+                v-if="full && project.mutedUntil"
+                v-tip="`Powiadomienia wyciszone do ${formatDateTime(project.mutedUntil)}`"
+                aria-label="Wyciszony"
+                class="muted-icon"
+              />
             </td>
 
             <td v-if="show('status')" :class="cellChanged(project, 'status')"><StatusChip :status="project.status" /></td>
@@ -220,7 +227,7 @@
 <script lang="ts" setup>
   import type { Flag, Project, SortKey } from '@/types'
   import type { Group } from '@/utils/projects'
-  import { ArrowUpRight, Check, ChevronDown, FlaskConical, GripVertical, Laptop } from 'lucide-vue-next'
+  import { ArrowUpRight, BellOff, Check, ChevronDown, FlaskConical, GripVertical, Laptop } from 'lucide-vue-next'
   import { computed } from 'vue'
   import { projectsApi } from '@/api/projects'
   import CategoryMenu from '@/components/CategoryMenu.vue'
@@ -237,7 +244,7 @@
   import { useProjectsStore } from '@/stores/projects'
   import { type ColumnKey, COLUMNS } from '@/utils/columns'
   import { formatMs, formatUptime } from '@/utils/history'
-  import { repoHost, siteUrl } from '@/utils/projects'
+  import { formatDateTime, repoHost, siteUrl } from '@/utils/projects'
   import '@/components/table/list.css'
 
   /** The list: the table on wide screens (cells in components/table/), cards on phones (ProjectCards). */
@@ -560,6 +567,15 @@ tbody:first-of-type .group-row td {
 
 tr:hover .row-grip {
   opacity: 1;
+}
+
+/* a project whose alerts are muted – a small bell by its name */
+.muted-icon {
+  width: 13px;
+  height: 13px;
+  margin-left: 6px;
+  color: var(--warn);
+  vertical-align: -1px;
 }
 
 /* the tick box – a narrow column before the name */

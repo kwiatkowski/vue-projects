@@ -1,4 +1,4 @@
-import type { Category, PasswordKind, Project, ProjectHistory, ProjectInput, SiteReport, TodoProject, TodoSummary, TodoTask, UpdateScope, UpdateState } from '@/types'
+import type { AlertChannel, AlertSettings, Category, PasswordKind, Project, ProjectHistory, ProjectInput, SiteReport, TodoProject, TodoSummary, TodoTask, UpdateScope, UpdateState } from '@/types'
 import type { ColumnKey } from '@/utils/columns'
 import { request } from './client'
 
@@ -26,6 +26,9 @@ export const projectsApi = {
   tasks: (id: number) => request<{ todo: TodoSummary | null, tasks: TodoTask[] }>('GET', `projects/${id}/tasks`),
   /** the last report of the site, as it came */
   history: (id: number) => request<ProjectHistory>('GET', `projects/${id}/history`),
+
+  /** the project's alerts muted for so many minutes – null unmutes them */
+  mute: (id: number, minutes: number | null) => request<{ mutedUntil: string | null }>('POST', `projects/${id}/mute`, { minutes }),
 
   report: (id: number) => request<{ reportedAt: string | null, report: SiteReport | null }>('GET', `projects/${id}/report`),
   /** the list fetches the site's report now – whether it came (error: why not) and the project after it */
@@ -56,4 +59,11 @@ export const viewerApi = {
 
 export const todoApi = {
   projects: () => request<TodoProject[]>('GET', 'todo-projects'),
+}
+
+export const alertsApi = {
+  get: () => request<AlertSettings>('GET', 'alerts'),
+  /** a secret: undefined – kept, '' – removed */
+  save: (settings: AlertSettings, smtpPassword?: string, slackWebhook?: string) => request<AlertSettings>('POST', 'alerts', { settings, smtpPassword, slackWebhook }),
+  test: (channel: AlertChannel, what: 'test' | 'weekly' = 'test') => request<{ sent: true }>('POST', 'alerts/test', { channel, what }),
 }

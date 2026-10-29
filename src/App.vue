@@ -10,6 +10,7 @@
       <ProjectDialog />
       <CategoryDialog />
       <SettingsDialog />
+      <AlertsDialog />
     </template>
 
     <ViewDialog />
@@ -23,6 +24,7 @@
 
 <script lang="ts" setup>
   import { onBeforeUnmount, onMounted } from 'vue'
+  import AlertsDialog from '@/components/AlertsDialog.vue'
   import AppTopbar from '@/components/AppTopbar.vue'
   import CategoryDialog from '@/components/CategoryDialog.vue'
   import ProjectDialog from '@/components/ProjectDialog.vue'

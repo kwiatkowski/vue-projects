@@ -1,4 +1,36 @@
 <template>
+  <!-- the project's alerts: on, or muted until when; mute for a while -->
+  <div v-if="project" class="mute">
+    <span v-if="project.mutedUntil" class="mute__state mute__state--off"><BellOff /> Powiadomienia wyciszone do <span class="mono">{{ formatDateTime(project.mutedUntil) }}</span></span>
+    <span v-else class="mute__state"><Bell /> Powiadomienia włączone</span>
+
+    <span style="flex: 1" />
+
+    <button
+      v-if="project.mutedUntil"
+      class="btn btn--sm btn--outline"
+      :disabled="muting"
+      type="button"
+      @click="mute(null)"
+    >
+      <Bell /> Włącz
+    </button>
+
+    <DropMenu label="Wycisz powiadomienia" :title="false" trigger-class="btn btn--sm btn--outline">
+      <template #trigger><BellOff /> Wycisz</template>
+
+      <button
+        v-for="option in MUTE_OPTIONS"
+        :key="option.minutes"
+        class="menu__item"
+        type="button"
+        @click="mute(option.minutes)"
+      >
+        {{ option.label }}
+      </button>
+    </DropMenu>
+  </div>
+
   <p v-if="!project" class="faint">Historia pojawi się po utworzeniu projektu.</p>
   <p v-else-if="loading && !history" class="faint">Wczytuję historię…</p>
 
@@ -110,16 +142,54 @@
 
 <script lang="ts" setup>
   import type { HistoryEvent, Outage, ProjectHistory, TargetHistory } from '@/types'
+  import { Bell, BellOff } from 'lucide-vue-next'
   import { computed, ref, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
   import { useProjectForm } from '@/components/project/form'
+  import DropMenu from '@/components/ui/DropMenu.vue'
   import { vTip } from '@/directives/tip'
+  import { useNotifyStore } from '@/stores/notify'
+  import { useProjectsStore } from '@/stores/projects'
   import { type Bucket, buckets, describeEvent, formatDuration, formatMs, formatUptime } from '@/utils/history'
   import { formatDateTime, stagingCheck } from '@/utils/projects'
 
   /** "Historia": the home page's and staging's availability and response times, the outages, what changed */
   const props = defineProps<{ active: boolean }>()
   const { project } = useProjectForm()
+
+  const projects = useProjectsStore()
+  const notify = useNotifyStore()
+
+  const MUTE_OPTIONS = [
+    { minutes: 60, label: 'na godzinę' },
+    { minutes: 240, label: 'na 4 godziny' },
+    { minutes: 1440, label: 'na dobę' },
+    { minutes: 10_080, label: 'na tydzień' },
+    { minutes: 43_200, label: 'na 30 dni' },
+  ]
+
+  const muting = ref(false)
+
+  /** mutes the project's alerts (null – on again); the dialog's project and the list take the new time */
+  async function mute (minutes: number | null): Promise<void> {
+    const current = project.value
+
+    if (!current) {
+      return
+    }
+
+    muting.value = true
+
+    try {
+      const { mutedUntil } = await projectsApi.mute(current.id, minutes)
+      projects.editing = { ...current, mutedUntil }
+      void projects.refresh()
+    } catch (error) {
+      notify.error(error)
+    }
+
+    muting.value = false
+  }
 
   const history = ref<ProjectHistory | null>(null)
   const loading = ref(false)
@@ -236,6 +306,30 @@
 </script>
 
 <style scoped>
+.mute {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.mute__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-2);
+}
+
+.mute__state svg {
+  width: 15px;
+  height: 15px;
+}
+
+.mute__state--off {
+  color: var(--warn);
+}
+
 .target {
   display: grid;
   gap: 10px;

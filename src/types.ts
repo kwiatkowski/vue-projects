@@ -100,6 +100,8 @@ export interface Project extends Record<Flag, boolean> {
   responseMs?: number | null
   /** the plugins' known vulnerabilities (WPVulnerability) – null: not scanned yet */
   vulnerabilities?: Vulnerability[] | null
+  /** the alerts muted until – null: not muted (the owner's) */
+  mutedUntil?: string | null
   updatedAt: string | null
   /** from the last report (not on the public list): the parent theme, the themes' versions and authors, what sent it */
   parentTheme?: string | null
@@ -272,4 +274,31 @@ export interface ProjectHistory {
   targets: { home?: TargetHistory, staging?: TargetHistory }
   /** newest first */
   events: HistoryEvent[]
+}
+
+export type AlertChannel = 'email' | 'slack'
+
+export interface AlertRule {
+  enabled: boolean
+  channels: AlertChannel[]
+  /** failed checks in a row (5 min each) */
+  after?: number
+  /** days before the certificate ends */
+  days?: number
+  /** hours without a report */
+  hours?: number
+}
+
+export type AlertRuleKey = 'down' | 'recovery' | 'staging' | 'ssl' | 'report' | 'vulnerability'
+
+/** the owner's "Powiadomienia" (the plugin's AlertSettings) */
+export interface AlertSettings {
+  email: { enabled: boolean, to: string }
+  smtp: { host: string, port: number, secure: 'tls' | 'ssl' | '', user: string, from: string, fromName: string }
+  slack: { enabled: boolean }
+  rules: Record<AlertRuleKey, AlertRule>
+  /** day: 1 Monday … 7 Sunday */
+  weekly: { enabled: boolean, day: number, hour: number, channels: AlertChannel[] }
+  hasSmtpPassword?: boolean
+  hasSlackWebhook?: boolean
 }
