@@ -1,0 +1,5 @@
+# The build's files have their content's hash in the name – a new version is a new name. The browser keeps them a
+# year and doesn't even ask again on a reload (immutable).
+<IfModule mod_headers.c>
+  Header set Cache-Control "public, max-age=31536000, immutable"
+</IfModule>

@@ -1,7 +1,21 @@
 /// <reference types="vitest/config" />
 import { fileURLToPath, URL } from 'node:url'
 import Vue from '@vitejs/plugin-vue'
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
+
+/**
+ * The Latin fonts (Geist, Geist Mono) asked for straight from index.html – not only once the CSS that names them has
+ * come; their names carry the build's hash, so they are found in the bundle.
+ */
+function preloadFonts (): Plugin {
+  return {
+    name: 'preload-fonts',
+    apply: 'build',
+    transformIndexHtml: (_html, context) => Object.keys(context.bundle ?? {})
+      .filter(file => /geist(?:-mono)?-latin-wght-normal-[\w-]+\.woff2$/.test(file))
+      .map(file => ({ tag: 'link', attrs: { rel: 'preload', as: 'font', type: 'font/woff2', crossorigin: '', href: `/projects/web/${file}` }, injectTo: 'head' })),
+  }
+}
 
 export default defineConfig(({ mode }) => {
   // PROJECTS_DEV_* are read here, in Node – never exposed to the browser bundle (only VITE_* are)
@@ -14,7 +28,7 @@ export default defineConfig(({ mode }) => {
       outDir: 'web',
       emptyOutDir: true,
     },
-    plugins: [Vue()],
+    plugins: [Vue(), preloadFonts()],
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('src', import.meta.url)),
