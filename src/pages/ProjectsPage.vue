@@ -28,8 +28,10 @@
           <span v-if="category || filter !== 'all' || onlyUpdates" class="toolbar__dot" />
         </button>
 
+        <!-- there from the start ("Wszystkie kategorie") – the categories fill it once loaded, nothing jumps; a list
+             without categories drops it then -->
         <SelectField
-          v-if="projects.categories.length > 0"
+          v-if="projects.status !== 'ready' || projects.categories.length > 0"
           class="toolbar__category"
           :clearable="false"
           :disabled="config.view === 'guest'"
