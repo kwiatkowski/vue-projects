@@ -155,6 +155,13 @@
   stroke-width: 2.5;
 }
 
+/* the number by the icon (updates, vulnerabilities): its box trimmed to the digits' height, centred on the icon –
+   the line's own room (for descenders) would put it off the middle; without text-box (Firefox) a tight line */
+.report .mono {
+  line-height: 1;
+  text-box: trim-both cap alphabetic;
+}
+
 .report--ok {
   color: var(--positive);
 }
