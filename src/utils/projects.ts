@@ -349,3 +349,36 @@ export function missingTranslations (project: Pick<Project, 'missingTranslations
 
   return (project.missingTranslations?.items ?? []).filter(item => !(own && item.type === 'theme'))
 }
+
+/** "plugin_meden 1.17.0" / "mk-core 2026.10.29" – what sends the site's report, and its version */
+export function parseReporter (reporter: string | null | undefined): { name: string, version: string } | null {
+  const match = reporter?.trim().match(/^(\S+)\s+(\d[\w.-]*)$/)
+
+  return match ? { name: match[1] as string, version: match[2] as string } : null
+}
+
+/**
+ * The newest version of each reporter: the highest any site sends – and for MK Core at least the list's own (it runs
+ * the newest). plugin_meden's repository is private, so the sites themselves tell.
+ */
+export function newestReporters (projects: Array<Pick<Project, 'reporter'>>, mkCore: string | null | undefined): Record<string, string> {
+  const newest: Record<string, string> = mkCore ? { 'mk-core': mkCore } : {}
+
+  for (const project of projects) {
+    const reporter = parseReporter(project.reporter)
+
+    if (reporter && (!newest[reporter.name] || compareVersions(reporter.version, newest[reporter.name] as string) > 0)) {
+      newest[reporter.name] = reporter.version
+    }
+  }
+
+  return newest
+}
+
+/** the newer version of the site's reporter (plugin_meden, MK Core) – null when it runs the newest */
+export function reporterUpdate (project: Pick<Project, 'reporter'>, newest: Record<string, string>): string | null {
+  const reporter = parseReporter(project.reporter)
+  const latest = reporter ? newest[reporter.name] : undefined
+
+  return reporter && latest && compareVersions(reporter.version, latest) < 0 ? latest : null
+}

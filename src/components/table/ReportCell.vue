@@ -14,7 +14,8 @@
 
       <template v-else-if="reportMark(project) === 'todo'">
         <template v-if="updateCount(project) > 0"><ArrowUp /><span class="mono">{{ updateCount(project) }}</span></template>
-        <Lock v-else />
+        <Lock v-else-if="sslState(project) === 'soon'" />
+        <Package v-else />
       </template>
 
       <Check v-else-if="reportMark(project) === 'ok'" />
@@ -53,13 +54,13 @@
 
 <script lang="ts" setup>
   import type { Project } from '@/types'
-  import { ArrowUp, Check, FileText, Lock, Minus, RefreshCw, ShieldAlert, TriangleAlert } from 'lucide-vue-next'
+  import { ArrowUp, Check, FileText, Lock, Minus, Package, RefreshCw, ShieldAlert, TriangleAlert } from 'lucide-vue-next'
   import { ref } from 'vue'
   import ReportSummary from '@/components/ReportSummary.vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
   import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
-  import { formatDateTime, pendingUpdates, reportState, sslState, UPDATE_LABELS, updateScope, vulnerabilityTone } from '@/utils/projects'
+  import { formatDateTime, pendingUpdates, reporterUpdate, reportState, sslState, UPDATE_LABELS, updateScope, vulnerabilityTone } from '@/utils/projects'
 
   /** The "Raport" cell: the report's mark, and its popup – what the report says and, for the owner, what to do. */
   defineProps<{ project: Project, full: boolean }>()
@@ -131,14 +132,15 @@
       return vulnerabilityTone(project.vulnerabilities ?? []) === 'bad' ? 'vulnerable' : 'vulnerable-warn'
     }
 
-    return state === 'ok' && (scopeOf(project) || sslState(project) === 'soon') ? 'todo' : state
+    // something to do: updates, a certificate ending soon, an older plugin_meden / MK Core
+    return state === 'ok' && (scopeOf(project) || sslState(project) === 'soon' || reporterUpdate(project, projects.latestReporters)) ? 'todo' : state
   }
 
 </script>
 
 <style scoped>
 /* the site's report as an icon – not a dot, that is the status's: a green tick – it reports; an orange arrow with the
-   number of updates (a lock – only the certificate runs out soon); a red warning – no report or a bad certificate;
+   number of updates (a lock – only the certificate runs out soon, a package – only plugin_meden / MK Core is older); a red warning – no report or a bad certificate;
    a shield with a number – plugins with known vulnerabilities (red with a high or critical one, else orange); a grey dash – not set up. No pulse. The date and time in the tooltip. */
 .report {
   display: inline-flex;

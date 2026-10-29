@@ -33,6 +33,8 @@ export interface AppConfig {
   columns: { visible: ColumnKey[], viewer: ColumnKey[] | null, guest: ColumnKey[] | null }
   /** the newest WordPress release – sites running it are marked; null when unknown */
   latestWordpress: string | null
+  /** MK Core of the list's own site – the newest; null without it */
+  mkCoreVersion?: string | null
   /** every WordPress release since 5.0, newest first – the version list (with a search) */
   wordpressVersions: string[]
   siteName: string

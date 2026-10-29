@@ -7,6 +7,12 @@
         </template>
 
         <template v-else>Strona jeszcze nic nie wysłała.</template>
+
+        <!-- what sends it – and a newer plugin_meden / MK Core when there is one -->
+        <template v-if="project.reporter">
+          · <span class="mono">{{ project.reporter.replace(/^mk-core\b/, 'MK Core') }}</span>
+          <span v-if="reporterNewer" class="reporter--old"> – najnowszy <span class="mono">{{ reporterNewer }}</span></span>
+        </template>
       </p>
 
       <!-- the list asks the site for its report now, without waiting for the cron -->
@@ -196,7 +202,7 @@
   import { vTip } from '@/directives/tip'
   import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
-  import { ago, formatDateTime, missingTranslations, SEVERITY_LABELS, UPDATE_LABELS, updateScope, vulnerabilityTone } from '@/utils/projects'
+  import { ago, formatDateTime, missingTranslations, reporterUpdate, SEVERITY_LABELS, UPDATE_LABELS, updateScope, vulnerabilityTone } from '@/utils/projects'
 
   /** "Raport strony": what the site last sent, updating it, the report's settings and token */
   const { form, initial, project, busy, siteReport, loadReport } = useProjectForm()
@@ -204,6 +210,9 @@
   const notify = useNotifyStore()
 
   const confirmToken = ref(false)
+
+  /** a newer plugin_meden / MK Core than the site runs */
+  const reporterNewer = computed(() => project.value ? reporterUpdate(project.value, projects.latestReporters) : null)
 
   /** no translation for the site's language */
   const missing = computed(() => project.value ? missingTranslations(project.value) : [])
@@ -542,6 +551,12 @@
 .vuln-severity--m,
 .vuln-severity--l {
   color: var(--warn);
+}
+
+/* an older plugin_meden / MK Core */
+.reporter--old {
+  color: var(--warn);
+  font-weight: 600;
 }
 
 /* no translation: an orange head, the names with what they are */

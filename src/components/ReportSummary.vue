@@ -2,7 +2,10 @@
   <!-- a header: when (or why not), and what sent it on the right -->
   <div class="report-tip__title" :class="{ 'report-tip__title--alone': plugins.length === 0 && !translations && !menu && !project.ssl && vulnerabilities.length === 0 && missing.length === 0 }">
     <strong>{{ title }}</strong>
-    <span v-if="project.reporter" class="mono faint">{{ reporterLabel(project.reporter) }}</span>
+    <!-- what sends the report – orange with the newer version when plugin_meden / MK Core is older -->
+    <span v-if="project.reporter" class="mono" :class="reporterNewer ? 'reporter--old' : 'faint'">
+      {{ reporterLabel(project.reporter) }}<template v-if="reporterNewer"> → {{ reporterNewer }}</template>
+    </span>
   </div>
 
   <!-- the certificate: until when and who issued it; a warning colour when it runs out soon, red when it is not fine -->
@@ -63,7 +66,7 @@
   import type { Project } from '@/types'
   import { computed } from 'vue'
   import { useProjectsStore } from '@/stores/projects'
-  import { formatDay, missingTranslations, pendingUpdates, SEVERITY_LABELS, sslDaysLeft, sslState, vulnerabilityTone } from '@/utils/projects'
+  import { formatDay, missingTranslations, pendingUpdates, reporterUpdate, SEVERITY_LABELS, sslDaysLeft, sslState, vulnerabilityTone } from '@/utils/projects'
 
   /**
    * What the report's mark says – the same in its tooltip and in its menu: when the site reported and what sent it, the
@@ -78,6 +81,7 @@
   const translations = computed(() => props.project.translationUpdates?.length ?? 0)
   const vulnerabilities = computed(() => props.project.vulnerabilities ?? [])
   const missing = computed(() => missingTranslations(props.project))
+  const reporterNewer = computed(() => reporterUpdate(props.project, projects.latestReporters))
   const ssl = computed(() => sslState(props.project))
   const daysLeft = computed(() => sslDaysLeft(props.project))
 
@@ -86,6 +90,11 @@
 </script>
 
 <style scoped>
+/* an older plugin_meden / MK Core */
+.reporter--old {
+  color: var(--warn);
+}
+
 /* what has no translation – the names in one wrapped line */
 .missing {
   max-width: 320px;
