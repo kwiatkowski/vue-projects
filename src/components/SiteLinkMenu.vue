@@ -6,8 +6,16 @@
     </span>
 
     <template #tip>
-      <div class="site-link__head faint mono">{{ url }}</div>
-      <div v-if="statusText" class="site-link__status" :class="{ 'site-link__status--up': up }">{{ statusText }}</div>
+      <!-- a header as the report's: the name, its address on the right; the list's check under it, as the report's SSL -->
+      <div class="report-tip__title">
+        <strong>{{ label }}</strong>
+        <span class="site-link__host mono faint">{{ host }}</span>
+      </div>
+
+      <div v-if="statusText" class="report-tip__row site-link__status" :class="{ 'site-link__status--up': up }">
+        <span>Sprawdzenie</span>
+        <span>{{ statusText }}</span>
+      </div>
 
       <!-- the site and its panel: the name opens it; behind Basic Auth the lock opens it with the login and password in the
          address, and copy takes that address – else the icons beside open it or copy it -->
@@ -76,7 +84,7 @@
   /** the list checked the address (the staging) and it answered 200 – the icon in the accent colour */
   const up = computed(() => props.status?.code === 200)
 
-  /** the list's check, at the top of the menu (no tooltip on the icon) */
+  /** the list's check, under the header */
   const statusText = computed(() => {
     const status = props.status
 
@@ -86,8 +94,11 @@
 
     const answer = status.code === 200 ? 'odpowiada (200)' : (status.code ? `nie odpowiada (HTTP ${status.code})` : 'nie odpowiada')
 
-    return `${answer}, sprawdzono ${formatDateTime(status.checkedAt).slice(-5)}`
+    return `${answer} · ${formatDateTime(status.checkedAt).slice(-5)}`
   })
+
+  /** the address in the header – without the scheme and the closing slash */
+  const host = computed(() => props.url.replace(/^https?:\/\//, '').replace(/\/$/, ''))
 
   const rows = computed(() => [
     { label: props.label, url: props.url, icon: Globe },
@@ -169,23 +180,24 @@
   height: 16px;
 }
 
+/* the check: red when the staging doesn't answer, the accent when it does */
 .site-link__status {
-  padding: 0 4px 4px;
-  color: var(--text-3);
-  font-size: 11px;
+  margin: 4px 0 2px;
+  color: var(--danger);
 }
 
 .site-link__status--up {
   color: var(--accent-text);
 }
 
-.site-link__head {
-  max-width: 260px;
-  padding: 0 4px 4px;
+.site-link__host {
+  max-width: 220px;
   overflow: hidden;
-  font-size: 11px;
   text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.report-tip__title + .site-link__row {
+  margin-top: 4px;
 }
 
 /* a row: the name (it opens too) and the two icons – the hover over all of it, as on the report's actions */
