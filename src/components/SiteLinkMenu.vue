@@ -17,8 +17,8 @@
         <span>{{ statusText }}</span>
       </div>
 
-      <!-- the site and its panel: the name opens it; behind Basic Auth the lock opens it with the login and password in the
-         address, and copy takes that address – else the icons beside open it or copy it -->
+      <!-- the site and its panel: the name opens it, copy beside it; behind Basic Auth also "open" with a lock – with the
+           login and password in the address, and copy takes that address -->
       <div v-for="row in rows" :key="row.url" class="site-link__row">
         <a
           class="menu__item site-link__name"
@@ -39,15 +39,6 @@
           <!-- the "open" icon of the plain link, with a small lock in its corner – opens with the login and password -->
           <span class="site-link__auth"><SquareArrowOutUpRight /><LockKeyhole class="site-link__lock" /></span>
         </button>
-
-        <a
-          v-else
-          :aria-label="`Otwórz: ${row.label}`"
-          class="btn btn--icon btn--sm"
-          :href="row.url"
-          rel="noopener"
-          target="_blank"
-        ><SquareArrowOutUpRight /></a>
 
         <button
           :aria-label="auth ? `Kopiuj adres z loginem i hasłem: ${row.label}` : `Kopiuj adres: ${row.label}`"
@@ -71,7 +62,7 @@
 
   /**
    * An icon in the list (the local copy, staging) – hovering it shows a popup: the site and its panel, each with
-   * "open" and "copy" beside it.
+   * "copy" beside it (and "open with the login and password" behind Basic Auth).
    */
   const props = defineProps<{
     url: string
