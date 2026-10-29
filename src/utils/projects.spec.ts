@@ -217,7 +217,10 @@ describe('phpStatus', () => {
 
   it('patched and supported, security fixes only, unpatched, unsupported, unknown', () => {
     expect(phpStatus({ php: '8.4', phpVersion: '8.4.27' }, branches).tone).toBe('ok')
-    expect(phpStatus({ php: '8.3', phpVersion: '8.3.36' }, branches).tone).toBe('security')
+    const now = new Date('2026-10-29')
+    expect(phpStatus({ php: '8.3', phpVersion: '8.3.36' }, branches, now).tone).toBe('ok')
+    // security fixes until 2027-03 – under half a year left
+    expect(phpStatus({ php: '8.3', phpVersion: '8.3.36' }, { 8.3: { ...branches['8.3'], securityEnd: '2027-03-31' } }, now).tone).toBe('ending')
     expect(phpStatus({ php: '8.3', phpVersion: '8.3.12' }, branches).tone).toBe('outdated')
     expect(phpStatus({ php: '8.1', phpVersion: '8.1.31' }, branches).tone).toBe('eol')
     expect(phpStatus({ php: '7.4', phpVersion: null }, branches).tone).toBe('eol')

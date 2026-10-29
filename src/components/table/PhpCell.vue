@@ -49,18 +49,19 @@
   import { config } from '@/config'
   import { formatDay, phpStatus } from '@/utils/projects'
 
-  /** The "PHP" cell: green – supported and patched; orange – patched, security fixes only; red – unpatched or unsupported. */
+  /** The "PHP" cell: green – the branch's newest release; orange – the same, its support ending within half a year; red – unpatched or unsupported. */
   const props = defineProps<{ project: Project }>()
 
   const status = computed(() => phpStatus(props.project, config.phpBranches ?? {}))
 
-  const STATUS_TEXT = {
-    ok: 'aktualna, pełne wsparcie',
-    security: 'aktualna, tylko poprawki bezpieczeństwa',
+  // ok and ending: the branch's own state says the rest (full support, or security fixes only)
+  const STATUS_TEXT = computed(() => ({
+    ok: status.value.info?.state === 'stable' ? 'aktualna, pełne wsparcie' : 'aktualna, tylko poprawki bezpieczeństwa',
+    ending: 'aktualna, wsparcie kończy się wkrótce',
     outdated: 'nieaktualna – brak poprawek',
     eol: 'bez wsparcia',
     unknown: 'stan nieznany',
-  }
+  }))
 
   const ended = (day: string) => new Date(day).getTime() < Date.now()
   const daysTo = (day: string) => Math.ceil((new Date(day).getTime() - Date.now()) / 86_400_000)
@@ -75,7 +76,7 @@
   color: var(--positive);
 }
 
-.php--security {
+.php--ending {
   color: var(--warn);
 }
 

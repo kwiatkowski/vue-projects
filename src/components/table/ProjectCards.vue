@@ -161,12 +161,12 @@
   gap: 4px;
 }
 
-/* PHP as in the table: green – supported and patched, orange – security fixes only, red – unpatched or unsupported */
+/* PHP as in the table: green – the branch's newest release, orange – its support ending soon, red – unpatched or unsupported */
 .php--ok {
   color: var(--positive);
 }
 
-.php--security {
+.php--ending {
   color: var(--warn);
 }
 

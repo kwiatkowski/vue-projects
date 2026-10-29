@@ -389,13 +389,17 @@ export function reporterUpdate (project: Pick<Project, 'reporter'>, newest: Reco
   return reporter && latest && compareVersions(reporter.version, latest) < 0 ? latest : null
 }
 
+/** a branch whose support ends within this many days – orange, time to plan the move */
+const PHP_ENDING_DAYS = 183
+
 /**
- * A site's PHP against php.net: ok – supported (active) and patched; security – patched, but its branch gets only
- * security fixes; outdated – a newer release of its branch is out (the security fixes missing); eol – its branch has
- * no support at all; unknown – php.net's data or the full version missing.
+ * A site's PHP against php.net: ok – the newest release of a supported branch (security fixes only counts too);
+ * ending – the same, but the branch's support ends within half a year; outdated – a newer release of its branch is out
+ * (the security fixes missing); eol – its branch has no support at all; unknown – php.net's data or the full version
+ * missing.
  */
-export function phpStatus (project: Pick<Project, 'php' | 'phpVersion'>, branches: Record<string, PhpBranch>): {
-  tone: 'ok' | 'security' | 'outdated' | 'eol' | 'unknown'
+export function phpStatus (project: Pick<Project, 'php' | 'phpVersion'>, branches: Record<string, PhpBranch>, now: Date = new Date()): {
+  tone: 'ok' | 'ending' | 'outdated' | 'eol' | 'unknown'
   branch: string | null
   info: PhpBranch | null
 } {
@@ -421,5 +425,7 @@ export function phpStatus (project: Pick<Project, 'php' | 'phpVersion'>, branche
     return { tone: 'outdated', branch, info }
   }
 
-  return { tone: info.state === 'stable' ? 'ok' : 'security', branch, info }
+  const ending = info.securityEnd !== null && new Date(info.securityEnd).getTime() - now.getTime() < PHP_ENDING_DAYS * 86_400_000
+
+  return { tone: ending ? 'ending' : 'ok', branch, info }
 }
