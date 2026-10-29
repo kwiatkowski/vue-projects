@@ -25,7 +25,7 @@
         <dt>{{ item.name }} <span class="mono faint">{{ item.version }}</span></dt>
 
         <dd>
-          <span class="vuln-severity" :class="`vuln-severity--${item.severity ?? 'm'}`">{{ SEVERITY_LABELS[item.severity ?? 'm'] }}</span>
+          <span class="vuln-severity" :class="`vuln-severity--${item.severity ?? 'm'}`">{{ item.severity ? SEVERITY_LABELS[item.severity] : 'ważność nieznana' }}</span>
           <template v-if="item.closed"> · zamknięta</template>
           <template v-else-if="item.fixedIn"> · naprawia <span class="mono">{{ item.fixedIn }}</span></template>
         </dd>

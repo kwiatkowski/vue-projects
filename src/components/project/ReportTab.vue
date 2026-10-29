@@ -74,7 +74,7 @@
           </span>
 
           <span class="vuln__fix">
-            <span :class="`vuln-severity--${item.severity ?? 'm'}`">{{ SEVERITY_LABELS[item.severity ?? 'm'] }}</span>
+            <span :class="`vuln-severity--${item.severity ?? 'm'}`">{{ item.severity ? SEVERITY_LABELS[item.severity] : 'ważność nieznana' }}</span>
             <template v-if="item.fixedIn"> · naprawia <span class="mono">{{ item.fixedIn }}</span></template>
             <template v-else-if="!item.closed"> · brak poprawki</template>
           </span>
