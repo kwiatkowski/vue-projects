@@ -123,7 +123,7 @@
               />
             </td>
 
-            <td v-if="show('status')" :class="cellChanged(project, 'status')"><StatusChip :status="project.status" /></td>
+            <td v-if="show('status')" class="fit" :class="cellChanged(project, 'status')"><StatusChip :status="project.status" /></td>
 
             <!-- the home page over 30 days; the response time in the tooltip -->
             <td v-if="show('uptime')" class="right mono nowrap">
@@ -326,7 +326,7 @@
   /** how a column shows in the table – the sort it offers, its alignment */
   const COLUMN_LOOK: Partial<Record<ColumnKey, Omit<Column, 'key' | 'label'>>> = {
     name: { sort: 'name' },
-    status: { sort: 'status' },
+    status: { sort: 'status', class: 'fit' },
     uptime: { sort: 'uptime', class: 'right' },
     server: { sort: 'server' },
     engine: { sort: 'version' },
@@ -582,6 +582,12 @@ tr:hover .row-grip {
 .select {
   width: 1%;
   padding-right: 0;
+}
+
+/* as wide as its content – the rest of the width goes to the other columns */
+.fit {
+  width: 1%;
+  white-space: nowrap;
 }
 
 .select input {
