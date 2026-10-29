@@ -591,9 +591,27 @@ tr:hover .row-grip {
 }
 
 .select input {
-  display: block;
-  margin: 0;
-  cursor: pointer;
+  vertical-align: middle;
+}
+
+/* on the green header: a dark edge, and ticked (or some ticked – a dash) dark on the green, as the header's text */
+th.select input {
+  border-color: var(--bg);
+  background: transparent;
+}
+
+th.select input:checked,
+th.select input:indeterminate {
+  border-color: var(--bg);
+  background: transparent;
+}
+
+th.select input:indeterminate::after {
+  width: 10px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--bg);
+  content: '';
 }
 
 .center {
