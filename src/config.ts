@@ -1,3 +1,4 @@
+import type { PhpBranch } from '@/types'
 import { COLUMN_KEYS, type ColumnKey, PUBLIC_DEFAULT } from '@/utils/columns'
 
 /**
@@ -33,6 +34,8 @@ export interface AppConfig {
   columns: { visible: ColumnKey[], viewer: ColumnKey[] | null, guest: ColumnKey[] | null }
   /** the newest WordPress release – sites running it are marked; null when unknown */
   latestWordpress: string | null
+  /** PHP's branches (php.net): state, newest release, end of support – by branch ("8.3") */
+  phpBranches?: Record<string, PhpBranch>
   /** MK Core of the list's own site – the newest; null without it */
   mkCoreVersion?: string | null
   /** every WordPress release since 5.0, newest first – the version list (with a search) */

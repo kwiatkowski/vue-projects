@@ -100,6 +100,10 @@ export interface Project extends Record<Flag, boolean> {
   responseMs?: number | null
   /** the plugins' known vulnerabilities (WPVulnerability) – null: not scanned yet */
   vulnerabilities?: Vulnerability[] | null
+  /** PHP as the site runs it: the full version, the SAPI, its limits (plugin_meden 1.19.0 / MK Core) */
+  phpVersion?: string | null
+  phpSapi?: string | null
+  phpIni?: Record<string, string> | null
   /** what has no translation for the site's language at all – WordPress, plugins, the theme; null: not reported */
   missingTranslations?: { locale: string, items: MissingTranslation[] } | null
   /** the alerts muted until – null: not muted (the owner's) */
@@ -312,4 +316,14 @@ export interface AlertSettings {
   weekly: { enabled: boolean, day: number, hour: number, channels: AlertChannel[] }
   hasSmtpPassword?: boolean
   hasSlackWebhook?: boolean
+}
+
+/** a PHP branch as php.net gives it */
+export interface PhpBranch {
+  /** stable – active support; security – security fixes only; eol – none */
+  state: 'stable' | 'security' | 'eol' | string
+  /** the newest release – null for an unsupported branch */
+  latest: string | null
+  activeEnd: string | null
+  securityEnd: string | null
 }

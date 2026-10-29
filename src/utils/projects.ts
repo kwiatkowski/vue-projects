@@ -1,4 +1,4 @@
-import type { Category, MissingTranslation, PluginUpdate, Project, SortKey, StagingCheck, Status, UpdateScope } from '@/types'
+import type { Category, MissingTranslation, PhpBranch, PluginUpdate, Project, SortKey, StagingCheck, Status, UpdateScope } from '@/types'
 
 /** in this order in the filters and the status select: online, offline, in progress, suspended */
 export const STATUS_LABELS: Record<Status, string> = {
@@ -361,7 +361,7 @@ export function parseReporter (reporter: string | null | undefined): { name: str
  * The newest plugin_meden released – its repository is private, the list can't ask GitHub. Bump it with every
  * release of plugin_meden (the tag vX.Y.Z), so the sites on an older one show it at once.
  */
-export const LATEST_PLUGIN_MEDEN = '1.18.0'
+export const LATEST_PLUGIN_MEDEN = '1.19.0'
 
 /**
  * The newest version of each reporter: the highest any site sends – at least the released plugin_meden
@@ -387,4 +387,39 @@ export function reporterUpdate (project: Pick<Project, 'reporter'>, newest: Reco
   const latest = reporter ? newest[reporter.name] : undefined
 
   return reporter && latest && compareVersions(reporter.version, latest) < 0 ? latest : null
+}
+
+/**
+ * A site's PHP against php.net: ok – supported (active) and patched; security – patched, but its branch gets only
+ * security fixes; outdated – a newer release of its branch is out (the security fixes missing); eol – its branch has
+ * no support at all; unknown – php.net's data or the full version missing.
+ */
+export function phpStatus (project: Pick<Project, 'php' | 'phpVersion'>, branches: Record<string, PhpBranch>): {
+  tone: 'ok' | 'security' | 'outdated' | 'eol' | 'unknown'
+  branch: string | null
+  info: PhpBranch | null
+} {
+  const branch = (project.phpVersion ?? project.php ?? '').match(/^(\d+\.\d+)/)?.[1] ?? null
+  const info = branch ? branches[branch] ?? null : null
+
+  if (!branch || !info) {
+    // a branch older than any php.net lists is long unsupported
+    const oldest = Object.keys(branches).toSorted(compareVersions)[0]
+
+    return { tone: branch && oldest && compareVersions(branch, oldest) < 0 ? 'eol' : 'unknown', branch, info }
+  }
+
+  if (info.state === 'eol') {
+    return { tone: 'eol', branch, info }
+  }
+
+  if (!project.phpVersion || !info.latest) {
+    return { tone: 'unknown', branch, info }
+  }
+
+  if (compareVersions(project.phpVersion, info.latest) < 0) {
+    return { tone: 'outdated', branch, info }
+  }
+
+  return { tone: info.state === 'stable' ? 'ok' : 'security', branch, info }
 }

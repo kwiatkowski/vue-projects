@@ -53,7 +53,7 @@
 
           <div v-if="(show('server') && project.server) || (show('php') && project.php)" class="card__line muted">
             <span v-if="show('server') && project.server">{{ project.server }} <span class="mono faint">{{ project.serverAccount }}</span></span>
-            <span v-if="show('php') && project.php" class="mono">PHP {{ project.php }}</span>
+            <span v-if="show('php') && project.php" class="mono" :class="`php--${phpStatus(project, config.phpBranches ?? {}).tone}`">PHP {{ project.php }}</span>
           </div>
 
           <div v-if="(show('todo') && project.todo) || flagsOf(project).length > 0" class="card__flags">
@@ -74,11 +74,12 @@
   import CategoryMenu from '@/components/CategoryMenu.vue'
   import StatusChip from '@/components/StatusChip.vue'
   import TodoChip from '@/components/TodoChip.vue'
+  import { config } from '@/config'
   import { vTip } from '@/directives/tip'
   import { useColumnsStore } from '@/stores/columns'
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
-  import { latestWordpress, outdatedWordpress, ownTheme, siteUrl } from '@/utils/projects'
+  import { latestWordpress, outdatedWordpress, ownTheme, phpStatus, siteUrl } from '@/utils/projects'
 
   /** The list on phones: a card per project, the lines of the columns shown. */
   defineProps<{ groups: Array<Group<Project>>, showHeaders: boolean, full: boolean }>()
@@ -158,6 +159,21 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+}
+
+/* PHP as in the table: green – supported and patched, orange – security fixes only, red – unpatched or unsupported */
+.php--ok {
+  color: var(--positive);
+}
+
+.php--security {
+  color: var(--warn);
+}
+
+.php--outdated,
+.php--eol {
+  color: var(--danger);
+  font-weight: 600;
 }
 
 /* a theme made in-house – a green tick after it */

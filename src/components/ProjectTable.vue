@@ -148,7 +148,7 @@
               <span v-if="project.serverAccount" class="cell-sub mono">{{ project.serverAccount }}</span>
             </td>
 
-            <td v-if="show('php')" class="mono" :class="[{ warn: outdatedPhp(project.php) }, cellChanged(project, 'php')]">{{ project.php }}</td>
+            <td v-if="show('php')" :class="cellChanged(project, 'php')"><PhpCell :project="project" /></td>
 
             <td v-if="show('engine')" :class="cellChanged(project, 'engine', 'version')"><EngineCell :project="project" /></td>
 
@@ -235,6 +235,7 @@
   import StatusChip from '@/components/StatusChip.vue'
   import { useTableDrag } from '@/components/table/drag'
   import EngineCell from '@/components/table/EngineCell.vue'
+  import PhpCell from '@/components/table/PhpCell.vue'
   import ProjectCards from '@/components/table/ProjectCards.vue'
   import ReportCell from '@/components/table/ReportCell.vue'
   import ThemeCell from '@/components/table/ThemeCell.vue'
@@ -352,12 +353,6 @@
   /** whether the column is on – its cells follow */
   const show = (key: ColumnKey): boolean => shown.value.has(key)
 
-  /** PHP before 8.1 has no security support any more. */
-  function outdatedPhp (php: string | null): boolean {
-    const [major = 0, minor = 0] = (php ?? '').split('.').map(Number)
-
-    return php !== null && (major < 8 || (major === 8 && minor < 1))
-  }
 </script>
 
 <style scoped>
@@ -690,11 +685,6 @@ th.select input:indeterminate::after {
 
 .link:hover {
   text-decoration-color: var(--accent);
-}
-
-.warn {
-  color: var(--warn);
-  font-weight: 600;
 }
 
 .uptime--warn {

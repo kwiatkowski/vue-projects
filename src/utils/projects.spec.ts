@@ -1,6 +1,6 @@
 import type { Project } from '@/types'
 import { describe, expect, it } from 'vitest'
-import { ago, bareDomain, compareManual, compareVersions, formatDateTime, formatDay, groupProjects, LATEST_PLUGIN_MEDEN, latestWordpress, matches, moveId, newestReporters, newestWordpress, ownTheme, parseReporter, pendingUpdates, repoHost, reporterUpdate, reportStale, reportState, siteUrl, sortProjects, stagingCheck, vulnerabilityTone } from './projects'
+import { ago, bareDomain, compareManual, compareVersions, formatDateTime, formatDay, groupProjects, LATEST_PLUGIN_MEDEN, latestWordpress, matches, moveId, newestReporters, newestWordpress, ownTheme, parseReporter, pendingUpdates, phpStatus, repoHost, reporterUpdate, reportStale, reportState, siteUrl, sortProjects, stagingCheck, vulnerabilityTone } from './projects'
 
 const p = (name: string, extra: Partial<Project> = {}): Partial<Project> => ({ name, domains: [name], status: 'online', ...extra })
 
@@ -205,5 +205,22 @@ describe('reporters', () => {
     expect(reporterUpdate({ reporter: 'plugin_meden 99.0.0' }, newest)).toBeNull()
     expect(reporterUpdate({ reporter: 'mk-core 2026.10.28' }, newest)).toBe('2026.10.29')
     expect(reporterUpdate({ reporter: null }, newest)).toBeNull()
+  })
+})
+
+describe('phpStatus', () => {
+  const branches = {
+    8.4: { state: 'stable', latest: '8.4.27', activeEnd: '2026-12-31', securityEnd: '2028-12-31' },
+    8.3: { state: 'security', latest: '8.3.36', activeEnd: '2025-12-31', securityEnd: '2027-12-31' },
+    8.1: { state: 'eol', latest: null, activeEnd: '2023-11-25', securityEnd: '2025-12-31' },
+  }
+
+  it('patched and supported, security fixes only, unpatched, unsupported, unknown', () => {
+    expect(phpStatus({ php: '8.4', phpVersion: '8.4.27' }, branches).tone).toBe('ok')
+    expect(phpStatus({ php: '8.3', phpVersion: '8.3.36' }, branches).tone).toBe('security')
+    expect(phpStatus({ php: '8.3', phpVersion: '8.3.12' }, branches).tone).toBe('outdated')
+    expect(phpStatus({ php: '8.1', phpVersion: '8.1.31' }, branches).tone).toBe('eol')
+    expect(phpStatus({ php: '7.4', phpVersion: null }, branches).tone).toBe('eol')
+    expect(phpStatus({ php: '8.3', phpVersion: null }, branches).tone).toBe('unknown')
   })
 })
