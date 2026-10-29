@@ -1,6 +1,6 @@
 <template>
   <!-- a popup on hover, as the report's – it can be entered; showing it fetches the Basic Auth password, ready for the lock -->
-  <HoverTip :anchor-class="`site-link${up ? ' site-link--up' : ''}${down ? ' site-link--down' : ''}`" interactive @show="loadPassword">
+  <HoverTip :anchor-class="`site-link${check ? ` site-link--${check.tone}` : ''}`" interactive @show="loadPassword">
     <span :aria-label="`${label}: ${url}`" class="site-link__icon" role="button" tabindex="0">
       <slot />
     </span>
@@ -12,7 +12,7 @@
         <span class="site-link__host mono faint">{{ host }}</span>
       </div>
 
-      <div v-if="statusText" class="report-tip__row site-link__status" :class="{ 'site-link__status--up': up }">
+      <div v-if="statusText" class="report-tip__row site-link__status" :class="`site-link__status--${check?.tone}`">
         <span>Sprawdzenie</span>
         <span>{{ statusText }}</span>
       </div>
@@ -59,11 +59,12 @@
 </template>
 
 <script lang="ts" setup>
+  import type { StagingCheck } from '@/types'
   import { Copy, Globe, LockKeyhole, LogIn, SquareArrowOutUpRight } from 'lucide-vue-next'
   import { computed } from 'vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
   import { useNotifyStore } from '@/stores/notify'
-  import { formatDateTime } from '@/utils/projects'
+  import { formatDateTime, stagingCheck } from '@/utils/projects'
 
   /**
    * An icon in the list (the local copy, staging) – hovering it shows a popup: the site and its panel, each with
@@ -73,16 +74,13 @@
     url: string
     adminUrl?: string | null
     label: string
-    status?: { code: number, checkedAt: string } | null
+    status?: StagingCheck | null
     /** the staging behind Basic Auth: its login and how to get its password (the owner's only) */
     auth?: { user: string, password: () => Promise<string | null> } | null
   }>()
 
-  /** the list checked the address (the staging) and it answered 200 – the icon in the accent colour */
-  const up = computed(() => props.status?.code === 200)
-
-  /** checked, but no 200 – the icon red */
-  const down = computed(() => Boolean(props.status) && !up.value)
+  /** the list's check in words and its tone: the icon green, orange (it works, the list can't get in) or red */
+  const check = computed(() => props.status ? stagingCheck(props.status) : null)
 
   /** the list's check, under the header */
   const statusText = computed(() => {
@@ -92,9 +90,7 @@
       return ''
     }
 
-    const answer = status.code === 200 ? 'odpowiada (200)' : (status.code ? `nie odpowiada (HTTP ${status.code})` : 'nie odpowiada')
-
-    return `${answer} · ${formatDateTime(status.checkedAt).slice(-5)}`
+    return `${check.value?.text} · ${formatDateTime(status.checkedAt).slice(-5)}`
   })
 
   /** the address in the header – without the scheme and the closing slash */
@@ -172,8 +168,14 @@
 }
 
 .site-link:hover,
-.site-link--up {
+.site-link--ok {
   color: var(--accent-text);
+}
+
+/* the staging's check: orange – it works, but the list can't get in; red – it doesn't work */
+.site-link--warn,
+.site-link--warn:hover {
+  color: var(--warn);
 }
 
 .site-link--down,
@@ -186,14 +188,21 @@
   height: 16px;
 }
 
-/* the check: red when the staging doesn't answer, the accent when it does */
+/* the check in the icon's colour */
 .site-link__status {
   margin: 4px 0 2px;
-  color: var(--danger);
 }
 
-.site-link__status--up {
+.site-link__status--ok {
   color: var(--accent-text);
+}
+
+.site-link__status--warn {
+  color: var(--warn);
+}
+
+.site-link__status--down {
+  color: var(--danger);
 }
 
 .site-link__host {

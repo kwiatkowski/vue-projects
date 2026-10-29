@@ -93,7 +93,7 @@ export interface Project extends Record<Flag, boolean> {
   /** whether reCAPTCHA's secret key is kept */
   hasRecaptchaSecret?: boolean
   /** what the staging answered at the list's last pull – 200 means it works */
-  staging?: { code: number, checkedAt: string } | null
+  staging?: StagingCheck | null
   updatedAt: string | null
   /** from the last report (not on the public list): the parent theme, the themes' versions and authors, what sent it */
   parentTheme?: string | null
@@ -200,3 +200,10 @@ export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'r
 export type PasswordKind = 'panel' | 'auth' | 'staging' | 'recaptcha'
 
 export type SortKey = 'name' | 'status' | 'server' | 'php' | 'version' | 'theme' | 'reportedAt'
+
+/** the staging's check: its HTTP code (0 – no answer, and why: the plugin's ReportPuller::failure()) */
+export interface StagingCheck {
+  code: number
+  checkedAt: string
+  error?: 'dns' | 'refused' | 'timeout' | 'ssl' | 'redirects' | 'other'
+}

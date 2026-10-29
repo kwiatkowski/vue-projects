@@ -1,6 +1,6 @@
 import type { Project } from '@/types'
 import { describe, expect, it } from 'vitest'
-import { ago, bareDomain, compareManual, compareVersions, formatDateTime, formatDay, groupProjects, latestWordpress, matches, moveId, newestWordpress, pendingUpdates, repoHost, reportStale, reportState, siteUrl, sortProjects } from './projects'
+import { ago, bareDomain, compareManual, compareVersions, formatDateTime, formatDay, groupProjects, latestWordpress, matches, moveId, newestWordpress, pendingUpdates, repoHost, reportStale, reportState, siteUrl, sortProjects, stagingCheck } from './projects'
 
 const p = (name: string, extra: Partial<Project> = {}): Partial<Project> => ({ name, domains: [name], status: 'online', ...extra })
 
@@ -145,5 +145,25 @@ describe('WordPress versions', () => {
 
     expect(pendingUpdates(site('7.1.3'), '7.1.4')).toEqual([{ name: 'WordPress', version: '7.1.3', update: '7.1.4' }])
     expect(pendingUpdates(site('7.1.4'), '7.1.3')).toEqual([])
+  })
+})
+
+describe('stagingCheck', () => {
+  const at = '2026-10-29T09:14:00Z'
+
+  it('answers 200 – ok', () => {
+    expect(stagingCheck({ code: 200, checkedAt: at })).toEqual({ text: 'odpowiada (200)', tone: 'ok' })
+  })
+
+  it('no answer – why, from the plugin; down', () => {
+    expect(stagingCheck({ code: 0, checkedAt: at, error: 'dns' })).toEqual({ text: 'nie ma takiej domeny (DNS)', tone: 'down' })
+    expect(stagingCheck({ code: 0, checkedAt: at })).toEqual({ text: 'brak połączenia', tone: 'down' })
+  })
+
+  it('the login or a block – warn; a missing page or a server error – down', () => {
+    expect(stagingCheck({ code: 401, checkedAt: at }).tone).toBe('warn')
+    expect(stagingCheck({ code: 403, checkedAt: at }).tone).toBe('warn')
+    expect(stagingCheck({ code: 503, checkedAt: at })).toEqual({ text: 'tryb konserwacji lub przeciążenie (HTTP 503)', tone: 'down' })
+    expect(stagingCheck({ code: 418, checkedAt: at })).toEqual({ text: 'HTTP 418', tone: 'down' })
   })
 })

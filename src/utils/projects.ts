@@ -1,4 +1,4 @@
-import type { Category, PluginUpdate, Project, SortKey, Status, UpdateScope } from '@/types'
+import type { Category, PluginUpdate, Project, SortKey, StagingCheck, Status, UpdateScope } from '@/types'
 
 /** in this order in the filters and the status select: online, offline, in progress, suspended */
 export const STATUS_LABELS: Record<Status, string> = {
@@ -264,4 +264,46 @@ export function sslState (project: Pick<Project, 'ssl'>, now: Date = new Date())
 /** days left on the certificate (whole, not below 0) */
 export function sslDaysLeft (project: Pick<Project, 'ssl'>, now: Date = new Date()): number | null {
   return project.ssl?.validTo ? Math.max(0, Math.floor((new Date(project.ssl.validTo).getTime() - now.getTime()) / 86_400_000)) : null
+}
+
+/** why the staging got no answer at all – the plugin's ReportPuller::failure() */
+const STAGING_FAILURES: Record<NonNullable<StagingCheck['error']>, string> = {
+  dns: 'nie ma takiej domeny (DNS)',
+  refused: 'serwer odrzuca połączenie',
+  timeout: 'brak odpowiedzi w 20 s',
+  ssl: 'błąd certyfikatu SSL',
+  redirects: 'pętla przekierowań',
+  other: 'brak połączenia',
+}
+
+/** what an HTTP code usually means on a staging */
+const STAGING_CODES: Record<number, string> = {
+  401: 'zły lub brak loginu i hasła Basic Auth',
+  403: 'dostęp zablokowany (IP, firewall)',
+  404: 'nie ma takiej strony – zły adres?',
+  500: 'błąd PHP lub WordPressa',
+  502: 'błąd serwera lub proxy',
+  503: 'tryb konserwacji lub przeciążenie',
+  504: 'serwer nie zdążył odpowiedzieć',
+}
+
+/**
+ * The staging's check in words, and its tone: ok – it answers 200; warn – it works, but the list can't get in (the
+ * login, a block); down – it doesn't work (no answer, a missing page, a server error).
+ */
+export function stagingCheck (check: StagingCheck): { text: string, tone: 'ok' | 'warn' | 'down' } {
+  if (check.code === 200) {
+    return { text: 'odpowiada (200)', tone: 'ok' }
+  }
+
+  if (check.code === 0) {
+    return { text: STAGING_FAILURES[check.error ?? 'other'] ?? STAGING_FAILURES.other, tone: 'down' }
+  }
+
+  const meaning = STAGING_CODES[check.code]
+
+  return {
+    text: meaning ? `${meaning} (HTTP ${check.code})` : `HTTP ${check.code}`,
+    tone: check.code === 401 || check.code === 403 ? 'warn' : 'down',
+  }
 }
