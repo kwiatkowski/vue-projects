@@ -79,6 +79,8 @@ export const config: AppConfig = {
   publicFields: injected.publicFields ?? ['domains', 'status', 'engine', 'version', 'theme'],
   columns: injected.columns ?? { visible: [...COLUMN_KEYS], viewer: PUBLIC_DEFAULT, guest: PUBLIC_DEFAULT },
   latestWordpress: injected.latestWordpress ?? null,
+  phpBranches: injected.phpBranches ?? {},
+  mkCoreVersion: injected.mkCoreVersion ?? null,
   wordpressVersions: injected.wordpressVersions ?? [],
   siteName: injected.siteName ?? 'kwiatkowski.co',
   homeUrl: injected.homeUrl ?? '/',
