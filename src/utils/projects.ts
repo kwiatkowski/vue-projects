@@ -156,11 +156,6 @@ export function outdatedWordpress (project: Partial<Project>, latest: string | n
   return Boolean(latest) && project.engine === 'wordpress' && Boolean(project.version) && !latestWordpress(project, latest)
 }
 
-/** the engine's name as written – the list keeps it in lower case ("wordpress") */
-const ENGINE_LABELS: Record<string, string> = { wordpress: 'WordPress' }
-
-export const engineLabel = (engine: string) => ENGINE_LABELS[engine] ?? engine
-
 /** "https://Example.pl/x" → "example.pl" – how domains are kept. */
 export function bareDomain (value: string): string {
   return value.trim().replace(/^https?:\/\//i, '').replace(/\/.*$/, '').toLowerCase()

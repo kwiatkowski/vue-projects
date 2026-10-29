@@ -117,7 +117,7 @@
             <!-- the name as in Server and Theme, the version centred under it: green – the newest, orange with an arrow –
                  a newer one is out -->
             <span class="engine">
-              <span v-if="project.engine">{{ engineLabel(project.engine) }}</span>
+              <span v-if="project.engine">{{ project.engine }}</span>
 
               <span
                 v-if="project.version"
@@ -312,7 +312,7 @@
           </div>
 
           <div v-if="(show('engine') && project.engine) || (show('theme') && project.theme)" class="card__line muted">
-            <span v-if="show('engine') && project.engine">{{ engineLabel(project.engine) }} <span class="mono" :class="{ latest: isLatest(project), warn: isOutdated(project) }">{{ project.version }}</span></span>
+            <span v-if="show('engine') && project.engine">{{ project.engine }} <span class="mono" :class="{ latest: isLatest(project), warn: isOutdated(project) }">{{ project.version }}</span></span>
             <span v-if="show('theme') && project.theme">{{ project.theme }}</span>
           </div>
 
@@ -348,7 +348,7 @@
   import { FLAGS } from '@/types'
   import { type ColumnKey, COLUMNS } from '@/utils/columns'
   import { dragId, dragKind, dropTarget, setDrag } from '@/utils/drag'
-  import { engineLabel, formatDateTime, latestWordpress, outdatedWordpress, pendingUpdates, repoHost, reportState, siteUrl, sslState, UPDATE_LABELS, updateScope } from '@/utils/projects'
+  import { formatDateTime, latestWordpress, outdatedWordpress, pendingUpdates, repoHost, reportState, siteUrl, sslState, UPDATE_LABELS, updateScope } from '@/utils/projects'
 
   const props = defineProps<{
     groups: Array<Group<Project>>
