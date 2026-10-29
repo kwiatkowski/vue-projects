@@ -4,7 +4,7 @@
     v-model="open"
     :can-close="canClose"
     :title="project ? 'Edycja projektu' : 'Nowy projekt'"
-    :width="1240"
+    :width="1360"
     @submit="save"
   >
     <!-- two columns: the name and what defines the project on the left, always in view; the details on the right, in
@@ -455,8 +455,8 @@
 
 .cols {
   display: grid;
-  /* the fixed part a third, the tabs two thirds */
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  /* the fixed part as wide as it was (a third of 1240px), the tabs get the rest */
+  grid-template-columns: minmax(0, 390px) minmax(0, 1fr);
   gap: 16px 32px;
   align-items: start;
 }
