@@ -114,14 +114,18 @@
           <td v-if="show('php')" class="mono" :class="[{ warn: outdatedPhp(project.php) }, cellChanged(project, 'php')]">{{ project.php }}</td>
 
           <td v-if="show('engine')" :class="cellChanged(project, 'engine', 'version')">
-            <span v-if="project.engine" class="chip chip--soft">{{ project.engine }}</span>
+            <!-- the name as in Server and Theme, the version centred under it: green – the newest, orange with an arrow –
+                 a newer one is out -->
+            <span class="engine">
+              <span v-if="project.engine">{{ engineLabel(project.engine) }}</span>
 
-            <span
-              v-if="project.version"
-              class="cell-sub mono"
-              :class="{ latest: isLatest(project) }"
-              :title="isLatest(project) ? latestTitle : undefined"
-            >{{ project.version }}</span>
+              <span
+                v-if="project.version"
+                class="cell-sub mono"
+                :class="{ latest: isLatest(project), warn: isOutdated(project) }"
+                :title="versionTitle(project)"
+              >{{ project.version }}<ArrowUp v-if="isOutdated(project)" /></span>
+            </span>
           </td>
 
           <td v-if="show('theme')" class="cell-theme" :class="cellChanged(project, 'theme')">
@@ -308,7 +312,7 @@
           </div>
 
           <div v-if="(show('engine') && project.engine) || (show('theme') && project.theme)" class="card__line muted">
-            <span v-if="show('engine') && project.engine">{{ project.engine }} <span class="mono" :class="{ latest: isLatest(project) }">{{ project.version }}</span></span>
+            <span v-if="show('engine') && project.engine">{{ engineLabel(project.engine) }} <span class="mono" :class="{ latest: isLatest(project), warn: isOutdated(project) }">{{ project.version }}</span></span>
             <span v-if="show('theme') && project.theme">{{ project.theme }}</span>
           </div>
 
@@ -344,7 +348,7 @@
   import { FLAGS } from '@/types'
   import { type ColumnKey, COLUMNS } from '@/utils/columns'
   import { dragId, dragKind, dropTarget, setDrag } from '@/utils/drag'
-  import { formatDateTime, latestWordpress, pendingUpdates, repoHost, reportState, siteUrl, sslState, UPDATE_LABELS, updateScope } from '@/utils/projects'
+  import { engineLabel, formatDateTime, latestWordpress, outdatedWordpress, pendingUpdates, repoHost, reportState, siteUrl, sslState, UPDATE_LABELS, updateScope } from '@/utils/projects'
 
   const props = defineProps<{
     groups: Array<Group<Project>>
@@ -476,7 +480,16 @@
   }
 
   const isLatest = (project: Project) => latestWordpress(project, projects.latestWordpress)
-  const latestTitle = computed(() => projects.latestWordpress ? `Najnowszy WordPress (${projects.latestWordpress})` : undefined)
+  const isOutdated = (project: Project) => outdatedWordpress(project, projects.latestWordpress)
+
+  /** the version's tooltip – the newest WordPress, or the one waiting */
+  function versionTitle (project: Project): string | undefined {
+    if (isLatest(project)) {
+      return `Najnowszy WordPress (${projects.latestWordpress})`
+    }
+
+    return isOutdated(project) ? `Dostępny WordPress ${projects.latestWordpress}` : undefined
+  }
 
   interface Column {
     key: ColumnKey
@@ -984,6 +997,20 @@ tr:hover .row-grip {
 .latest {
   color: var(--positive);
   font-weight: 600;
+}
+
+/* the engine's name with its version centred under it */
+.engine {
+  display: inline-block;
+  text-align: center;
+}
+
+.engine svg {
+  width: 12px;
+  height: 12px;
+  margin-left: 1px;
+  stroke-width: 2.5;
+  vertical-align: -1px;
 }
 
 .yes {
