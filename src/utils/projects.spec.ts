@@ -1,6 +1,6 @@
 import type { Project } from '@/types'
 import { describe, expect, it } from 'vitest'
-import { ago, bareDomain, compareManual, compareVersions, formatDateTime, formatDay, groupProjects, latestWordpress, matches, moveId, newestReporters, newestWordpress, ownTheme, parseReporter, pendingUpdates, repoHost, reporterUpdate, reportStale, reportState, siteUrl, sortProjects, stagingCheck, vulnerabilityTone } from './projects'
+import { ago, bareDomain, compareManual, compareVersions, formatDateTime, formatDay, groupProjects, LATEST_PLUGIN_MEDEN, latestWordpress, matches, moveId, newestReporters, newestWordpress, ownTheme, parseReporter, pendingUpdates, repoHost, reporterUpdate, reportStale, reportState, siteUrl, sortProjects, stagingCheck, vulnerabilityTone } from './projects'
 
 const p = (name: string, extra: Partial<Project> = {}): Partial<Project> => ({ name, domains: [name], status: 'online', ...extra })
 
@@ -190,17 +190,19 @@ describe('vulnerabilityTone', () => {
 })
 
 describe('reporters', () => {
-  const sites = [{ reporter: 'plugin_meden 1.16.0' }, { reporter: 'plugin_meden 1.18.0' }, { reporter: 'mk-core 2026.10.28' }, { reporter: null }]
+  const sites = [{ reporter: 'plugin_meden 1.16.0' }, { reporter: 'plugin_meden 99.0.0' }, { reporter: 'mk-core 2026.10.28' }, { reporter: null }]
 
   it('the newest of each – plugin_meden from the sites, MK Core at least the list\'s own', () => {
     expect(parseReporter('plugin_meden 1.17.0')).toEqual({ name: 'plugin_meden', version: '1.17.0' })
-    expect(newestReporters(sites, '2026.10.29')).toEqual({ 'mk-core': '2026.10.29', 'plugin_meden': '1.18.0' })
+    expect(newestReporters(sites, '2026.10.29')).toEqual({ 'mk-core': '2026.10.29', 'plugin_meden': '99.0.0' })
+    // none newer than the released one reported – the released one (LATEST_PLUGIN_MEDEN)
+    expect(newestReporters([{ reporter: 'plugin_meden 1.0.0' }], null)).toEqual({ plugin_meden: LATEST_PLUGIN_MEDEN })
   })
 
   it('an older one gets the newer version, the newest none', () => {
     const newest = newestReporters(sites, '2026.10.29')
-    expect(reporterUpdate({ reporter: 'plugin_meden 1.16.0' }, newest)).toBe('1.18.0')
-    expect(reporterUpdate({ reporter: 'plugin_meden 1.18.0' }, newest)).toBeNull()
+    expect(reporterUpdate({ reporter: 'plugin_meden 1.16.0' }, newest)).toBe('99.0.0')
+    expect(reporterUpdate({ reporter: 'plugin_meden 99.0.0' }, newest)).toBeNull()
     expect(reporterUpdate({ reporter: 'mk-core 2026.10.28' }, newest)).toBe('2026.10.29')
     expect(reporterUpdate({ reporter: null }, newest)).toBeNull()
   })

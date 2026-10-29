@@ -358,11 +358,17 @@ export function parseReporter (reporter: string | null | undefined): { name: str
 }
 
 /**
- * The newest version of each reporter: the highest any site sends – and for MK Core at least the list's own (it runs
- * the newest). plugin_meden's repository is private, so the sites themselves tell.
+ * The newest plugin_meden released – its repository is private, the list can't ask GitHub. Bump it with every
+ * release of plugin_meden (the tag vX.Y.Z), so the sites on an older one show it at once.
+ */
+export const LATEST_PLUGIN_MEDEN = '1.18.0'
+
+/**
+ * The newest version of each reporter: the highest any site sends – at least the released plugin_meden
+ * (LATEST_PLUGIN_MEDEN) and the list's own MK Core (it runs the newest).
  */
 export function newestReporters (projects: Array<Pick<Project, 'reporter'>>, mkCore: string | null | undefined): Record<string, string> {
-  const newest: Record<string, string> = mkCore ? { 'mk-core': mkCore } : {}
+  const newest: Record<string, string> = { plugin_meden: LATEST_PLUGIN_MEDEN, ...(mkCore ? { 'mk-core': mkCore } : {}) }
 
   for (const project of projects) {
     const reporter = parseReporter(project.reporter)
