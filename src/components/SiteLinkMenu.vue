@@ -36,7 +36,8 @@
           type="button"
           @click="openWithAuth(row.url)"
         >
-          <LockKeyhole />
+          <!-- the "open" icon of the plain link, with a small lock in its corner – opens with the login and password -->
+          <span class="site-link__auth"><SquareArrowOutUpRight /><LockKeyhole class="site-link__lock" /></span>
         </button>
 
         <a
@@ -236,6 +237,29 @@
 
 .site-link__row .btn--icon:hover {
   color: var(--text);
+}
+
+/* the lock over the "open" icon's corner, in the accent; its background follows the row's, cutting it out of the icon */
+.site-link__auth {
+  position: relative;
+  display: inline-flex;
+}
+
+.site-link__row .site-link__lock {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 11px;
+  height: 11px;
+  padding: 1px;
+  border-radius: 50%;
+  background: var(--tip-bg);
+  color: var(--accent-text);
+  stroke-width: 2.75;
+}
+
+.site-link__row:hover .site-link__lock {
+  background: color-mix(in srgb, var(--tip-bg) 85%, var(--text));
 }
 
 /* the items are links here too – the same look as the buttons */
