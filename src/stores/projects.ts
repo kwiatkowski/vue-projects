@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { categoriesApi, projectsApi, todoApi } from '@/api/projects'
 import { config } from '@/config'
-import { compareManual, groupProjects, moveId, newestWordpress } from '@/utils/projects'
+import { compareManual, groupProjects, moveId, newestWordpress, updateScope } from '@/utils/projects'
 import { useNotifyStore } from './notify'
 
 /**
@@ -453,22 +453,29 @@ export const useProjectsStore = defineStore('projects', () => {
   /** sites updating themselves (Composer / the plugins), started from the table – their dot spins until it ends */
   const updating = ref<Set<number>>(new Set())
 
-  async function runUpdate (id: number, scope: UpdateScope = 'all'): Promise<void> {
+  /** `quiet` – no toasts of its own (a batch says it at the end); resolves to how it ended: done, nothing, failed */
+  async function runUpdate (id: number, scope: UpdateScope = 'all', quiet = false): Promise<'done' | 'nothing' | 'failed'> {
     const name = items.value.find(item => item.id === id)?.name ?? ''
+    let result: 'done' | 'nothing' | 'failed' = 'failed'
 
     try {
       let state = await projectsApi.startUpdate(id, scope)
       updating.value = new Set(updating.value).add(id)
-      notify.show(`${name}: aktualizacja uruchomiona.`)
+
+      if (!quiet) {
+        notify.show(`${name}: aktualizacja uruchomiona.`)
+      }
 
       while (state.state === 'running') {
         await new Promise(resolve => setTimeout(resolve, 4000))
         state = await projectsApi.updateState(id)
       }
 
+      result = state.state === 'nothing' ? 'nothing' : (state.state === 'failed' ? 'failed' : 'done')
+
       if (state.state === 'failed') {
         notify.show(`${name}: aktualizacja się nie udała – log w oknie projektu (Raport strony).`, { tone: 'error' })
-      } else {
+      } else if (!quiet) {
         notify.show(state.state === 'nothing' ? `${name}: nic nowego do zainstalowania.` : `${name}: zaktualizowano.`)
       }
 
@@ -481,6 +488,98 @@ export const useProjectsStore = defineStore('projects', () => {
       next.delete(id)
       updating.value = next
     }
+
+    return result
+  }
+
+  // ---- several projects at once: the ones ticked in the table, or "Aktualizuj wszystkie"
+
+  /** the projects ticked in the table (the owner's) */
+  const selected = ref<Set<number>>(new Set())
+
+  function toggleSelected (id: number, on = !selected.value.has(id)): void {
+    const next = new Set(selected.value)
+
+    if (on) {
+      next.add(id)
+    } else {
+      next.delete(id)
+    }
+
+    selected.value = next
+  }
+
+  function setSelected (ids: number[]): void {
+    selected.value = new Set(ids)
+  }
+
+  /** runs `task` for every id, `limit` at a time */
+  async function inTurn<T> (ids: number[], limit: number, task: (id: number) => Promise<T>): Promise<T[]> {
+    const results: T[] = []
+    const queue = [...ids]
+
+    await Promise.all(Array.from({ length: Math.min(limit, queue.length) }, async () => {
+      while (queue.length > 0) {
+        results.push(await task(queue.shift() as number))
+      }
+    }))
+
+    return results
+  }
+
+  /** a batch running – its name and how far it got, for the bar above the table */
+  const batch = ref<{ label: string, done: number, total: number } | null>(null)
+
+  /** the sites' reports, now – 4 at a time; one toast at the end */
+  async function pullReports (ids: number[]): Promise<void> {
+    batch.value = { label: 'Aktualizuję raporty', done: 0, total: ids.length }
+
+    const results = await inTurn(ids, 4, async id => {
+      const result = await projectsApi.pullReport(id).catch(() => null)
+
+      if (result) {
+        replace(result.project)
+      }
+
+      batch.value = batch.value && { ...batch.value, done: batch.value.done + 1 }
+
+      return result?.ok !== false && result !== null
+    })
+
+    batch.value = null
+    const failed = results.filter(ok => !ok).length
+    notify.show(failed ? `Raporty: ${results.length - failed} pobrane, ${failed} nie przyszło.` : `Raporty pobrane: ${results.length}.`, failed ? { tone: 'error' } : undefined)
+  }
+
+  /**
+   * The sites' updates – each with what it waits for (everything, or the translations alone); 2 at a time (Composer
+   * is heavy, several sites share a server). One toast at the end, the failed ones by name.
+   */
+  async function runUpdates (ids: number[]): Promise<void> {
+    const todo = ids.filter(id => {
+      const project = items.value.find(item => item.id === id)
+
+      return project && updateScope(project, latestWordpress.value) !== null && !updating.value.has(id)
+    })
+
+    if (todo.length === 0) {
+      return
+    }
+
+    batch.value = { label: 'Aktualizuję strony', done: 0, total: todo.length }
+
+    const results = await inTurn(todo, 2, async id => {
+      const project = items.value.find(item => item.id === id)
+      const result = await runUpdate(id, project ? updateScope(project, latestWordpress.value) ?? 'all' : 'all', true)
+      batch.value = batch.value && { ...batch.value, done: batch.value.done + 1 }
+
+      return result
+    })
+
+    batch.value = null
+    const done = results.filter(result => result === 'done').length
+    const failed = results.filter(result => result === 'failed').length
+    notify.show(`Aktualizacje: ${done} zaktualizowane${failed ? `, ${failed} nieudane` : ''}${results.length - done - failed ? `, ${results.length - done - failed} bez zmian` : ''}.`, failed ? { tone: 'error' } : undefined)
   }
 
   return {
@@ -488,6 +587,12 @@ export const useProjectsStore = defineStore('projects', () => {
     latestWordpress,
     updating,
     runUpdate,
+    selected,
+    toggleSelected,
+    setSelected,
+    batch,
+    pullReports,
+    runUpdates,
     categories,
     sortedCategories,
     changed,

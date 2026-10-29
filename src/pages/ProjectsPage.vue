@@ -50,6 +50,17 @@
           <RefreshCw /> Do aktualizacji <span class="mono faint">{{ updatesCount }}</span>
         </button>
 
+        <!-- the owner: every project with something waiting, after a question -->
+        <button
+          v-if="config.canManage && updatesCount > 0"
+          class="btn btn--outline toolbar__update-all"
+          :disabled="projects.batch !== null"
+          type="button"
+          @click="updateAll"
+        >
+          <ArrowUp /> Aktualizuj wszystkie
+        </button>
+
         <div aria-label="Status" class="seg toolbar__filters" role="radiogroup">
           <button
             v-for="option in filters"
@@ -90,6 +101,30 @@
           <ListOrdered /> Własna kolejność
         </button>
       </div>
+
+      <!-- the owner's ticked projects: what to do with them; while a batch runs – how far it got -->
+      <div v-if="config.canManage && (projects.selected.size > 0 || projects.batch)" class="bulk">
+        <template v-if="projects.batch">
+          <span class="bulk__spinner" />
+          <span>{{ projects.batch.label }}: <span class="mono">{{ projects.batch.done }} / {{ projects.batch.total }}</span></span>
+        </template>
+
+        <template v-else>
+          <span>Zaznaczone: <strong class="mono">{{ projects.selected.size }}</strong></span>
+
+          <button class="btn btn--sm btn--outline" type="button" @click="projects.pullReports(selectedIds)">
+            <RefreshCw /> Aktualizuj raport
+          </button>
+
+          <button class="btn btn--sm btn--outline" :disabled="selectedWithUpdates.length === 0" type="button" @click="updateSelected">
+            <ArrowUp /> Aktualizuj stronę <span class="mono faint">{{ selectedWithUpdates.length }}</span>
+          </button>
+
+          <button class="btn btn--sm" type="button" @click="projects.setSelected([])">
+            <X /> Odznacz
+          </button>
+        </template>
+      </div>
     </header>
 
     <template v-if="projects.status === 'ready'">
@@ -126,7 +161,7 @@
 <script lang="ts" setup>
   import type { Category, Project, SortKey, Status } from '@/types'
   import type { Filter, Group } from '@/utils/projects'
-  import { Columns3, ListFilter, ListOrdered, RefreshCw, Search, SearchX } from 'lucide-vue-next'
+  import { ArrowUp, Columns3, ListFilter, ListOrdered, RefreshCw, Search, SearchX, X } from 'lucide-vue-next'
   import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
   import ProjectTable from '@/components/ProjectTable.vue'
@@ -227,6 +262,33 @@
   const canFilterUpdates = computed(() => columns.available.includes('report'))
   const inCategory = computed(() => category.value ? projects.items.filter(project => project.categoryId === category.value?.id) : projects.items)
   const updatesCount = computed(() => inCategory.value.filter(project => hasUpdates(project)).length)
+  // ---- several at once: the ticked projects, or all with updates
+
+  const selectedIds = computed(() => [...projects.selected])
+  const selectedWithUpdates = computed(() => projects.items.filter(project => projects.selected.has(project.id) && hasUpdates(project)))
+
+  /** updates change the sites (Composer, commit, push) – asked first, with their names */
+  function confirmUpdates (list: Project[]): boolean {
+    const names = list.map(project => project.name)
+    const shown = names.length > 12 ? [...names.slice(0, 12), `… i ${names.length - 12} więcej`] : names
+
+    return window.confirm(`Zaktualizować ${list.length} ${list.length === 1 ? 'stronę' : 'stron(y)'}?\n\n${shown.join('\n')}`)
+  }
+
+  function updateSelected (): void {
+    if (confirmUpdates(selectedWithUpdates.value)) {
+      void projects.runUpdates(selectedWithUpdates.value.map(project => project.id)).then(() => projects.setSelected([]))
+    }
+  }
+
+  function updateAll (): void {
+    const list = inCategory.value.filter(project => hasUpdates(project))
+
+    if (confirmUpdates(list)) {
+      void projects.runUpdates(list.map(project => project.id))
+    }
+  }
+
   const scoped = computed(() => onlyUpdates.value && canFilterUpdates.value ? inCategory.value.filter(project => hasUpdates(project)) : inCategory.value)
 
   /** null – the user's own order, grouped by category; a column – a flat list sorted by it */
@@ -402,7 +464,8 @@
 
 /* as tall as the search and the filters */
 .toolbar__columns,
-.toolbar__updates {
+.toolbar__updates,
+.toolbar__update-all {
   flex: none;
   height: 36px;
 }
@@ -437,6 +500,41 @@
   box-sizing: content-box;
 }
 
+/* the ticked projects' actions, under the toolbar */
+.bulk {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 13px;
+}
+
+.bulk__spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--line-strong);
+  border-top-color: var(--info);
+  border-radius: 50%;
+  animation: bulk-spin .8s linear infinite;
+}
+
+@keyframes bulk-spin {
+  to {
+    rotate: 1turn;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bulk__spinner {
+    animation: none;
+  }
+}
+
 @media (max-width: 900px) {
   .head {
     padding-top: 14px;
@@ -467,12 +565,14 @@
 
   /* phones: under the category and the status, folded with them */
   .toolbar__columns,
-  .toolbar__updates {
+  .toolbar__updates,
+  .toolbar__update-all {
     display: none;
   }
 
   .toolbar--open .toolbar__columns,
-  .toolbar--open .toolbar__updates {
+  .toolbar--open .toolbar__updates,
+  .toolbar--open .toolbar__update-all {
     display: inline-flex;
     flex: 1 1 100%;
     justify-content: center;

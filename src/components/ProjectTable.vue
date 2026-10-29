@@ -5,6 +5,17 @@
       <table class="table">
         <thead>
           <tr>
+            <!-- the owner ticks projects for the actions above the list – the box here ticks all shown -->
+            <th v-if="full" class="select" scope="col">
+              <input
+                aria-label="Zaznacz wszystkie widoczne"
+                :checked="allSelected"
+                :indeterminate="someSelected && !allSelected"
+                type="checkbox"
+                @change="projects.setSelected(allSelected ? [] : visibleIds)"
+              >
+            </th>
+
             <th v-for="column in columns" :key="column.key" :class="column.class" scope="col">
               <button
                 v-if="column.sort"
@@ -37,7 +48,7 @@
           @drop.prevent="onDrop($event, group)"
         >
           <tr v-if="showHeaders && !group.sizer" class="group-row">
-            <td :colspan="columns.length">
+            <td :colspan="span">
               <div class="group-head">
                 <!-- kept when dragging is off (a filter) – just hidden, so the names don't move sideways -->
                 <span
@@ -77,6 +88,15 @@
             @dragend="endDrag"
             @dragstart="startProject($event, project.id)"
           >
+            <td v-if="full" class="select" @click.stop>
+              <input
+                :aria-label="`Zaznacz: ${project.name}`"
+                :checked="projects.selected.has(project.id)"
+                type="checkbox"
+                @change="projects.toggleSelected(project.id)"
+              >
+            </td>
+
             <td class="cell-name" :class="cellChanged(project, 'name', 'domains')">
               <GripVertical v-if="full" aria-hidden="true" class="row-grip" :class="{ 'grip--off': !canDrag }" />
 
@@ -187,7 +207,7 @@
           </tr>
 
           <tr v-if="!group.sizer && group.projects.length === 0" class="drop-here">
-            <td :colspan="columns.length">{{ canDrag ? 'Przeciągnij tu projekt' : 'Brak projektów' }}</td>
+            <td :colspan="span">{{ canDrag ? 'Przeciągnij tu projekt' : 'Brak projektów' }}</td>
           </tr>
         </tbody>
       </table>
@@ -260,6 +280,14 @@
     acf: 'ACF',
     miModal: 'MI Modal',
   }
+
+  /** the projects shown – what the header's box ticks */
+  const visibleIds = computed(() => props.groups.flatMap(group => group.projects.map(project => project.id)))
+  const someSelected = computed(() => visibleIds.value.some(id => projects.selected.has(id)))
+  const allSelected = computed(() => visibleIds.value.length > 0 && visibleIds.value.every(id => projects.selected.has(id)))
+
+  /** the rows across the whole table – the columns and, for the owner, the tick box */
+  const span = computed(() => columns.value.length + (props.full ? 1 : 0))
 
   /** headers only when there are categories to tell apart */
   const showHeaders = computed(() => props.grouped && props.groups.some(group => group.category !== null))
@@ -532,6 +560,18 @@ tbody:first-of-type .group-row td {
 
 tr:hover .row-grip {
   opacity: 1;
+}
+
+/* the tick box – a narrow column before the name */
+.select {
+  width: 1%;
+  padding-right: 0;
+}
+
+.select input {
+  display: block;
+  margin: 0;
+  cursor: pointer;
 }
 
 .center {
