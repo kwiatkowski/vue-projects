@@ -10,6 +10,7 @@
     >
       <RefreshCw v-if="reportMark(project) === 'running'" />
       <TriangleAlert v-else-if="reportMark(project) === 'failed'" />
+      <template v-else-if="reportMark(project) === 'vulnerable'"><ShieldAlert /><span class="mono">{{ project.vulnerabilities?.length }}</span></template>
 
       <template v-else-if="reportMark(project) === 'todo'">
         <template v-if="updateCount(project) > 0"><ArrowUp /><span class="mono">{{ updateCount(project) }}</span></template>
@@ -52,7 +53,7 @@
 
 <script lang="ts" setup>
   import type { Project } from '@/types'
-  import { ArrowUp, Check, FileText, Lock, Minus, RefreshCw, TriangleAlert } from 'lucide-vue-next'
+  import { ArrowUp, Check, FileText, Lock, Minus, RefreshCw, ShieldAlert, TriangleAlert } from 'lucide-vue-next'
   import { ref } from 'vue'
   import ReportSummary from '@/components/ReportSummary.vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
@@ -125,6 +126,11 @@
       return 'failed'
     }
 
+    // a plugin with a known vulnerability – red, with how many
+    if (state !== 'off' && (project.vulnerabilities?.length ?? 0) > 0) {
+      return 'vulnerable'
+    }
+
     return state === 'ok' && (scopeOf(project) || sslState(project) === 'soon') ? 'todo' : state
   }
 
@@ -133,7 +139,7 @@
 <style scoped>
 /* the site's report as an icon – not a dot, that is the status's: a green tick – it reports; an orange arrow with the
    number of updates (a lock – only the certificate runs out soon); a red warning – no report or a bad certificate;
-   a grey dash – not set up. No pulse. The date and time in the tooltip. */
+   a red shield with a number – plugins with known vulnerabilities; a grey dash – not set up. No pulse. The date and time in the tooltip. */
 .report {
   display: inline-flex;
   align-items: center;
@@ -157,7 +163,8 @@
   color: var(--warn);
 }
 
-.report--failed {
+.report--failed,
+.report--vulnerable {
   color: var(--danger);
 }
 

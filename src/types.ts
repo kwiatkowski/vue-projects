@@ -98,6 +98,8 @@ export interface Project extends Record<Flag, boolean> {
   uptime?: number | null
   /** the home page's mean response time over the last day, in ms */
   responseMs?: number | null
+  /** the plugins' known vulnerabilities (WPVulnerability) – null: not scanned yet */
+  vulnerabilities?: Vulnerability[] | null
   updatedAt: string | null
   /** from the last report (not on the public list): the parent theme, the themes' versions and authors, what sent it */
   parentTheme?: string | null
@@ -210,6 +212,24 @@ export interface StagingCheck {
   code: number
   checkedAt: string
   error?: 'dns' | 'refused' | 'timeout' | 'ssl' | 'redirects' | 'other'
+}
+
+/** a known vulnerability of an installed plugin – or the plugin closed on wordpress.org */
+export interface Vulnerability {
+  id: string
+  type: 'plugin'
+  slug: string
+  name: string
+  /** the installed version */
+  version: string
+  title: string
+  /** CVSS: low, medium, high, critical */
+  severity: 'l' | 'm' | 'h' | 'c' | null
+  score: number | null
+  /** the version that fixes it – null: not said, or none yet */
+  fixedIn: string | null
+  closed: boolean
+  link: string
 }
 
 /** one look at a home page or staging (History) */

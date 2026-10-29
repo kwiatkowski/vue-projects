@@ -16,6 +16,23 @@
     </span>
   </div>
 
+  <!-- the plugins' known vulnerabilities: the plugin, its version, what fixes it -->
+  <template v-if="vulnerabilities.length > 0">
+    <div class="info-tip__head info-tip__head--bad">Podatności: {{ vulnerabilities.length }}</div>
+
+    <dl class="info-tip info-tip--right">
+      <template v-for="item in vulnerabilities" :key="item.id">
+        <dt>{{ item.name }} <span class="mono faint">{{ item.version }}</span></dt>
+
+        <dd>
+          <span class="vuln-severity" :class="`vuln-severity--${item.severity ?? 'm'}`">{{ SEVERITY_LABELS[item.severity ?? 'm'] }}</span>
+          <template v-if="item.closed"> · zamknięta</template>
+          <template v-else-if="item.fixedIn"> · naprawia <span class="mono">{{ item.fixedIn }}</span></template>
+        </dd>
+      </template>
+    </dl>
+  </template>
+
   <!-- what's waiting on the site: WordPress and the plugins, installed → available -->
   <template v-if="plugins.length > 0">
     <div class="info-tip__head info-tip__head--todo">Do aktualizacji wtyczki: {{ plugins.length }}</div>
@@ -40,7 +57,7 @@
   import type { Project } from '@/types'
   import { computed } from 'vue'
   import { useProjectsStore } from '@/stores/projects'
-  import { formatDay, pendingUpdates, sslDaysLeft, sslState } from '@/utils/projects'
+  import { formatDay, pendingUpdates, SEVERITY_LABELS, sslDaysLeft, sslState } from '@/utils/projects'
 
   /**
    * What the report's mark says – the same in its tooltip and in its menu: when the site reported and what sent it, the
@@ -53,6 +70,7 @@
 
   const plugins = computed(() => pendingUpdates(props.project, projects.latestWordpress))
   const translations = computed(() => props.project.translationUpdates?.length ?? 0)
+  const vulnerabilities = computed(() => props.project.vulnerabilities ?? [])
   const ssl = computed(() => sslState(props.project))
   const daysLeft = computed(() => sslDaysLeft(props.project))
 
@@ -61,6 +79,23 @@
 </script>
 
 <style scoped>
+/* the vulnerabilities: their severity – critical and high in red, the rest orange */
+.info-tip__head--bad {
+  margin: 8px 0 4px;
+  color: var(--danger);
+}
+
+.vuln-severity--c,
+.vuln-severity--h {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.vuln-severity--m,
+.vuln-severity--l {
+  color: var(--warn);
+}
+
 /* the certificate's line under the header */
 .report-tip__ssl {
   margin-top: 6px;

@@ -48,7 +48,7 @@
 
             <ul class="plugins">
               <li v-for="plugin in sortedPlugins" :key="plugin.file" class="plugin" :class="{ 'plugin--off': !plugin.active }">
-                <span class="plugin__name">{{ plugin.name }}</span>
+                <span class="plugin__name">{{ plugin.name }} <ShieldAlert v-if="vulnerableSlugs.has(slugOf(plugin.file))" v-tip="'Znana podatność – szczegóły wyżej'" class="plugin__vuln" /></span>
                 <span v-if="plugin.mu" class="faint">MU</span>
                 <span v-else-if="!plugin.active" class="faint">nieaktywna</span>
 
@@ -61,6 +61,26 @@
         </dd>
       </template>
     </dl>
+
+    <!-- the plugins' known vulnerabilities (WPVulnerability – Wordfence, WPScan, Patchstack, CVE), the link to each -->
+    <div v-if="vulnerabilities.length > 0" class="vulns">
+      <div class="vulns__head"><ShieldAlert /> Podatności wtyczek: {{ vulnerabilities.length }}</div>
+
+      <ul class="plugins">
+        <li v-for="item in vulnerabilities" :key="item.id" class="plugin vuln">
+          <span class="plugin__name">
+            {{ item.name }} <span class="mono faint">{{ item.version }}</span>
+            <a class="vuln__title" :href="item.link" rel="noopener" target="_blank">{{ item.title }}</a>
+          </span>
+
+          <span class="vuln__fix">
+            <span :class="`vuln-severity--${item.severity ?? 'm'}`">{{ SEVERITY_LABELS[item.severity ?? 'm'] }}</span>
+            <template v-if="item.fixedIn"> · naprawia <span class="mono">{{ item.fixedIn }}</span></template>
+            <template v-else-if="!item.closed"> · brak poprawki</template>
+          </span>
+        </li>
+      </ul>
+    </div>
 
     <!-- composer update on production, composer.lock committed and pushed – the other environments pull it -->
     <div v-if="update" class="update">
@@ -157,7 +177,7 @@
 
 <script lang="ts" setup>
   import type { Project, ReportPlugin, UpdateState } from '@/types'
-  import { ArrowUp, Copy, KeyRound, RefreshCw, Trash2 } from 'lucide-vue-next'
+  import { ArrowUp, Copy, KeyRound, RefreshCw, ShieldAlert, Trash2 } from 'lucide-vue-next'
   import { computed, onBeforeUnmount, ref, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
   import { fromProject, REPORTED_FIELDS, useProjectForm } from '@/components/project/form'
@@ -165,7 +185,7 @@
   import { vTip } from '@/directives/tip'
   import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
-  import { ago, formatDateTime, UPDATE_LABELS, updateScope } from '@/utils/projects'
+  import { ago, formatDateTime, SEVERITY_LABELS, UPDATE_LABELS, updateScope } from '@/utils/projects'
 
   /** "Raport strony": what the site last sent, updating it, the report's settings and token */
   const { form, initial, project, busy, siteReport, loadReport } = useProjectForm()
@@ -173,6 +193,13 @@
   const notify = useNotifyStore()
 
   const confirmToken = ref(false)
+
+  /** the plugins' known vulnerabilities – critical first */
+  const SEVERITY_RANK = { c: 0, h: 1, m: 2, l: 3 }
+  const vulnerabilities = computed(() => (project.value?.vulnerabilities ?? []).toSorted((a, b) => SEVERITY_RANK[a.severity ?? 'm'] - SEVERITY_RANK[b.severity ?? 'm']))
+  const vulnerableSlugs = computed(() => new Set(vulnerabilities.value.map(item => item.slug)))
+  /** a plugin's slug – its folder, as the scanner takes it */
+  const slugOf = (file: string) => (file.includes('/') ? file.split('/', 1)[0] ?? '' : file.replace(/\.php$/, '')).toLowerCase()
 
   const activePlugins = computed(() => siteReport.value?.plugins?.filter(plugin => plugin.active).length ?? 0)
   const pluginUpdates = computed(() => siteReport.value?.plugins?.filter(plugin => plugin.update) ?? [])
@@ -435,6 +462,66 @@
   align-items: center;
   gap: 6px 10px;
   margin: 0;
+}
+
+/* the vulnerabilities: a red head, each with its title as a link; severity critical / high red, the rest orange */
+.vulns {
+  display: grid;
+  gap: 6px;
+}
+
+.vulns__head {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--danger);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.vulns__head svg,
+.plugin__vuln {
+  width: 15px;
+  height: 15px;
+}
+
+.plugin__vuln {
+  color: var(--danger);
+  vertical-align: -2px;
+}
+
+.vuln {
+  align-items: flex-start;
+}
+
+.vuln .plugin__name {
+  white-space: normal;
+}
+
+.vuln__title {
+  display: block;
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.vuln__title:hover {
+  color: var(--text);
+}
+
+.vuln__fix {
+  flex: none;
+  font-size: 12px;
+}
+
+.vuln-severity--c,
+.vuln-severity--h {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.vuln-severity--m,
+.vuln-severity--l {
+  color: var(--warn);
 }
 
 /* the Composer update: the button, what came of it, the log */

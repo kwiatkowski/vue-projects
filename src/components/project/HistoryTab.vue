@@ -221,8 +221,12 @@
   /** why it was down – as the staging's check says it */
   const outageText = (outage: Outage) => stagingCheck({ code: outage.code, checkedAt: outage.from, error: outage.error ?? undefined }).text
 
-  /** down in red, back in green, a new administrator orange */
+  /** down and a new vulnerability in red, back in green, a new administrator orange */
   function eventTone (event: HistoryEvent): string | null {
+    if (event.type === 'vulnerability') {
+      return 'bad'
+    }
+
     if (event.type === 'status') {
       return event.data.to === 'offline' ? 'bad' : (event.data.to === 'online' ? 'ok' : null)
     }

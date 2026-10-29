@@ -311,3 +311,6 @@ export function stagingCheck (check: StagingCheck): { text: string, tone: 'ok' |
     tone: check.code === 401 || check.code === 403 ? 'warn' : 'down',
   }
 }
+
+/** a vulnerability's CVSS severity in words */
+export const SEVERITY_LABELS: Record<'l' | 'm' | 'h' | 'c', string> = { l: 'niska', m: 'średnia', h: 'wysoka', c: 'krytyczna' }
