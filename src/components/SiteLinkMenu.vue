@@ -17,8 +17,8 @@
         <span>{{ statusText }}</span>
       </div>
 
-      <!-- the site and its panel: the name opens it, copy beside it; behind Basic Auth also "open" with a lock – with the
-           login and password in the address, and copy takes that address -->
+      <!-- the site and its panel: the name opens it, copy beside it; behind Basic Auth also "open" and "copy" with a lock –
+           with the login and password in the address -->
       <div v-for="row in rows" :key="row.url" class="site-link__row">
         <a
           class="menu__item site-link__name"
@@ -36,17 +36,22 @@
           type="button"
           @click="openWithAuth(row.url)"
         >
-          <!-- the "open" icon of the plain link, with a small lock in its corner – opens with the login and password -->
+          <!-- the "open" icon with a small lock in its corner – opens with the login and password; the same on copy -->
           <span class="site-link__auth"><SquareArrowOutUpRight /><LockKeyhole class="site-link__lock" /></span>
         </button>
 
+        <button :aria-label="`Kopiuj adres: ${row.label}`" class="btn btn--icon btn--sm" type="button" @click="copy(row.url)">
+          <Copy />
+        </button>
+
         <button
-          :aria-label="auth ? `Kopiuj adres z loginem i hasłem: ${row.label}` : `Kopiuj adres: ${row.label}`"
+          v-if="auth"
+          :aria-label="`Kopiuj adres z loginem i hasłem: ${row.label}`"
           class="btn btn--icon btn--sm"
           type="button"
-          @click="copy(row.url)"
+          @click="copy(row.url, true)"
         >
-          <Copy />
+          <span class="site-link__auth"><Copy /><LockKeyhole class="site-link__lock" /></span>
         </button>
       </div>
     </template>
@@ -62,7 +67,7 @@
 
   /**
    * An icon in the list (the local copy, staging) – hovering it shows a popup: the site and its panel, each with
-   * "copy" beside it (and "open with the login and password" behind Basic Auth).
+   * "copy" beside it (behind Basic Auth also "open" and "copy" with the login and password).
    */
   const props = defineProps<{
     url: string
@@ -138,8 +143,9 @@
     }
   }
 
-  async function copy (url: string): Promise<void> {
-    const address = props.auth ? await withAuth(url) : url
+  /** the address as it is, or with the login and password in it */
+  async function copy (url: string, auth = false): Promise<void> {
+    const address = auth ? await withAuth(url) : url
 
     if (!address) {
       notify.show('Nie udało się pobrać hasła.', { tone: 'error' })
@@ -149,7 +155,7 @@
 
     try {
       await navigator.clipboard.writeText(address)
-      notify.show(props.auth ? 'Adres z loginem i hasłem skopiowany do schowka.' : 'Adres skopiowany do schowka.')
+      notify.show(auth ? 'Adres z loginem i hasłem skopiowany do schowka.' : 'Adres skopiowany do schowka.')
     } catch {
       notify.show('Nie udało się skopiować.', { tone: 'error' })
     }
