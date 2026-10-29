@@ -242,6 +242,12 @@
                     <RefreshCw /> {{ projects.updating.has(project.id) ? 'Aktualizuję…' : UPDATE_LABELS[scopeOf(project) ?? 'all'] }}
                   </button>
 
+                  <!-- the site sends its report now – as "Pobierz raport" in the project's dialog -->
+                  <button class="menu__item" :disabled="pulling.has(project.id)" type="button" @click="pullReport(project.id)">
+                    <component :is="pulling.has(project.id) ? RefreshCw : Download" :class="{ spin: pulling.has(project.id) }" />
+                    {{ pulling.has(project.id) ? 'Pobieram…' : 'Pobierz raport' }}
+                  </button>
+
                   <button class="menu__item" type="button" @click="hide(); emit('open', project)">
                     <FileText /> Szczegóły raportu
                   </button>
@@ -324,7 +330,7 @@
 <script lang="ts" setup>
   import type { Category, Flag, Project, SortKey } from '@/types'
   import type { Group } from '@/utils/projects'
-  import { ArrowUp, ArrowUpRight, Check, ChevronDown, FileText, FlaskConical, GripVertical, Laptop, Lock, Minus, RefreshCw, TriangleAlert } from 'lucide-vue-next'
+  import { ArrowUp, ArrowUpRight, Check, ChevronDown, Download, FileText, FlaskConical, GripVertical, Laptop, Lock, Minus, RefreshCw, TriangleAlert } from 'lucide-vue-next'
   import { computed, ref } from 'vue'
   import CategoryMenu from '@/components/CategoryMenu.vue'
   import ReportSummary from '@/components/ReportSummary.vue'
@@ -333,6 +339,7 @@
   import TodoChip from '@/components/TodoChip.vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
   import { useColumnsStore } from '@/stores/columns'
+  import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
   import { type ColumnKey, COLUMNS } from '@/utils/columns'
@@ -354,6 +361,7 @@
   const emit = defineEmits<{ open: [Project], sort: [SortKey] }>()
 
   const projects = useProjectsStore()
+  const notify = useNotifyStore()
   const columnsStore = useColumnsStore()
 
   /**
@@ -424,6 +432,27 @@
   }
 
   const scopeOf = (project: Project) => updateScope(project, projects.latestWordpress)
+
+  /** sites whose report is being fetched from the report's popup */
+  const pulling = ref<Set<number>>(new Set())
+
+  async function pullReport (id: number): Promise<void> {
+    pulling.value = new Set(pulling.value).add(id)
+    const result = await projects.pullReport(id)
+    const next = new Set(pulling.value)
+    next.delete(id)
+    pulling.value = next
+
+    if (!result) {
+      return
+    }
+
+    if (result.error) {
+      notify.show(`Raport nie przyszedł: ${result.error}.`, { tone: 'error' })
+    } else {
+      notify.show('Raport pobrany.')
+    }
+  }
 
   /** WordPress, plugins and translations waiting – the number next to the report's arrow */
   function updateCount (project: Project) {
@@ -1014,7 +1043,8 @@ tr:hover .row-grip {
   color: var(--info);
 }
 
-.report--running svg {
+.report--running svg,
+.report-actions .spin {
   animation: spin 1s linear infinite;
 }
 
@@ -1025,7 +1055,8 @@ tr:hover .row-grip {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .report--running svg {
+  .report--running svg,
+  .report-actions .spin {
     animation: none;
   }
 }
