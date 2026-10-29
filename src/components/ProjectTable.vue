@@ -186,6 +186,7 @@
             <SiteLinkMenu
               v-if="project.stagingUrl"
               :admin-url="project.stagingAdminUrl"
+              :auth="stagingAuth(project)"
               label="Staging"
               :status="project.staging"
               :url="project.stagingUrl"
@@ -336,6 +337,7 @@
   import type { Group } from '@/utils/projects'
   import { ArrowUp, ArrowUpRight, Check, ChevronDown, FileText, FlaskConical, GripVertical, Laptop, Lock, Minus, RefreshCw, TriangleAlert } from 'lucide-vue-next'
   import { computed, ref } from 'vue'
+  import { projectsApi } from '@/api/projects'
   import CategoryMenu from '@/components/CategoryMenu.vue'
   import ReportSummary from '@/components/ReportSummary.vue'
   import SiteLinkMenu from '@/components/SiteLinkMenu.vue'
@@ -436,6 +438,13 @@
   }
 
   const scopeOf = (project: Project) => updateScope(project, projects.latestWordpress)
+
+  /** the staging's Basic Auth for its menu – the owner's only, with a login and a kept password */
+  function stagingAuth (project: Project) {
+    return props.full && project.stagingAuthUser && project.hasStagingAuthPassword
+      ? { user: project.stagingAuthUser, password: () => projectsApi.password(project.id, 'staging').then(result => result.password) }
+      : null
+  }
 
   /** sites whose report is being fetched from the report's popup */
   const pulling = ref<Set<number>>(new Set())

@@ -1,5 +1,12 @@
 <template>
-  <DropMenu align="start" :label="`${label}: ${url}`" :title="false" :trigger-class="`menu__bare site-link${up ? ' site-link--up' : ''}`">
+  <!-- opening the menu fetches the Basic Auth password – it is ready when the lock is clicked -->
+  <DropMenu
+    align="start"
+    :label="`${label}: ${url}`"
+    :title="false"
+    :trigger-class="`menu__bare site-link${up ? ' site-link--up' : ''}`"
+    @click.capture="loadPassword"
+  >
     <template #trigger>
       <slot />
     </template>
@@ -7,7 +14,8 @@
     <div class="site-link__head faint mono">{{ url }}</div>
     <div v-if="statusText" class="site-link__status" :class="{ 'site-link__status--up': up }">{{ statusText }}</div>
 
-    <!-- the site and its panel: the name opens it, the icons beside open it or copy the address -->
+    <!-- the site and its panel: the name opens it; behind Basic Auth the lock opens it with the login and password in the
+         address, and copy takes that address – else the icons beside open it or copy it -->
     <div v-for="row in rows" :key="row.url" class="site-link__row">
       <a
         class="menu__item site-link__name"
@@ -19,7 +27,18 @@
         <component :is="row.icon" /> {{ row.label }}
       </a>
 
+      <button
+        v-if="auth"
+        :aria-label="`Otwórz z loginem i hasłem: ${row.label}`"
+        class="btn btn--icon btn--sm"
+        type="button"
+        @click="openWithAuth(row.url)"
+      >
+        <LockKeyhole />
+      </button>
+
       <a
+        v-else
         :aria-label="`Otwórz: ${row.label}`"
         class="btn btn--icon btn--sm"
         :href="row.url"
@@ -27,7 +46,12 @@
         target="_blank"
       ><SquareArrowOutUpRight /></a>
 
-      <button :aria-label="`Kopiuj adres: ${row.label}`" class="btn btn--icon btn--sm" type="button" @click="copy(row.url)">
+      <button
+        :aria-label="auth ? `Kopiuj adres z loginem i hasłem: ${row.label}` : `Kopiuj adres: ${row.label}`"
+        class="btn btn--icon btn--sm"
+        type="button"
+        @click="copy(row.url)"
+      >
         <Copy />
       </button>
     </div>
@@ -35,7 +59,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { Copy, Globe, LogIn, SquareArrowOutUpRight } from 'lucide-vue-next'
+  import { Copy, Globe, LockKeyhole, LogIn, SquareArrowOutUpRight } from 'lucide-vue-next'
   import { computed } from 'vue'
   import DropMenu from '@/components/ui/DropMenu.vue'
   import { useNotifyStore } from '@/stores/notify'
@@ -45,7 +69,14 @@
    * An icon in the list (the local copy, staging) – a click opens a small menu: the site and its panel, each with
    * "open" and "copy" beside it.
    */
-  const props = defineProps<{ url: string, adminUrl?: string | null, label: string, status?: { code: number, checkedAt: string } | null }>()
+  const props = defineProps<{
+    url: string
+    adminUrl?: string | null
+    label: string
+    status?: { code: number, checkedAt: string } | null
+    /** the staging behind Basic Auth: its login and how to get its password (the owner's only) */
+    auth?: { user: string, password: () => Promise<string | null> } | null
+  }>()
 
   /** the list checked the address (the staging) and it answered 200 – the icon in the accent colour */
   const up = computed(() => props.status?.code === 200)
@@ -70,10 +101,57 @@
 
   const notify = useNotifyStore()
 
+  /** the password, fetched once the menu opens */
+  let password: Promise<string | null> | null = null
+
+  function loadPassword (): void {
+    if (props.auth && !password) {
+      password = props.auth.password().catch(() => {
+        password = null
+
+        return null
+      })
+    }
+  }
+
+  /** the address with the login and password in it – the browser passes them to Basic Auth; null without a password */
+  async function withAuth (url: string): Promise<string | null> {
+    loadPassword()
+    const secret = await password
+
+    if (!props.auth || !secret) {
+      return null
+    }
+
+    const address = new URL(url)
+    address.username = encodeURIComponent(props.auth.user)
+    address.password = encodeURIComponent(secret)
+
+    return address.toString()
+  }
+
+  async function openWithAuth (url: string): Promise<void> {
+    const address = await withAuth(url)
+
+    if (address) {
+      window.open(address, '_blank', 'noopener')
+    } else {
+      notify.show('Nie udało się pobrać hasła.', { tone: 'error' })
+    }
+  }
+
   async function copy (url: string): Promise<void> {
+    const address = props.auth ? await withAuth(url) : url
+
+    if (!address) {
+      notify.show('Nie udało się pobrać hasła.', { tone: 'error' })
+
+      return
+    }
+
     try {
-      await navigator.clipboard.writeText(url)
-      notify.show('Adres skopiowany do schowka.')
+      await navigator.clipboard.writeText(address)
+      notify.show(props.auth ? 'Adres z loginem i hasłem skopiowany do schowka.' : 'Adres skopiowany do schowka.')
     } catch {
       notify.show('Nie udało się skopiować.', { tone: 'error' })
     }
@@ -115,11 +193,20 @@
   white-space: nowrap;
 }
 
-/* a row: the name (it opens too) and the two icons */
+/* a row: the name (it opens too) and the two icons – the hover over all of it */
 .site-link__row {
   display: flex;
   align-items: center;
   gap: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.site-link__row:hover {
+  background: var(--hover);
+}
+
+.site-link__row .site-link__name:hover {
+  background: transparent;
 }
 
 .site-link__name {
