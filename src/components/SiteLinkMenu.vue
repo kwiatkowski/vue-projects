@@ -1,6 +1,6 @@
 <template>
   <!-- a popup on hover, as the report's – it can be entered; showing it fetches the Basic Auth password, ready for the lock -->
-  <HoverTip :anchor-class="`site-link${up ? ' site-link--up' : ''}`" interactive @show="loadPassword">
+  <HoverTip :anchor-class="`site-link${up ? ' site-link--up' : ''}${down ? ' site-link--down' : ''}`" interactive @show="loadPassword">
     <span :aria-label="`${label}: ${url}`" class="site-link__icon" role="button" tabindex="0">
       <slot />
     </span>
@@ -80,6 +80,9 @@
 
   /** the list checked the address (the staging) and it answered 200 – the icon in the accent colour */
   const up = computed(() => props.status?.code === 200)
+
+  /** checked, but no 200 – the icon red */
+  const down = computed(() => Boolean(props.status) && !up.value)
 
   /** the list's check, under the header */
   const statusText = computed(() => {
@@ -171,6 +174,11 @@
 .site-link:hover,
 .site-link--up {
   color: var(--accent-text);
+}
+
+.site-link--down,
+.site-link--down:hover {
+  color: var(--danger);
 }
 
 .site-link svg {
