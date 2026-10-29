@@ -134,7 +134,7 @@
                 type="button"
                 @click="pullReport"
               >
-                <component :is="pulling ? RefreshCw : Download" :class="{ spin: pulling }" /> {{ pulling ? 'Pobieram…' : 'Pobierz raport' }}
+                <RefreshCw :class="{ spin: pulling }" /> {{ pulling ? 'Aktualizuję raport…' : 'Aktualizuj raport' }}
               </button>
             </div>
 
@@ -188,7 +188,7 @@
                   type="button"
                   @click="startUpdate"
                 >
-                  <RefreshCw :class="{ spin: updateRunning }" /> {{ updateRunning ? 'Aktualizuję…' : scope ? UPDATE_LABELS[scope] : 'Wszystko aktualne' }}
+                  <component :is="updateRunning ? RefreshCw : ArrowUp" :class="{ spin: updateRunning }" /> {{ updateRunning ? 'Aktualizuję stronę…' : scope ? UPDATE_LABELS[scope] : 'Wszystko aktualne' }}
                 </button>
 
                 <span v-if="update.mode === 'wordpress'" class="faint">wtyczki, tłumaczenia i baza na produkcji (strona bez Bedrocka – jak „Aktualizuj” w panelu)</span>
@@ -655,7 +655,7 @@
 
 <script lang="ts" setup>
   import type { Flag, Project, ProjectInput, ReportPlugin, SiteReport, Status, TodoTask, UpdateState } from '@/types'
-  import { Activity, AlertTriangle, ArrowUpRight, Check, Copy, Cpu, Download, KeyRound, ListChecks, Minus, NotebookPen, PenLine, Plus, Puzzle, RefreshCw, Server, Trash2, X } from 'lucide-vue-next'
+  import { Activity, AlertTriangle, ArrowUp, ArrowUpRight, Check, Copy, Cpu, KeyRound, ListChecks, Minus, NotebookPen, PenLine, Plus, Puzzle, RefreshCw, Server, Trash2, X } from 'lucide-vue-next'
   import { type Component, computed, defineAsyncComponent, nextTick, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
   import StatusChip from '@/components/StatusChip.vue'

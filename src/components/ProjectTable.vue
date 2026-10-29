@@ -239,13 +239,13 @@
                     type="button"
                     @click="projects.runUpdate(project.id, scopeOf(project) ?? 'all')"
                   >
-                    <RefreshCw /> {{ projects.updating.has(project.id) ? 'Aktualizuję…' : UPDATE_LABELS[scopeOf(project) ?? 'all'] }}
+                    <ArrowUp /> {{ projects.updating.has(project.id) ? 'Aktualizuję stronę…' : UPDATE_LABELS[scopeOf(project) ?? 'all'] }}
                   </button>
 
-                  <!-- the site sends its report now – as "Pobierz raport" in the project's dialog -->
+                  <!-- the site sends its report now – as "Aktualizuj raport" in the project's dialog -->
                   <button class="menu__item" :disabled="pulling.has(project.id)" type="button" @click="pullReport(project.id)">
-                    <component :is="pulling.has(project.id) ? RefreshCw : Download" :class="{ spin: pulling.has(project.id) }" />
-                    {{ pulling.has(project.id) ? 'Pobieram…' : 'Pobierz raport' }}
+                    <RefreshCw :class="{ spin: pulling.has(project.id) }" />
+                    {{ pulling.has(project.id) ? 'Aktualizuję raport…' : 'Aktualizuj raport' }}
                   </button>
 
                   <button class="menu__item" type="button" @click="hide(); emit('open', project)">
@@ -330,7 +330,7 @@
 <script lang="ts" setup>
   import type { Category, Flag, Project, SortKey } from '@/types'
   import type { Group } from '@/utils/projects'
-  import { ArrowUp, ArrowUpRight, Check, ChevronDown, Download, FileText, FlaskConical, GripVertical, Laptop, Lock, Minus, RefreshCw, TriangleAlert } from 'lucide-vue-next'
+  import { ArrowUp, ArrowUpRight, Check, ChevronDown, FileText, FlaskConical, GripVertical, Laptop, Lock, Minus, RefreshCw, TriangleAlert } from 'lucide-vue-next'
   import { computed, ref } from 'vue'
   import CategoryMenu from '@/components/CategoryMenu.vue'
   import ReportSummary from '@/components/ReportSummary.vue'

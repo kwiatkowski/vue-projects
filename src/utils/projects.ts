@@ -232,7 +232,7 @@ export function updateScope (project: Project, latest: string | null): UpdateSco
 }
 
 export const UPDATE_LABELS: Record<UpdateScope, string> = {
-  all: 'Aktualizuj',
+  all: 'Aktualizuj stronę',
   translations: 'Aktualizuj tłumaczenia',
 }
 
