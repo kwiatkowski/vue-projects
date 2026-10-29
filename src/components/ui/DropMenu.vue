@@ -19,12 +19,12 @@
     <button
       v-else
       ref="trigger"
+      v-tip="title ? label : undefined"
       :aria-expanded="open"
       aria-haspopup="menu"
       :aria-label="label"
       :class="triggerClass"
       :disabled="disabled"
-      :title="title ? label : undefined"
       type="button"
       @click="toggle"
     >
@@ -54,6 +54,7 @@
   import { Ellipsis } from 'lucide-vue-next'
   import { nextTick, onBeforeUnmount, ref, useTemplateRef } from 'vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
+  import { vTip } from '@/directives/tip'
 
   /**
    * A "…" button with a small menu; items are `<button class="menu__item">` in the default slot.
@@ -69,7 +70,7 @@
     disabled?: boolean
     /** the label in a HoverTip, not the browser's title */
     tip?: boolean
-    /** the browser's title with the label – off when the trigger sits in a HoverTip of its own */
+    /** the label in a tooltip (v-tip) – off when the trigger sits in a HoverTip of its own */
     title?: boolean
     /** a class for the panel (it is rendered in <body>, out of the caller's scoped styles) */
     panelClass?: string

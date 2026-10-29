@@ -57,9 +57,9 @@
     <!-- next to the arrow, outside the trigger (a button can't hold a button) -->
     <button
       v-if="clearable && !disabled && model !== null"
+      v-tip="`Wyczyść: ${label}`"
       :aria-label="`Wyczyść: ${label}`"
       class="select-field__clear"
-      :title="`Wyczyść: ${label}`"
       type="button"
       @click="model = null"
     >
@@ -72,6 +72,7 @@
   import { Check, ChevronDown, Plus, Search, X } from 'lucide-vue-next'
   import { computed, ref } from 'vue'
   import DropMenu from '@/components/ui/DropMenu.vue'
+  import { vTip } from '@/directives/tip'
 
   /**
    * A dropdown in the app's style instead of a native select (which can't show colours): the options, the `option`

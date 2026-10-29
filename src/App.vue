@@ -15,6 +15,9 @@
     <ViewDialog />
 
     <ToastHost />
+
+    <!-- v-tip's tooltip, one for the whole app -->
+    <TipLayer />
   </div>
 </template>
 
@@ -24,6 +27,7 @@
   import CategoryDialog from '@/components/CategoryDialog.vue'
   import ProjectDialog from '@/components/ProjectDialog.vue'
   import SettingsDialog from '@/components/SettingsDialog.vue'
+  import TipLayer from '@/components/ui/TipLayer.vue'
   import ToastHost from '@/components/ui/ToastHost.vue'
   import ViewDialog from '@/components/ViewDialog.vue'
   import { config } from '@/config'

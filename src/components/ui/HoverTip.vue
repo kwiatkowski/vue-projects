@@ -31,6 +31,7 @@
 
 <script lang="ts" setup>
   import { nextTick, onBeforeUnmount, ref, useTemplateRef } from 'vue'
+  import { placeTip } from '@/utils/tip'
 
   /**
    * A tooltip in the app's style instead of the browser's `title`: `text`, or the `tip` slot for more lines.
@@ -46,12 +47,6 @@
   /** an interactive tip waits this long before closing – the pointer crosses the gap to it */
   const LINGER = 200
   let hideTimer: ReturnType<typeof setTimeout> | undefined
-
-  /** room kept from the screen's edges, the gap to the anchor (the triangle sits in it) */
-  const EDGE = 8
-  const GAP = 10
-  /** the triangle in a corner: this far from the bubble's side */
-  const CORNER = 14
 
   const anchor = useTemplateRef<HTMLElement>('anchor')
   const tip = useTemplateRef<HTMLElement>('tip')
@@ -88,28 +83,7 @@
       return
     }
 
-    const center = box.left + box.width / 2
-    let left = center - size.width / 2
-
-    // too close to an edge to centre it: the bubble goes the other way, its corner (and the triangle) at the anchor
-    if (left + size.width > window.innerWidth - EDGE) {
-      left = center + CORNER - size.width
-    } else if (left < EDGE) {
-      left = center - CORNER
-    }
-
-    left = Math.min(Math.max(left, EDGE), window.innerWidth - size.width - EDGE)
-
-    // the top bar and the page's sticky header cover the upper part of the screen – no room above there
-    const top = (document.querySelector('.head')?.getBoundingClientRect().bottom ?? 0) + EDGE
-
-    below.value = box.top - GAP - size.height < top
-    position.value = {
-      'left': `${left}px`,
-      'top': `${below.value ? box.bottom + GAP : box.top - GAP - size.height}px`,
-      // where the triangle points – the anchor's centre, kept off the rounded corners
-      '--arrow': `${Math.min(Math.max(center - left, CORNER), size.width - CORNER)}px`,
-    }
+    ;({ below: below.value, position: position.value } = placeTip(box, size))
   }
 
   function hide (): void {
@@ -179,71 +153,5 @@
   display: inline-flex;
   align-items: center;
   vertical-align: middle;
-}
-
-.tip {
-  position: fixed;
-  z-index: 60;
-  /* as wide as its content – near the screen's right edge a fixed box would otherwise squeeze and wrap */
-  width: max-content;
-  max-width: min(360px, calc(100vw - 16px));
-  padding: 7px 10px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius);
-  background: var(--tip-bg);
-  box-shadow: 0 2px 4px rgb(0 0 0 / 12%), 0 6px 16px rgb(0 0 0 / 14%);
-  color: var(--text);
-  font-size: 12px;
-  line-height: 1.45;
-  pointer-events: none;
-  animation: tip-in .12s ease-out;
-}
-
-/* the triangle: a square turned 45°, two of its borders showing – at the bottom (pointing down), on top when below */
-.tip::before {
-  position: absolute;
-  bottom: -6px;
-  left: var(--arrow, 50%);
-  width: 10px;
-  height: 10px;
-  border-right: 1px solid var(--line-strong);
-  border-bottom: 1px solid var(--line-strong);
-  background: var(--tip-bg);
-  translate: -50% 0;
-  rotate: 45deg;
-  content: '';
-}
-
-/* it can be entered: the pointer works in it, and an invisible bridge over the gap keeps it while crossing */
-.tip--interactive {
-  pointer-events: auto;
-}
-
-.tip--interactive::after {
-  position: absolute;
-  right: 0;
-  bottom: -12px;
-  left: 0;
-  height: 12px;
-  content: '';
-}
-
-.tip--interactive.tip--below::after {
-  top: -12px;
-  bottom: auto;
-}
-
-.tip--below::before {
-  top: -6px;
-  bottom: auto;
-  border: 0;
-  border-top: 1px solid var(--line-strong);
-  border-left: 1px solid var(--line-strong);
-}
-
-@keyframes tip-in {
-  from {
-    opacity: 0;
-  }
 }
 </style>

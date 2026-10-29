@@ -41,11 +41,11 @@
               <!-- kept when dragging is off (a filter) – just hidden, so the names don't move sideways -->
               <span
                 v-if="full && group.category"
+                v-tip="canDrag ? 'Przeciągnij kategorię' : undefined"
                 aria-hidden="true"
                 class="grip"
                 :class="{ 'grip--off': !canDrag }"
                 :draggable="canDrag ? 'true' : undefined"
-                :title="canDrag ? 'Przeciągnij kategorię' : undefined"
                 @dragend="endDrag"
                 @dragstart="startCategory($event, group.category.id)"
               ><GripVertical /></span>
@@ -81,11 +81,11 @@
 
             <a
               v-if="project.domains[0]"
+              v-tip="project.domains.join(', ')"
               class="site"
               :href="siteUrl(project.domains[0])"
               rel="noopener"
               target="_blank"
-              :title="project.domains.join(', ')"
               @click.stop
             >
               {{ project.name }}
@@ -121,9 +121,9 @@
 
               <span
                 v-if="project.version"
+                v-tip="versionTitle(project)"
                 class="cell-sub mono"
                 :class="{ latest: isLatest(project), warn: isOutdated(project) }"
-                :title="versionTitle(project)"
               >{{ project.version }}<ArrowUp v-if="isOutdated(project)" /></span>
             </span>
           </td>
@@ -158,11 +158,11 @@
           <td v-if="show('repo')" class="center" :class="cellChanged(project, 'repo')">
             <a
               v-if="project.repo"
+              v-tip="project.repo"
               class="chip chip--soft repo"
               :href="project.repo"
               rel="noopener"
               target="_blank"
-              :title="project.repo"
               @click.stop
             >{{ repoHost(project.repo) }}</a>
           </td>
@@ -289,11 +289,11 @@
           <div class="card__head">
             <a
               v-if="project.domains[0]"
+              v-tip="project.domains.join(', ')"
               class="site"
               :href="siteUrl(project.domains[0])"
               rel="noopener"
               target="_blank"
-              :title="project.domains.join(', ')"
               @click.stop
             >
               {{ project.name }} <ArrowUpRight class="site__icon" />
@@ -303,10 +303,10 @@
 
             <span
               v-if="projects.changed.has(project.id)"
+              v-tip="'Dane zaktualizowane'"
               aria-label="Zaktualizowano"
               class="refreshing"
               role="status"
-              title="Dane zaktualizowane"
             />
 
             <StatusChip v-if="show('status')" :status="project.status" />
@@ -344,6 +344,7 @@
   import StatusChip from '@/components/StatusChip.vue'
   import TodoChip from '@/components/TodoChip.vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
+  import { vTip } from '@/directives/tip'
   import { useColumnsStore } from '@/stores/columns'
   import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'

@@ -11,11 +11,23 @@
     <span class="top__space" />
 
     <template v-if="config.canManage">
-      <button class="btn btn--sm btn--outline" title="Nowa kategoria" type="button" @click="projects.editingCategory = 'new'">
+      <button
+        v-tip="'Nowa kategoria'"
+        aria-label="Nowa kategoria"
+        class="btn btn--sm btn--outline"
+        type="button"
+        @click="projects.editingCategory = 'new'"
+      >
         <FolderPlus /> <span class="top__label">Nowa kategoria</span>
       </button>
 
-      <button class="btn btn--sm btn--accent" title="Nowy projekt" type="button" @click="projects.editing = 'new'">
+      <button
+        v-tip="'Nowy projekt'"
+        aria-label="Nowy projekt"
+        class="btn btn--sm btn--accent"
+        type="button"
+        @click="projects.editing = 'new'"
+      >
         <Plus /> <span class="top__label">Nowy projekt</span>
       </button>
     </template>
@@ -23,8 +35,8 @@
     <!-- the owner's preview: says as whom, and leads back to the owner's view -->
     <button
       v-if="config.preview"
+      v-tip="'Wróć do swojego widoku'"
       class="btn btn--sm top__preview"
-      title="Wróć do swojego widoku"
       type="button"
       @click="viewAs('admin')"
     >
@@ -32,9 +44,9 @@
     </button>
 
     <button
+      v-tip="dark ? 'Jasny motyw' : 'Ciemny motyw'"
       :aria-label="dark ? 'Jasny motyw' : 'Ciemny motyw'"
       class="btn btn--icon btn--sm"
-      :title="dark ? 'Jasny motyw' : 'Ciemny motyw'"
       type="button"
       @click="toggleTheme"
     >
@@ -148,6 +160,7 @@
   import DropMenu from '@/components/ui/DropMenu.vue'
   import { useTheme } from '@/composables/theme'
   import { config } from '@/config'
+  import { vTip } from '@/directives/tip'
   import { useColumnsStore } from '@/stores/columns'
   import { useProjectsStore } from '@/stores/projects'
 

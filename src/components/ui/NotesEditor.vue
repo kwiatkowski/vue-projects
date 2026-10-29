@@ -4,10 +4,10 @@
       <button
         v-for="tool in TOOLS"
         :key="tool.name"
+        v-tip="tool.title"
         :aria-label="tool.title"
         :aria-pressed="editor.isActive(tool.name)"
         class="notes__tool"
-        :title="tool.title"
         type="button"
         @click="tool.run(editor)"
         @mousedown.prevent
@@ -30,6 +30,7 @@
   import { EditorContent, useEditor } from '@tiptap/vue-3'
   import { Bold, Code, Italic, List, ListChecks, ListOrdered, Strikethrough } from 'lucide-vue-next'
   import { ref, watch } from 'vue'
+  import { vTip } from '@/directives/tip'
 
   /**
    * The project's notes with simple formatting (the same editor as Todo's task notes) – bold, italic, strikethrough, code and lists (checklists too).

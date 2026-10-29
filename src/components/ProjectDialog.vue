@@ -41,9 +41,9 @@
 
               <button
                 v-if="form.domains.length > 1"
+                v-tip="'Usuń domenę'"
                 aria-label="Usuń domenę"
                 class="btn btn--icon btn--sm"
-                title="Usuń domenę"
                 type="button"
                 @click="form.domains.splice(index, 1)"
               ><X /></button>
@@ -232,9 +232,9 @@
                 <pre class="env__lines mono">{{ envLines }}</pre>
 
                 <button
+                  v-tip="'Kopiuj'"
                   :aria-label="`Kopiuj linie do ${envFile}`"
                   class="btn btn--icon btn--sm env__copy"
-                  title="Kopiuj"
                   type="button"
                   @click="copyEnv"
                 ><Copy /></button>
@@ -665,6 +665,7 @@
   import PasswordInput from '@/components/ui/PasswordInput.vue'
   import SelectField from '@/components/ui/SelectField.vue'
   import { config, TODO_TAB } from '@/config'
+  import { vTip } from '@/directives/tip'
   import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
