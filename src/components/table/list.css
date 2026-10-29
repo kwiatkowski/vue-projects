@@ -1,0 +1,85 @@
+/* the list – shared by its table (ProjectTable) and its cards on phones (ProjectCards); under .projects-list */
+
+.projects-list .site {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 550;
+  color: var(--text);
+}
+
+.projects-list .site:hover {
+  color: var(--accent-text);
+}
+
+.projects-list .site__icon {
+  width: 13px;
+  height: 13px;
+  color: var(--text-3);
+  opacity: 0;
+  transition: opacity .12s;
+}
+
+.projects-list .site:hover .site__icon,
+.projects-list .site:focus-visible .site__icon {
+  opacity: 1;
+}
+
+.projects-list .site--plain {
+  color: var(--text-2);
+}
+
+.projects-list .cell-sub {
+  display: block;
+  margin-top: 1px;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+/* the newest WordPress; an older one with a newer out */
+.projects-list .latest {
+  color: var(--positive);
+  font-weight: 600;
+}
+
+.projects-list .outdated {
+  color: var(--warn);
+  font-weight: 600;
+}
+
+/* suspended – greyed out, as in the spreadsheet */
+.projects-list .row--gone {
+  opacity: .5;
+}
+
+/*
+ * changed by a refresh – for 1 s, the changed rows one under another (the store), the row has the hover colour and
+ * its text a bit greyed out; the cells that changed are blurred under a spinner. Then the colour fades out.
+ */
+.projects-list .row--changed td,
+.projects-list .card.row--changed {
+  background: var(--hover);
+  color: var(--text-3);
+}
+
+.projects-list .row--changed td > *,
+.projects-list .card.row--changed > * {
+  opacity: .6;
+}
+
+.projects-list .row--fading td,
+.projects-list .card.row--fading {
+  animation: row-fading 1s ease-out;
+}
+
+@keyframes row-fading {
+  from {
+    background: var(--hover);
+  }
+}
+
+@media (max-width: 900px) {
+  .projects-list .site__icon {
+    opacity: 1;
+  }
+}

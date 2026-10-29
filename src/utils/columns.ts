@@ -3,7 +3,7 @@
  * the public list (access data, the owner's own work): the server doesn't send their data to anyone else.
  */
 export const COLUMN_KEYS = [
-  'name', 'status', 'server', 'php', 'engine', 'theme', 'repo', 'deploy', 'bedrock', 'security',
+  'name', 'status', 'uptime', 'server', 'php', 'engine', 'theme', 'repo', 'deploy', 'bedrock', 'security',
   'local', 'stage', 'acf', 'miModal', 'todo', 'report',
 ] as const
 
@@ -20,6 +20,7 @@ export interface ColumnDef {
 export const COLUMNS: ColumnDef[] = [
   { key: 'name', label: 'Projekt', section: 'Podstawowe' },
   { key: 'status', label: 'Status', section: 'Podstawowe' },
+  { key: 'uptime', label: 'Dostępność', section: 'Podstawowe' },
   { key: 'server', label: 'Serwer', section: 'Podstawowe', private: true },
   { key: 'php', label: 'PHP', section: 'Podstawowe' },
   { key: 'engine', label: 'Silnik', section: 'Podstawowe' },

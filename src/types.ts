@@ -94,6 +94,10 @@ export interface Project extends Record<Flag, boolean> {
   hasRecaptchaSecret?: boolean
   /** what the staging answered at the list's last pull – 200 means it works */
   staging?: StagingCheck | null
+  /** the home page over 30 days: availability in % (null – not checked yet) – the "Dostępność" column */
+  uptime?: number | null
+  /** the home page's mean response time over the last day, in ms */
+  responseMs?: number | null
   updatedAt: string | null
   /** from the last report (not on the public list): the parent theme, the themes' versions and authors, what sent it */
   parentTheme?: string | null
@@ -199,11 +203,53 @@ export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'r
 /** the secrets kept encrypted: the panel's password, HTTP Basic Auth's, reCAPTCHA's secret key */
 export type PasswordKind = 'panel' | 'auth' | 'staging' | 'recaptcha'
 
-export type SortKey = 'name' | 'status' | 'server' | 'php' | 'version' | 'theme' | 'reportedAt'
+export type SortKey = 'name' | 'status' | 'uptime' | 'server' | 'php' | 'version' | 'theme' | 'reportedAt'
 
 /** the staging's check: its HTTP code (0 – no answer, and why: the plugin's ReportPuller::failure()) */
 export interface StagingCheck {
   code: number
   checkedAt: string
   error?: 'dns' | 'refused' | 'timeout' | 'ssl' | 'redirects' | 'other'
+}
+
+/** one look at a home page or staging (History) */
+export interface HistoryCheck {
+  at: string
+  up: boolean
+  /** HTTP code; 0 – no answer */
+  code: number
+  ms: number | null
+}
+
+/** a run of failed checks – `to` null: still down */
+export interface Outage {
+  from: string
+  to: string | null
+  minutes: number
+  code: number
+  error: StagingCheck['error'] | null
+}
+
+export interface TargetHistory {
+  uptime: { day: number | null, week: number | null, month: number | null }
+  /** the mean response time of the last day and week, in ms */
+  ms: number | null
+  msWeek: number | null
+  /** the last day's checks, oldest first */
+  recent: HistoryCheck[]
+  /** 30 days, newest first */
+  outages: Outage[]
+}
+
+/** what happened to a project: status – down / back; change – what a report brought; update, alert, mute */
+export interface HistoryEvent {
+  type: string
+  at: string
+  data: Record<string, unknown>
+}
+
+export interface ProjectHistory {
+  targets: { home?: TargetHistory, staging?: TargetHistory }
+  /** newest first */
+  events: HistoryEvent[]
 }

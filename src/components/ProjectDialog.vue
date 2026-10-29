@@ -9,7 +9,7 @@
   >
     <!-- two columns: the name and what defines the project on the left, always in view; the details on the right, in
          tabs that start level with the name -->
-    <div class="cols">
+    <div class="cols project-form">
       <div class="col">
         <div class="name">
           <input
@@ -114,483 +114,18 @@
           </button>
         </div>
 
-        <div v-show="tab === 'report'" class="tab-panel" role="tabpanel">
-          <template v-if="project">
-
-            <div class="report__head">
-              <p class="muted report__state">
-                <template v-if="project.reportedAt">
-                  Ostatni: <strong class="mono">{{ formatDateTime(project.reportedAt) }}</strong> <span class="faint">{{ ago(project.reportedAt) }}</span>
-                </template>
-
-                <template v-else>Strona jeszcze nic nie wysłała.</template>
-              </p>
-
-              <!-- the list asks the site for its report now, without waiting for the cron -->
-              <button
-                v-if="project.token"
-                class="btn btn--sm btn--outline"
-                :disabled="pulling"
-                type="button"
-                @click="pullReport"
-              >
-                <RefreshCw :class="{ spin: pulling }" /> {{ pulling ? 'Aktualizuję raport…' : 'Aktualizuj raport' }}
-              </button>
-            </div>
-
-            <dl v-if="siteReport?.users || siteReport?.plugins" class="site">
-              <template v-if="siteReport.users">
-                <dt>Użytkownicy</dt>
-
-                <dd>
-                  <strong class="mono">{{ siteReport.users.total }}</strong>
-                  <span v-if="siteReport.users.online !== null" class="site__online"><span class="dot" /> {{ siteReport.users.online }} online</span>
-                  <span v-for="role in siteReport.users.roles" :key="role.role" class="chip chip--soft">{{ role.name }} <span class="mono">{{ role.count }}</span></span>
-                </dd>
-              </template>
-
-              <template v-if="siteReport.plugins">
-                <dt>Wtyczki</dt>
-
-                <dd>
-                  <strong class="mono">{{ siteReport.plugins.length }}</strong>
-                  <span class="faint">{{ activePlugins }} aktywnych</span>
-                  <span v-if="pluginUpdates.length > 0" class="chip chip--warn">{{ pluginUpdates.length }} do aktualizacji</span>
-                  <span v-else class="site__ok">aktualne</span>
-                </dd>
-
-                <dd class="site__plugins">
-                  <details :open="pluginUpdates.length > 0">
-                    <summary class="faint">Lista wtyczek</summary>
-
-                    <ul class="plugins">
-                      <li v-for="plugin in sortedPlugins" :key="plugin.file" class="plugin" :class="{ 'plugin--off': !plugin.active }">
-                        <span class="plugin__name">{{ plugin.name }}</span>
-                        <span v-if="plugin.mu" class="faint">MU</span>
-                        <span v-else-if="!plugin.active" class="faint">nieaktywna</span>
-
-                        <span class="plugin__version mono">
-                          {{ plugin.version }}<template v-if="plugin.update"> → <strong>{{ plugin.update }}</strong></template>
-                        </span>
-                      </li>
-                    </ul>
-                  </details>
-                </dd>
-              </template>
-            </dl>
-
-            <!-- composer update on production, composer.lock committed and pushed – the other environments pull it -->
-            <div v-if="update" class="update">
-              <div class="update__head">
-                <button
-                  class="btn btn--sm btn--accent"
-                  :disabled="!update.available || updateRunning || busy || !scope"
-                  type="button"
-                  @click="startUpdate"
-                >
-                  <component :is="updateRunning ? RefreshCw : ArrowUp" :class="{ spin: updateRunning }" /> {{ updateRunning ? 'Aktualizuję stronę…' : scope ? UPDATE_LABELS[scope] : 'Wszystko aktualne' }}
-                </button>
-
-                <span v-if="update.mode === 'wordpress'" class="faint">wtyczki, tłumaczenia i baza na produkcji (strona bez Bedrocka – jak „Aktualizuj” w panelu)</span>
-                <span v-else class="faint">na produkcji <code>composer update</code>, baza, tłumaczenia i cache (jak <code>www_update</code>), commit i push – na innych środowiskach <code>git pull</code> i <code>composer install</code></span>
-              </div>
-
-              <p v-if="!update.available" class="update__note faint">{{ update.reason }}</p>
-              <p v-else-if="update.state === 'done' && update.mode === 'wordpress'" class="update__note update__note--ok">Zaktualizowano {{ formatDateTime(update.finishedAt) }}.</p>
-              <p v-else-if="update.state === 'done'" class="update__note update__note--ok">Zaktualizowano {{ formatDateTime(update.finishedAt) }} – zmiany są w repozytorium.</p>
-              <p v-else-if="update.state === 'nothing' && update.mode === 'wordpress'" class="update__note faint">{{ formatDateTime(update.finishedAt) }}: wtyczki i tłumaczenia są aktualne.</p>
-              <p v-else-if="update.state === 'nothing'" class="update__note faint">{{ formatDateTime(update.finishedAt) }}: Composer nie znalazł nowszych wersji w ramach wymagań z <code>composer.json</code> (np. <code>^4</code> nie weźmie 5.0, wtyczki z prywatnych repozytoriów trzeba najpierw podbić tam).</p>
-              <p v-else-if="update.state === 'failed'" class="update__note update__note--failed">Aktualizacja się nie udała – szczegóły w logu.</p>
-
-              <details v-if="update.log" :open="update.state === 'failed' || updateRunning">
-                <summary class="faint">Log</summary>
-                <pre class="update__log mono">{{ update.log }}</pre>
-              </details>
-            </div>
-
-            <template v-if="project.token">
-              <!-- Bedrock reads .env, a plain WordPress the constant in wp-config.php -->
-              <div class="env-head">
-                <p class="muted">
-                  Dodaj do pliku <code>{{ envFile }}</code> strony<template v-if="envTarget === 'wordpress'">, przed „That’s all, stop editing”</template>:
-                </p>
-
-                <div aria-label="Rodzaj instalacji" class="seg" role="radiogroup">
-                  <button
-                    v-for="option in ENV_TARGETS"
-                    :key="option.value"
-                    :aria-checked="envTarget === option.value"
-                    role="radio"
-                    type="button"
-                    @click="envTarget = option.value"
-                  >{{ option.label }}</button>
-                </div>
-              </div>
-
-              <!-- the copy button sits in the block, top right, and shows on hover -->
-              <div class="env">
-                <pre class="env__lines mono">{{ envLines }}</pre>
-
-                <button
-                  v-tip="'Kopiuj'"
-                  :aria-label="`Kopiuj linie do ${envFile}`"
-                  class="btn btn--icon btn--sm env__copy"
-                  type="button"
-                  @click="copyEnv"
-                ><Copy /></button>
-              </div>
-            </template>
-
-            <div class="report__actions">
-              <button class="btn btn--sm btn--warn" :disabled="busy" type="button" @click="newToken">
-                <KeyRound /> {{ project.token ? 'Nowy token' : 'Utwórz token' }}
-              </button>
-
-              <button
-                v-if="project.token && !confirmToken"
-                class="btn btn--sm btn--danger"
-                :disabled="busy"
-                type="button"
-                @click="confirmToken = true"
-              >
-                <Trash2 /> Usuń token
-              </button>
-            </div>
-
-            <!-- asked here, in the dialog – as deleting the project -->
-            <div v-if="project.token && confirmToken" class="alert">
-              <div>Usunąć token? Strona przestanie wysyłać raport – ostatni raport zostaje, a pola z raportu znów da się edytować.</div>
-
-              <button class="btn btn--sm" type="button" @click="confirmToken = false">Anuluj</button>
-
-              <button class="btn btn--danger-solid btn--sm" :disabled="busy" type="button" @click="deleteToken">
-                <Trash2 /> Tak, usuń token
-              </button>
-            </div>
-          </template>
-
-          <p v-else class="faint">Token raportu pojawi się po utworzeniu projektu.</p>
-        </div>
-
-        <div v-show="tab === 'server'" class="tab-panel" role="tabpanel">
-
-          <div class="stack">
-            <label class="field">
-              <span>Hosting</span>
-
-              <CopyInput
-                v-model="form.server"
-                placeholder="hostido.pl"
-                tip="Kopiuj hosting"
-                type="text"
-                what="Hosting"
-              />
-            </label>
-
-            <label class="field">
-              <span>Adres panelu</span>
-
-              <CopyInput
-                v-model="form.serverUrl"
-                placeholder="https://…"
-                tip="Kopiuj adres panelu"
-                type="url"
-                what="Adres panelu"
-              />
-            </label>
-
-            <label class="field">
-              <span>Nazwa konta</span>
-
-              <CopyInput
-                v-model="form.serverAccount"
-                class="mono"
-                tip="Kopiuj nazwę konta"
-                type="text"
-                what="Nazwa konta"
-              />
-            </label>
-          </div>
-
-          <!-- the TLS certificate as the list saw it at its last pull – read only -->
-          <fieldset v-if="project?.domains.length" class="group ssl">
-            <legend class="eyebrow">Certyfikat SSL <span class="access__note">– sprawdza lista przy pobieraniu raportów</span></legend>
-
-            <div v-if="project.ssl" class="grid">
-              <label class="field">
-                <span>Stan <span class="reported-mark">*</span></span>
-
-                <input
-                  class="input"
-                  :class="`ssl__state--${sslInfo?.state}`"
-                  disabled
-                  type="text"
-                  :value="sslInfo?.text"
-                >
-              </label>
-
-              <label class="field">
-                <span>Ważny do <span class="reported-mark">*</span></span>
-                <input class="input mono" disabled type="text" :value="sslInfo?.validTo">
-              </label>
-
-              <label class="field">
-                <span>Wystawca <span class="reported-mark">*</span></span>
-                <input class="input" disabled type="text" :value="project.ssl.issuer ?? '–'">
-              </label>
-
-              <label class="field">
-                <span>Sprawdzono <span class="reported-mark">*</span></span>
-                <input class="input mono" disabled type="text" :value="formatDateTime(project.ssl.checkedAt)">
-              </label>
-            </div>
-
-            <p v-else class="faint">Lista jeszcze nie sprawdzała certyfikatu – sprawdzi go przy najbliższym pobieraniu raportów.</p>
-          </fieldset>
-        </div>
-
-        <div v-show="tab === 'tech'" class="tab-panel" role="tabpanel">
-          <div class="stack">
-            <label class="field">
-              <span>Silnik <span class="reported-mark">*</span></span>
-
-              <SelectField
-                :disabled="locked('engine')"
-                label="Silnik"
-                :model-value="form.engine || null"
-                :options="engineOptions"
-                @update:model-value="form.engine = $event ?? ''"
-              />
-            </label>
-
-            <label class="field">
-              <span>Wersja <span class="reported-mark">*</span></span>
-
-              <SelectField
-                custom
-                :disabled="locked('version')"
-                label="Wersja"
-                :model-value="form.version || null"
-                :options="versionOptions"
-                searchable
-                @update:model-value="form.version = $event ?? ''"
-              >
-                <template #option="{ option }"><span class="mono">{{ option.label }}</span></template>
-              </SelectField>
-            </label>
-
-            <label class="field">
-              <span>Motyw <span class="reported-mark">*</span></span>
-              <input v-model.trim="form.theme" class="input" :disabled="locked('theme')" type="text">
-            </label>
-
-            <label class="field">
-              <span>PHP <span class="reported-mark">*</span></span>
-
-              <SelectField
-                custom
-                :disabled="locked('php')"
-                label="PHP"
-                :model-value="form.php || null"
-                :options="phpOptions"
-                searchable
-                @update:model-value="form.php = $event ?? ''"
-              >
-                <template #option="{ option }"><span class="mono">{{ option.label }}</span></template>
-              </SelectField>
-            </label>
-          </div>
-        </div>
-
-        <div v-show="tab === 'access'" class="tab-panel" role="tabpanel">
-          <!-- one section per environment: its addresses (open, copy), then its logins -->
-          <div class="access">
-            <!-- the panel's login and password – the same on production, staging and the local copy -->
-            <fieldset class="group access__group">
-              <legend class="eyebrow">Logowanie do panelu <span class="access__note">– wszystkie środowiska</span></legend>
-
-              <div class="grid">
-                <label class="field">
-                  <span>Login</span>
-
-                  <CopyInput
-                    v-model="form.login"
-                    autocomplete="off"
-                    class="mono"
-                    tip="Kopiuj login"
-                    type="text"
-                    what="Login"
-                  />
-                </label>
-
-                <label class="field">
-                  <span>Hasło</span>
-                  <PasswordInput v-model="password" v-model:shown="showPassword" :loading="passwordLoading" what="Hasło" />
-                </label>
-              </div>
-            </fieldset>
-
-            <fieldset v-for="group in ACCESS_GROUPS" :key="group.key" class="group access__group">
-              <legend class="eyebrow">{{ group.label }}</legend>
-
-              <div :class="group.links.length > 1 ? 'grid' : 'stack'">
-                <label v-for="link in group.links" :key="link.field" class="field">
-                  <span>{{ link.label }}</span>
-
-                  <span class="input-row input-row--inside input-row--two">
-                    <input v-model.trim="form[link.field]" class="input" :placeholder="link.placeholder" type="url">
-
-                    <template v-if="form[link.field]">
-                      <HoverTip anchor-class="field-icon field-icon--second" text="Otwórz w nowej karcie">
-                        <a
-                          :aria-label="`Otwórz: ${group.label} – ${link.label}`"
-                          class="btn btn--icon btn--sm input-copy"
-                          :href="form[link.field] ?? undefined"
-                          rel="noopener"
-                          target="_blank"
-                        ><ArrowUpRight /></a>
-                      </HoverTip>
-
-                      <HoverTip anchor-class="field-icon" text="Kopiuj adres">
-                        <button
-                          :aria-label="`Kopiuj: ${group.label} – ${link.label}`"
-                          class="btn btn--icon btn--sm input-copy"
-                          type="button"
-                          @click="copy(form[link.field], `${group.label} – ${link.label}`)"
-                        ><Copy /></button>
-                      </HoverTip>
-                    </template>
-                  </span>
-                </label>
-              </div>
-
-              <template v-if="group.key === 'production'">
-                <!-- a site behind HTTP Basic Auth: the list fetches its report with these -->
-                <div class="grid">
-                  <label class="field">
-                    <span>Basic Auth – login</span>
-
-                    <CopyInput
-                      v-model="form.authUser"
-                      autocomplete="off"
-                      class="mono"
-                      tip="Kopiuj login Basic Auth"
-                      type="text"
-                      what="Login Basic Auth"
-                    />
-                  </label>
-
-                  <label class="field">
-                    <span>Basic Auth – hasło</span>
-                    <PasswordInput v-model="authPassword" v-model:shown="showAuthPassword" :loading="authPasswordLoading" what="Hasło Basic Auth" />
-                  </label>
-                </div>
-              </template>
-
-              <!-- the staging behind HTTP Basic Auth: the list checks it with these (green Stage icon when it answers 200) -->
-              <div v-if="group.key === 'staging'" class="grid">
-                <label class="field">
-                  <span>Basic Auth – login</span>
-
-                  <CopyInput
-                    v-model="form.stagingAuthUser"
-                    autocomplete="off"
-                    class="mono"
-                    tip="Kopiuj login Basic Auth stagingu"
-                    type="text"
-                    what="Login Basic Auth stagingu"
-                  />
-                </label>
-
-                <label class="field">
-                  <span>Basic Auth – hasło</span>
-                  <PasswordInput v-model="stagingPassword" v-model:shown="showStagingPassword" :loading="stagingPasswordLoading" what="Hasło Basic Auth stagingu" />
-                </label>
-              </div>
-            </fieldset>
-          </div>
-        </div>
+        <div v-show="tab === 'report'" class="tab-panel" role="tabpanel"><ReportTab /></div>
+        <div v-show="tab === 'history'" class="tab-panel" role="tabpanel"><HistoryTab :active="tab === 'history'" /></div>
+        <div v-show="tab === 'server'" class="tab-panel" role="tabpanel"><ServerTab /></div>
+        <div v-show="tab === 'tech'" class="tab-panel" role="tabpanel"><TechTab /></div>
+        <div v-show="tab === 'access'" class="tab-panel" role="tabpanel"><AccessTab /></div>
+        <div v-show="tab === 'integrations'" class="tab-panel" role="tabpanel"><IntegrationsTab /></div>
 
         <div v-show="tab === 'notes'" class="tab-panel" role="tabpanel">
           <NotesEditor :max-length="5000" :model-value="form.notes ?? ''" placeholder="Notatki" @update:model-value="form.notes = $event" />
         </div>
 
-        <div v-show="tab === 'todo'" class="tab-panel" role="tabpanel">
-
-          <label class="field">
-            <span>Powiązany projekt w Todo – jego otwarte zadania widać na liście</span>
-
-            <SelectField v-model="form.todoProject" label="Projekt w Todo" :options="todoOptions">
-              <template #option="{ option }">
-                <span class="todo-option"><span class="todo-option__dot" :style="{ background: todoColor(option.value) }" />{{ option.label }}</span>
-              </template>
-            </SelectField>
-          </label>
-
-          <p v-if="form.todoProject && form.todoProject !== project?.todoProject" class="faint">Zadania pokażą się po zapisaniu.</p>
-
-          <template v-else-if="project?.todo">
-            <p v-if="tasksLoading" class="faint">Wczytuję zadania…</p>
-            <p v-else-if="tasks.length === 0" class="faint">Brak otwartych zadań.</p>
-
-            <ul v-else class="tasks">
-              <li v-for="task in tasks" :key="task.id" class="task" :class="`p-${task.priority}`">
-                <span class="task__check" :class="{ 'task__check--doing': task.status === 'doing' }" />
-                <span class="task__title">{{ task.title }}</span>
-
-                <span v-if="task.due" class="task__due mono" :class="{ 'task__due--late': task.due < today }">
-                  {{ formatDay(task.due) }}<template v-if="task.time"> {{ task.time }}</template>
-                </span>
-              </li>
-            </ul>
-
-            <a class="btn btn--sm btn--outline tasks__open" :href="project.todo.url" :target="TODO_TAB">
-              <ListChecks /> Otwórz w Todo
-            </a>
-          </template>
-        </div>
-
-        <div v-show="tab === 'integrations'" class="tab-panel" role="tabpanel">
-          <!-- reCAPTCHA v3: the site key, and the secret one kept encrypted like the passwords -->
-          <fieldset class="group">
-            <legend class="eyebrow">reCAPTCHA v3</legend>
-
-            <div class="stack">
-              <label class="field">
-                <span>Klucz witryny</span>
-
-                <CopyInput
-                  v-model="form.recaptchaSiteKey"
-                  autocomplete="off"
-                  class="mono"
-                  tip="Kopiuj klucz witryny"
-                  type="text"
-                  what="Klucz witryny reCAPTCHA"
-                />
-              </label>
-
-              <label class="field">
-                <span>Klucz tajny</span>
-                <PasswordInput v-model="recaptchaSecret" v-model:shown="showRecaptchaSecret" :loading="recaptchaSecretLoading" what="Klucz tajny reCAPTCHA" />
-              </label>
-            </div>
-
-            <!-- where the site uses reCAPTCHA (the last report) – and whether with these keys -->
-            <ul v-if="recaptchaPlaces.length > 0" class="recaptcha-places">
-              <li v-for="item in recaptchaPlaces" :key="item.place" :class="`recaptcha-places__item--${item.tone}`">
-                <component :is="item.tone === 'ok' ? Check : (item.tone === 'bad' ? X : Minus)" />
-                <span>{{ item.label }}</span>
-                <span class="faint">{{ item.text }}</span>
-              </li>
-            </ul>
-
-            <template v-else-if="project?.reportedAt">
-              <p v-if="project.recaptcha" class="faint recaptcha-places__none">Raport nie widzi na stronie Contact Form 7 ani Wordfence.</p>
-              <p v-else class="faint recaptcha-places__none">Raport strony jeszcze tego nie sprawdza ({{ project.reporter ?? 'starsza wersja' }}) – potrzebny plugin_meden 1.15.0.</p>
-            </template>
-          </fieldset>
-
-        </div>
+        <div v-show="tab === 'todo'" class="tab-panel" role="tabpanel"><TodoTab /></div>
       </div>
     </div>
 
@@ -654,23 +189,31 @@
 </template>
 
 <script lang="ts" setup>
-  import type { Flag, Project, ProjectInput, ReportPlugin, SiteReport, Status, TodoTask, UpdateState } from '@/types'
-  import { Activity, AlertTriangle, ArrowUp, ArrowUpRight, Check, Copy, Cpu, KeyRound, ListChecks, Minus, NotebookPen, PenLine, Plus, Puzzle, RefreshCw, Server, Trash2, X } from 'lucide-vue-next'
-  import { type Component, computed, defineAsyncComponent, nextTick, onBeforeUnmount, ref, useTemplateRef, watch } from 'vue'
+  import type { Project, SiteReport, Status } from '@/types'
+  import { Activity, AlertTriangle, Check, Cpu, History, KeyRound, ListChecks, NotebookPen, PenLine, Plus, Puzzle, Server, Trash2, X } from 'lucide-vue-next'
+  import { type Component, computed, defineAsyncComponent, nextTick, provide, ref, useTemplateRef, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
+  import AccessTab from '@/components/project/AccessTab.vue'
+  import { blank, FLAG_LABELS, type Form, fromProject, type LockedField, projectFormKey, REPORTED_FLAGS, TEXT_FIELDS } from '@/components/project/form'
+  import HistoryTab from '@/components/project/HistoryTab.vue'
+  import IntegrationsTab from '@/components/project/IntegrationsTab.vue'
+  import ReportTab from '@/components/project/ReportTab.vue'
+  import { useSecrets } from '@/components/project/secrets'
+  import ServerTab from '@/components/project/ServerTab.vue'
+  import TechTab from '@/components/project/TechTab.vue'
+  import TodoTab from '@/components/project/TodoTab.vue'
   import StatusChip from '@/components/StatusChip.vue'
   import BaseDialog from '@/components/ui/BaseDialog.vue'
   import CopyInput from '@/components/ui/CopyInput.vue'
-  import HoverTip from '@/components/ui/HoverTip.vue'
-  import PasswordInput from '@/components/ui/PasswordInput.vue'
   import SelectField from '@/components/ui/SelectField.vue'
-  import { config, TODO_TAB } from '@/config'
   import { vTip } from '@/directives/tip'
   import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
-  import { ago, bareDomain, formatDateTime, formatDay, sslDaysLeft, sslState, STATUS_LABELS, UPDATE_LABELS, updateScope } from '@/utils/projects'
+  import { bareDomain, STATUS_LABELS } from '@/utils/projects'
+  import '@/components/project/project-form.css'
 
+  /** The project's dialog: the name and what defines the project on the left, the tabs (components/project/) right. */
   const projects = useProjectsStore()
   const notify = useNotifyStore()
 
@@ -679,48 +222,15 @@
   const NotesEditor = defineAsyncComponent(loadNotesEditor)
   setTimeout(() => void loadNotesEditor().catch(() => {}), 3000)
 
-  const FLAG_LABELS: Record<Flag, string> = {
-    deploy: 'Deploy (git na produkcji)',
-    bedrock: 'Bedrock',
-    security: 'Wordfence',
-    acf: 'ACF',
-    miModal: 'MI Modal',
-  }
-
-  /** the flags a site's report sets – a star by them */
-  const REPORTED_FLAGS = new Set<Flag>(['deploy', 'bedrock', 'security', 'acf', 'miModal'])
-
-  type Form = Required<Omit<ProjectInput, 'status'>> & { status: Status | null }
-
-  const TEXT_FIELDS = [
-    'server', 'serverUrl', 'serverAccount', 'php', 'engine', 'version', 'theme', 'repo', 'notes',
-    'adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login', 'authUser', 'stagingAuthUser', 'recaptchaSiteKey',
-  ] as const
-
-  // ---- the dropdowns' options
-
   const statusOptions = (Object.keys(STATUS_LABELS) as Status[]).map(value => ({ value, label: STATUS_LABELS[value] }))
   const categoryOptions = computed(() => projects.sortedCategories.map(category => ({ value: category.id, label: category.name })))
-  const todoOptions = computed(() => projects.todoProjects.map(todo => ({ value: todo.id, label: todo.name })))
-  const todoColor = (id: number) => projects.todoProjects.find(todo => todo.id === id)?.color ?? 'transparent'
 
-  /** what's known, newest first – with the project's own value, even an unusual one, so it isn't lost */
-  function versions (...values: Array<string | null | undefined>): Array<{ value: string, label: string }> {
-    return [...new Set(values.filter((value): value is string => typeof value === 'string' && value !== ''))]
-      .toSorted((a, b) => b.localeCompare(a, undefined, { numeric: true }))
-      .map(value => ({ value, label: value }))
-  }
-
-  const engineOptions = computed(() => versions('wordpress', form.value.engine).toSorted((a, b) => a.value === 'wordpress' ? -1 : (b.value === 'wordpress' ? 1 : 0)))
-  // every WordPress since 5.0, plus what the projects run (an older one isn't lost)
-  const versionOptions = computed(() => versions(projects.latestWordpress, ...config.wordpressVersions, form.value.version, ...projects.items.map(item => item.version)))
-  const phpOptions = computed(() => versions('7.4', '8.0', '8.1', '8.2', '8.3', '8.4', '8.5', form.value.php, ...projects.items.map(item => item.php)))
-
-  type Tab = 'report' | 'server' | 'tech' | 'access' | 'integrations' | 'notes' | 'todo'
+  type Tab = 'report' | 'history' | 'server' | 'tech' | 'access' | 'integrations' | 'notes' | 'todo'
 
   /** the right column's tabs; `fields` – what a change there marks the tab with */
   const TABS: Array<{ key: Tab, label: string, icon: Component, fields: string[] }> = [
     { key: 'report', label: 'Raport strony', icon: Activity, fields: [] },
+    { key: 'history', label: 'Historia', icon: History, fields: [] },
     { key: 'server', label: 'Serwer', icon: Server, fields: ['server', 'serverUrl', 'serverAccount'] },
     { key: 'tech', label: 'Technologia', icon: Cpu, fields: ['engine', 'version', 'theme', 'php'] },
     { key: 'access', label: 'Dostęp', icon: KeyRound, fields: ['adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login', 'authUser', 'stagingAuthUser'] },
@@ -737,50 +247,7 @@
     const fields = TABS.find(item => item.key === key)?.fields ?? []
     const changed = fields.some(field => JSON.stringify((form.value as Record<string, unknown>)[field]) !== JSON.stringify(before[field]))
 
-    return changed || (key === 'access' && accessPasswordsChanged.value) || (key === 'integrations' && recaptchaSecret.value !== savedRecaptchaSecret.value)
-  }
-
-  /** the addresses under "Dostęp" – each with a button that opens it */
-  type AccessField = 'adminUrl' | 'stagingUrl' | 'stagingAdminUrl' | 'localUrl' | 'localAdminUrl'
-
-  /** the Access tab: one section per environment, its addresses (the logins follow in the template) */
-  const ACCESS_GROUPS: Array<{ key: 'production' | 'staging' | 'local', label: string, links: Array<{ field: AccessField, label: string, placeholder: string }> }> = [
-    { key: 'production', label: 'Produkcja', links: [
-      { field: 'adminUrl', label: 'Panel', placeholder: 'https://…/wp/wp-login.php' },
-    ] },
-    { key: 'staging', label: 'Staging', links: [
-      { field: 'stagingUrl', label: 'Adres', placeholder: 'https://….medendev.eu/' },
-      { field: 'stagingAdminUrl', label: 'Panel', placeholder: 'https://…/wp/wp-login.php' },
-    ] },
-    { key: 'local', label: 'Lokalnie', links: [
-      { field: 'localUrl', label: 'Adres', placeholder: 'https://….local/' },
-      { field: 'localAdminUrl', label: 'Panel', placeholder: 'https://….local/wp/wp-login.php' },
-    ] },
-  ]
-
-  function blank (): Form {
-    return {
-      name: '',
-      domains: [''],
-      status: null,
-      categoryId: null,
-      todoProject: null,
-      ...Object.fromEntries(TEXT_FIELDS.map(field => [field, ''])),
-      ...Object.fromEntries(FLAGS.map(flag => [flag, false])),
-    } as Form
-  }
-
-  function fromProject (project: Project): Form {
-    const form = blank()
-
-    for (const key of Object.keys(form) as Array<keyof Form>) {
-      const value = project[key as keyof Project]
-      ;(form as Record<string, unknown>)[key] = value ?? (typeof form[key] === 'string' ? '' : form[key])
-    }
-
-    form.domains = project.domains.length > 0 ? [...project.domains] : ['']
-
-    return form
+    return changed || (key === 'access' && secrets.accessChanged.value) || (key === 'integrations' && secrets.changed('recaptcha'))
   }
 
   const open = computed({
@@ -798,10 +265,20 @@
   const initial = ref('')
   const nameError = ref('')
   const confirmDelete = ref(false)
-  const confirmToken = ref(false)
   const busy = ref(false)
   const nameInput = useTemplateRef<HTMLInputElement>('nameInput')
   const dialog = useTemplateRef<InstanceType<typeof BaseDialog>>('dialog')
+  const secrets = useSecrets()
+  const siteReport = ref<SiteReport | null>(null)
+
+  /** users and plugins from the site's last report – fetched when the dialog opens */
+  async function loadReport (target: Project): Promise<void> {
+    siteReport.value = null
+
+    if (target.reportedAt) {
+      siteReport.value = (await projectsApi.report(target.id).catch(() => null))?.report ?? null
+    }
+  }
 
   // a different project (or a new one) fills the form – a fresh token for the same one doesn't touch it
   watch(() => projects.editing === 'new' ? 'new' : projects.editing?.id ?? null, () => {
@@ -814,110 +291,26 @@
     form.value = editing === 'new' ? blank() : fromProject(editing)
     initial.value = JSON.stringify(form.value)
     nameError.value = ''
-    confirmDelete.value = confirmToken.value = false
-    showPassword.value = showAuthPassword.value = showStagingPassword.value = showRecaptchaSecret.value = false
+    confirmDelete.value = false
     // a new project has no report yet – it starts on the server
     tab.value = editing === 'new' ? 'server' : 'report'
-    envTarget.value = editing !== 'new' && !editing.bedrock ? 'wordpress' : 'bedrock'
 
     if (editing === 'new') {
-      password.value = savedPassword.value = authPassword.value = savedAuthPassword.value = ''
-      stagingPassword.value = savedStagingPassword.value = ''
-      recaptchaSecret.value = savedRecaptchaSecret.value = ''
+      secrets.reset()
+      siteReport.value = null
       void nextTick(() => nameInput.value?.focus())
     } else {
-      void loadTasks(editing)
       void loadReport(editing)
-      void loadUpdate(editing)
-      void loadPassword(editing)
+      void secrets.load(editing)
     }
   })
 
-  /**
-   * The passwords – the panel's and Basic Auth's – and reCAPTCHA's secret key apart from the form: kept encrypted, fetched only when the dialog
-   * opens, saved on their own.
-   */
-  const password = ref('')
-  const savedPassword = ref('')
-  const passwordLoading = ref(false)
-  const showPassword = ref(false)
-  const authPassword = ref('')
-  const savedAuthPassword = ref('')
-  const authPasswordLoading = ref(false)
-  const showAuthPassword = ref(false)
-  const stagingPassword = ref('')
-  const savedStagingPassword = ref('')
-  const stagingPasswordLoading = ref(false)
-  const showStagingPassword = ref(false)
-  const recaptchaSecret = ref('')
-  const savedRecaptchaSecret = ref('')
-  const recaptchaSecretLoading = ref(false)
-  const showRecaptchaSecret = ref(false)
+  /** the site reports – the fields it fills are read-only (the status too: online / offline from its home page);
+   * the repository only when the report brings one (git) */
+  const reporting = computed(() => Boolean(project.value?.token && project.value?.reportedAt))
 
-  const accessPasswordsChanged = computed(() => password.value !== savedPassword.value || authPassword.value !== savedAuthPassword.value
-    || stagingPassword.value !== savedStagingPassword.value)
-
-  const passwordsChanged = computed(() => accessPasswordsChanged.value || recaptchaSecret.value !== savedRecaptchaSecret.value)
-
-  /** the typed secret's SHA-256 – the report has the site's only so; '' – none typed */
-  const recaptchaSecretHash = ref('')
-
-  watch(recaptchaSecret, async secret => {
-    const value = secret.trim()
-    const digest = value ? new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))) : null
-    // a newer one typed meanwhile wins
-    if (secret === recaptchaSecret.value) {
-      recaptchaSecretHash.value = digest ? [...digest].map(byte => byte.toString(16).padStart(2, '0')).join('') : ''
-    }
-  })
-
-  const RECAPTCHA_PLACES: Record<string, string> = { cf7: 'Contact Form 7', wordfence: 'Wordfence – logowanie' }
-
-  /** where the site uses reCAPTCHA (the last report) – a tick when with the keys above, a cross when with others */
-  const recaptchaPlaces = computed(() => (project.value?.recaptcha ?? []).map(place => {
-    const siteKey = (form.value.recaptchaSiteKey ?? '').trim()
-    const off = place.enabled ? '' : ' – wyłączone'
-    const label = RECAPTCHA_PLACES[place.place] ?? place.place
-
-    if (!place.siteKey) {
-      return { place: place.place, label, tone: 'none', text: 'bez kluczy' }
-    }
-
-    if (!siteKey) {
-      return { place: place.place, label, tone: 'none', text: `klucz witryny ${place.siteKey.slice(0, 10)}…${off}` }
-    }
-
-    if (place.siteKey !== siteKey) {
-      return { place: place.place, label, tone: 'bad', text: `inny klucz witryny${off}` }
-    }
-
-    if (recaptchaSecretHash.value && place.secretHash && place.secretHash !== recaptchaSecretHash.value) {
-      return { place: place.place, label, tone: 'bad', text: `inny klucz tajny${off}` }
-    }
-
-    return { place: place.place, label, tone: place.enabled ? 'ok' : 'none', text: (recaptchaSecretHash.value && place.secretHash ? 'klucze zgodne' : 'klucz witryny zgodny') + off }
-  }))
-
-  async function loadPassword (project: Project): Promise<void> {
-    password.value = savedPassword.value = authPassword.value = savedAuthPassword.value = ''
-    stagingPassword.value = savedStagingPassword.value = recaptchaSecret.value = savedRecaptchaSecret.value = ''
-    passwordLoading.value = !!project.hasPassword
-    authPasswordLoading.value = !!project.hasAuthPassword
-    stagingPasswordLoading.value = !!project.hasStagingAuthPassword
-    recaptchaSecretLoading.value = !!project.hasRecaptchaSecret
-
-    const [panel, auth, staging, recaptcha] = await Promise.all([
-      project.hasPassword ? projectsApi.password(project.id).catch(() => null) : null,
-      project.hasAuthPassword ? projectsApi.password(project.id, 'auth').catch(() => null) : null,
-      project.hasStagingAuthPassword ? projectsApi.password(project.id, 'staging').catch(() => null) : null,
-      project.hasRecaptchaSecret ? projectsApi.password(project.id, 'recaptcha').catch(() => null) : null,
-    ])
-
-    password.value = savedPassword.value = panel?.password ?? ''
-    authPassword.value = savedAuthPassword.value = auth?.password ?? ''
-    stagingPassword.value = savedStagingPassword.value = staging?.password ?? ''
-    recaptchaSecret.value = savedRecaptchaSecret.value = recaptcha?.password ?? ''
-    passwordLoading.value = authPasswordLoading.value = stagingPasswordLoading.value = recaptchaSecretLoading.value = false
+  function locked (field: LockedField): boolean {
+    return reporting.value && (field !== 'repo' || Boolean(siteReport.value?.repo))
   }
 
   async function copy (text: string | null | undefined, what: string): Promise<void> {
@@ -933,115 +326,10 @@
     }
   }
 
-  const siteReport = ref<SiteReport | null>(null)
+  provide(projectFormKey, { form, initial, project, busy, siteReport, loadReport, locked, secrets, copy })
 
-  /** users and plugins from the site's last report – fetched when the dialog opens */
-  async function loadReport (project: Project): Promise<void> {
-    siteReport.value = null
-
-    if (project.reportedAt) {
-      siteReport.value = (await projectsApi.report(project.id).catch(() => null))?.report ?? null
-    }
-  }
-
-  /** the site's update – Composer on Bedrock, the plugins through WP-CLI elsewhere; a project with a token; polled while it runs */
-  const update = ref<UpdateState | null>(null)
-  const updateRunning = computed(() => update.value?.state === 'running')
-  let updateTimer: ReturnType<typeof setTimeout> | undefined
-
-  async function loadUpdate (target: Project): Promise<void> {
-    clearTimeout(updateTimer)
-    update.value = null
-
-    if (!target.token) {
-      return
-    }
-
-    try {
-      update.value = await projectsApi.updateState(target.id)
-    } catch (error) {
-      // an older plugin_meden, a site that doesn't answer – the reason instead of the button
-      update.value = { available: false, reason: error instanceof Error ? error.message : String(error), state: 'idle', startedAt: null, finishedAt: null, log: '' }
-    }
-
-    followUpdate(target)
-  }
-
-  /** while it runs: ask again in 3 s; at the end the new report (the site sends it) comes with the list's refresh */
-  function followUpdate (target: Project): void {
-    if (update.value?.state === 'running' && project.value?.id === target.id) {
-      updateTimer = setTimeout(async () => {
-        const was = update.value?.state
-        update.value = await projectsApi.updateState(target.id).catch(() => update.value)
-
-        if (was === 'running' && update.value?.state !== 'running') {
-          void projects.load()
-          void loadReport(target)
-        }
-
-        followUpdate(target)
-      }, 3000)
-    }
-  }
-
-  /** all, the translations alone, or nothing to do – from the last report */
-  const scope = computed(() => project.value ? updateScope(project.value, projects.latestWordpress) : null)
-
-  async function startUpdate (): Promise<void> {
-    const target = project.value
-
-    if (!target) {
-      return
-    }
-
-    try {
-      update.value = await projectsApi.startUpdate(target.id, scope.value ?? 'all')
-      followUpdate(target)
-    } catch (error) {
-      notify.error(error)
-    }
-  }
-
-  onBeforeUnmount(() => clearTimeout(updateTimer))
-
-  /** the site reports – the fields it fills are read-only (the status too: online / offline from its home page);
-   * the repository only when the report brings one (git) */
-  const reporting = computed(() => Boolean(project.value?.token && project.value?.reportedAt))
-
-  function locked (field: 'status' | 'repo' | 'php' | 'engine' | 'version' | 'theme' | Flag): boolean {
-    return reporting.value && (field !== 'repo' || Boolean(siteReport.value?.repo))
-  }
-
-  const activePlugins = computed(() => siteReport.value?.plugins?.filter(plugin => plugin.active).length ?? 0)
-  const pluginUpdates = computed(() => siteReport.value?.plugins?.filter(plugin => plugin.update) ?? [])
-
-  /** waiting for an update first, then the active ones, the inactive last – by name within each */
-  const sortedPlugins = computed(() => {
-    const rank = (plugin: ReportPlugin) => plugin.update ? 0 : (plugin.active ? 1 : 2)
-
-    return (siteReport.value?.plugins ?? []).toSorted((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name, 'pl'))
-  })
-
-  const tasks = ref<TodoTask[]>([])
-  const tasksLoading = ref(false)
-  const today = new Date().toLocaleDateString('sv')
-
-  /** open tasks of the linked Todo project – fetched when the dialog opens */
-  async function loadTasks (project: Project): Promise<void> {
-    tasks.value = []
-
-    if (!project.todo) {
-      return
-    }
-
-    tasksLoading.value = true
-    tasks.value = (await projectsApi.tasks(project.id).catch(() => null))?.tasks ?? []
-    tasksLoading.value = false
-  }
-
-  /** unsaved changes – ask before they are thrown away */
   /** something typed since it opened (or since the last save) – the passwords too */
-  const dirty = computed(() => JSON.stringify(form.value) !== initial.value || passwordsChanged.value)
+  const dirty = computed(() => JSON.stringify(form.value) !== initial.value || secrets.anyChanged.value)
 
   /** "Zapisz" only with changes to save */
   const canSave = computed(() => dirty.value && !busy.value)
@@ -1068,7 +356,7 @@
     ;[...document.querySelectorAll<HTMLInputElement>('.domains__row input')].at(-1)?.focus()
   }
 
-  function payload (): ProjectInput & { name: string } {
+  function payload () {
     const data: Record<string, unknown> = { ...form.value }
 
     // empty text clears the field
@@ -1078,7 +366,7 @@
 
     data.domains = [...new Set(form.value.domains.map(domain => bareDomain(domain)).filter(Boolean))]
 
-    return data as ProjectInput & { name: string }
+    return data as Parameters<typeof projects.add>[0]
   }
 
   async function save (): Promise<void> {
@@ -1091,24 +379,8 @@
     busy.value = true
     let saved = project.value ? await projects.update(project.value.id, payload()) : await projects.add(payload())
 
-    if (saved && password.value !== savedPassword.value) {
-      saved = await projects.setPassword(saved.id, password.value || null)
-      savedPassword.value = saved ? password.value : savedPassword.value
-    }
-
-    if (saved && authPassword.value !== savedAuthPassword.value) {
-      saved = await projects.setPassword(saved.id, authPassword.value || null, 'auth')
-      savedAuthPassword.value = saved ? authPassword.value : savedAuthPassword.value
-    }
-
-    if (saved && stagingPassword.value !== savedStagingPassword.value) {
-      saved = await projects.setPassword(saved.id, stagingPassword.value || null, 'staging')
-      savedStagingPassword.value = saved ? stagingPassword.value : savedStagingPassword.value
-    }
-
-    if (saved && recaptchaSecret.value !== savedRecaptchaSecret.value) {
-      saved = await projects.setPassword(saved.id, recaptchaSecret.value || null, 'recaptcha')
-      savedRecaptchaSecret.value = saved ? recaptchaSecret.value : savedRecaptchaSecret.value
+    if (saved) {
+      saved = await secrets.save(saved)
     }
 
     busy.value = false
@@ -1133,187 +405,10 @@
 
     busy.value = false
   }
-
-  type EnvTarget = 'bedrock' | 'wordpress'
-
-  const ENV_TARGETS: Array<{ value: EnvTarget, label: string }> = [
-    { value: 'bedrock', label: 'Bedrock' },
-    { value: 'wordpress', label: 'WordPress' },
-  ]
-
-  /** where the report's settings go – picked by the project's Bedrock flag when the dialog opens */
-  const envTarget = ref<EnvTarget>('bedrock')
-  const envFile = computed(() => envTarget.value === 'bedrock' ? '.env' : 'wp-config.php')
-
-  // the path only – the report sends it to the list's site (kwiatkowski.co); without Bedrock the token alone, as a
-  // constant (the path is the default one)
-  const envLines = computed(() => {
-    const token = project.value?.token ?? ''
-
-    return envTarget.value === 'bedrock'
-      ? `# Site report for the projects list\nPROJECTS_REPORT_URL=${config.reportUrl}\nPROJECTS_REPORT_TOKEN=${token}`
-      : `// Site report for the projects list\ndefine('PROJECTS_REPORT_TOKEN', '${token}');`
-  })
-
-  async function copyEnv (): Promise<void> {
-    try {
-      await navigator.clipboard.writeText(envLines.value)
-      notify.show(`Skopiowano – wklej do ${envFile.value} strony.`)
-    } catch {
-      notify.show('Nie udało się skopiować – zaznacz tekst ręcznie.', { tone: 'error' })
-    }
-  }
-
-  async function newToken (): Promise<void> {
-    if (!project.value || (project.value.token && !window.confirm('Nowy token – stary przestanie działać. Kontynuować?'))) {
-      return
-    }
-
-    busy.value = true
-    const updated = await projects.regenerateToken(project.value.id)
-    busy.value = false
-
-    if (updated) {
-      // the dialog keeps the unsaved form, only the token part is new
-      projects.editing = updated
-      notify.show('Nowy token gotowy.')
-    }
-  }
-
-  /** the certificate in the Server tab: fine, running out soon, or why not; until when and how long still */
-  const sslInfo = computed(() => {
-    const ssl = project.value?.ssl
-
-    if (!project.value || !ssl) {
-      return null
-    }
-
-    const state = sslState(project.value)
-    const days = sslDaysLeft(project.value)
-
-    return {
-      state,
-      text: state === 'bad' ? (ssl.error ?? 'błąd') : (state === 'soon' ? `ważny, wygasa za ${days} dni` : 'ważny'),
-      validTo: ssl.validTo ? `${formatDay(ssl.validTo)}${days === null ? '' : ` (${days} dni)`}` : '–',
-    }
-  })
-
-  /** the reported fields – a fetched report brings them in, unless they were typed over in the form */
-  const REPORTED_FIELDS = ['status', 'repo', 'php', 'engine', 'version', 'theme', ...REPORTED_FLAGS] as const
-
-  const pulling = ref(false)
-
-  async function pullReport (): Promise<void> {
-    if (!project.value) {
-      return
-    }
-
-    pulling.value = true
-    const result = await projects.pullReport(project.value.id)
-    pulling.value = false
-
-    if (!result) {
-      return
-    }
-
-    // the fields the report fills take the fresh values; the rest of the form stays as typed
-    const fresh = fromProject(result.project) as Record<string, unknown>
-    const current = form.value as Record<string, unknown>
-    const before = JSON.parse(initial.value || '{}') as Record<string, unknown>
-
-    for (const field of REPORTED_FIELDS) {
-      if (JSON.stringify(current[field]) === JSON.stringify(before[field])) {
-        current[field] = before[field] = fresh[field]
-      }
-    }
-
-    initial.value = JSON.stringify(before)
-    projects.editing = result.project
-    void loadReport(result.project)
-
-    if (result.error) {
-      notify.show(`Raport nie przyszedł: ${result.error}.`, { tone: 'error' })
-    } else {
-      notify.show('Raport pobrany.')
-    }
-  }
-
-  async function deleteToken (): Promise<void> {
-    if (!project.value) {
-      return
-    }
-
-    busy.value = true
-    const updated = await projects.removeToken(project.value.id)
-    busy.value = false
-    confirmToken.value = false
-
-    if (updated) {
-      projects.editing = updated
-      notify.show('Token usunięty.')
-    }
-  }
 </script>
 
 <style scoped>
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.grid--3 {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.grid--4 {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.group {
-  display: grid;
-  gap: 10px;
-  margin: 0;
-  padding: 14px 0 0;
-  border: 0;
-  border-top: 1px solid var(--line);
-}
-
-/* the Access tab: the environments one under another, the first without a line over it */
-.access {
-  display: grid;
-  gap: 18px;
-}
-
-.access__note {
-  font-weight: 400;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
-.access__group:first-child {
-  padding-top: 0;
-  border-top: 0;
-}
-
-.group legend {
-  float: left;
-  width: 100%;
-  margin-bottom: 2px;
-}
-
-.group__hint {
-  font-weight: 400;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
-/* the fields a site's report also fills: a green star by the name and a note over them */
-.reported-mark {
-  color: var(--accent);
-  font-weight: 600;
-}
-
+/* the note under the form: the fields a site's report fills */
 .reported-note {
   display: flex;
   margin: 0;
@@ -1338,7 +433,6 @@
   gap: 6px 18px;
 }
 
-/* one under the other – Deploy, DEV, Bedrock, Wordfence, ACF, MI Modal */
 .unsaved {
   display: inline-flex;
   align-items: center;
@@ -1442,250 +536,6 @@
   cursor: pointer;
 }
 
-/* the certificate under the server's fields; its state in the colour of the report's mark */
-.ssl {
-  margin-top: 20px;
-}
-
-.ssl .input.ssl__state--ok {
-  color: var(--positive);
-}
-
-.ssl .input.ssl__state--soon {
-  color: var(--warn);
-}
-
-.ssl .input.ssl__state--bad {
-  color: var(--danger);
-}
-
-.report__head {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px 12px;
-}
-
-.report__head .report__state {
-  margin: 0;
-}
-
-.report__state strong {
-  color: var(--text);
-}
-
-.env-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px 12px;
-}
-
-.env-head p {
-  margin: 0;
-}
-
-.env {
-  position: relative;
-}
-
-.env__lines {
-  margin: 0;
-  padding: 10px 44px 10px 12px;
-  overflow-x: auto;
-  border-radius: var(--radius);
-  background: var(--panel);
-  font-size: 12px;
-  white-space: pre;
-}
-
-/* the copy button – in the block's top right corner, when the pointer is over it (or the keyboard on the button) */
-.env__copy {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  opacity: 0;
-  transition: opacity .12s;
-}
-
-.env:hover .env__copy,
-.env__copy:focus-visible {
-  opacity: 1;
-}
-
-.todo-option {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.todo-option__dot {
-  flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 3px;
-}
-
-/* fields one under the other */
-.stack {
-  display: grid;
-  gap: 12px;
-}
-
-code {
-  font-family: var(--mono);
-  font-size: .92em;
-}
-
-.report__actions {
-  display: flex;
-  gap: 6px;
-}
-
-/* users and plugins of the site's last report */
-.site {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 8px 14px;
-  margin: 0;
-  font-size: 13px;
-}
-
-.site dt {
-  color: var(--text-2);
-}
-
-.site dd {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 10px;
-  margin: 0;
-}
-
-/* the Composer update: the button, what came of it, the log */
-.update {
-  display: grid;
-  gap: 8px;
-  padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-}
-
-.update__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
-  font-size: 12px;
-}
-
-.update__note {
-  margin: 0;
-  font-size: 13px;
-}
-
-.update__note--ok {
-  color: var(--positive);
-}
-
-.update__note--failed {
-  color: var(--danger);
-}
-
-.update__log {
-  max-height: 240px;
-  margin: 6px 0 0;
-  padding: 8px 10px;
-  overflow: auto;
-  border-radius: var(--radius-sm);
-  background: var(--panel);
-  font-size: 12px;
-  white-space: pre-wrap;
-}
-
-.spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.site__online,
-.site__ok {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--positive);
-}
-
-.site__online .dot {
-  width: 6px;
-  height: 6px;
-}
-
-.site__plugins {
-  grid-column: 1 / -1;
-}
-
-.site__plugins details {
-  width: 100%;
-}
-
-.site__plugins summary {
-  cursor: pointer;
-}
-
-.plugins {
-  display: grid;
-  max-height: 260px;
-  margin: 6px 0 0;
-  padding: 0;
-  overflow-y: auto;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  list-style: none;
-}
-
-.plugin {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border-bottom: 1px solid var(--line);
-}
-
-.plugin:last-child {
-  border-bottom: 0;
-}
-
-.plugin--off .plugin__name {
-  color: var(--text-3);
-}
-
-.plugin__name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.plugin__version {
-  flex: none;
-  color: var(--text-2);
-  font-size: 12px;
-}
-
-.plugin__version strong {
-  color: var(--warn);
-}
-
 .domains {
   display: grid;
   gap: 6px;
@@ -1701,110 +551,8 @@ code {
   justify-self: start;
 }
 
-/* open tasks of the linked Todo project – the circle in the priority colour, as in Todo */
-/* where the site uses reCAPTCHA – a tick with the project's keys, a cross with others, a dash otherwise */
-.recaptcha-places {
-  display: grid;
-  gap: 4px;
-  margin: 12px 0 0;
-  padding: 0;
-  font-size: 13px;
-  list-style: none;
-}
-
-.recaptcha-places li {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.recaptcha-places svg {
-  flex: none;
-  width: 15px;
-  height: 15px;
-  color: var(--text-3);
-}
-
-.recaptcha-places__item--ok svg {
-  color: var(--positive);
-}
-
-.recaptcha-places__item--bad svg {
-  color: var(--danger);
-}
-
-.recaptcha-places__none {
-  margin: 12px 0 0;
-  font-size: 13px;
-}
-
-.tasks {
-  display: grid;
-  margin: 0;
-  padding: 0;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  list-style: none;
-}
-
-.task {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 7px 10px;
-  border-bottom: 1px solid var(--line);
-  font-size: 13px;
-}
-
-.task:last-child {
-  border-bottom: 0;
-}
-
-.task__check {
-  flex: none;
-  width: 14px;
-  height: 14px;
-  border: 1.5px solid var(--p);
-  border-radius: 50%;
-}
-
-/* in progress – half filled */
-.task__check--doing {
-  background: linear-gradient(90deg, var(--p) 50%, transparent 50%);
-}
-
-.task__title {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.task__due {
-  flex: none;
-  color: var(--text-2);
-  font-size: 12px;
-}
-
-.task__due--late {
-  color: var(--danger);
-}
-
-.tasks__open {
-  justify-self: start;
-}
-
 @media (max-width: 860px) {
   .cols {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-@media (max-width: 640px) {
-  .grid,
-  .grid--3,
-  .grid--4 {
     grid-template-columns: minmax(0, 1fr);
   }
 }

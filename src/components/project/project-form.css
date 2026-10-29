@@ -1,0 +1,52 @@
+/* the project dialog's form – shared by its tabs (components/project/*Tab.vue); under .project-form, the dialog's columns */
+
+.project-form .grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* fields one under the other */
+.project-form .stack {
+  display: grid;
+  gap: 12px;
+}
+
+.project-form .group {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 14px 0 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+.project-form .group legend {
+  float: left;
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+/* a remark after a group's name, in plain text */
+.project-form .group__note {
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.project-form code {
+  font-family: var(--mono);
+  font-size: .92em;
+}
+
+/* the fields a site's report also fills: a green star by the name (and in the note under the form) */
+.reported-mark {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .project-form .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

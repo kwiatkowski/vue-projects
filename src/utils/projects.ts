@@ -46,6 +46,10 @@ export function sortProjects<T extends Partial<Project>> (projects: T[], key: So
       return STATUS_ORDER.indexOf(project.status ?? null)
     }
 
+    if (key === 'uptime') {
+      return project.uptime ?? null
+    }
+
     return (project[key] as string | null | undefined) || null
   }
 
