@@ -48,7 +48,7 @@
               <span class="mono" :class="{ latest: latestWordpress(project, projects.latestWordpress), outdated: outdatedWordpress(project, projects.latestWordpress) }">{{ project.version }}</span>
             </span>
 
-            <span v-if="show('theme') && project.theme">{{ project.theme }}</span>
+            <span v-if="show('theme') && project.theme">{{ project.theme }}<Check v-if="ownTheme(project)" aria-label="Motyw zrobiony u nas" class="own-theme" /></span>
           </div>
 
           <div v-if="(show('server') && project.server) || (show('php') && project.php)" class="card__line muted">
@@ -70,7 +70,7 @@
   import type { Flag, Project } from '@/types'
   import type { ColumnKey } from '@/utils/columns'
   import type { Group } from '@/utils/projects'
-  import { ArrowUpRight } from 'lucide-vue-next'
+  import { ArrowUpRight, Check } from 'lucide-vue-next'
   import CategoryMenu from '@/components/CategoryMenu.vue'
   import StatusChip from '@/components/StatusChip.vue'
   import TodoChip from '@/components/TodoChip.vue'
@@ -78,7 +78,7 @@
   import { useColumnsStore } from '@/stores/columns'
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
-  import { latestWordpress, outdatedWordpress, siteUrl } from '@/utils/projects'
+  import { latestWordpress, outdatedWordpress, ownTheme, siteUrl } from '@/utils/projects'
 
   /** The list on phones: a card per project, the lines of the columns shown. */
   defineProps<{ groups: Array<Group<Project>>, showHeaders: boolean, full: boolean }>()
@@ -158,6 +158,16 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+}
+
+/* a theme made in-house – a green tick after it */
+.own-theme {
+  width: 13px;
+  height: 13px;
+  margin-left: 4px;
+  color: var(--positive);
+  stroke-width: 2.5;
+  vertical-align: -1px;
 }
 
 /* the yes/no fields on a card – the positive green, as the checkmarks in the table */

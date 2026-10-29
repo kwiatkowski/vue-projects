@@ -314,3 +314,28 @@ export function stagingCheck (check: StagingCheck): { text: string, tone: 'ok' |
 
 /** a vulnerability's CVSS severity in words */
 export const SEVERITY_LABELS: Record<'l' | 'm' | 'h' | 'c', string> = { l: 'niska', m: 'średnia', h: 'wysoka', c: 'krytyczna' }
+
+/** a vulnerability list's tone: red with a high or critical one, else (medium, low, unknown) orange */
+export function vulnerabilityTone (items: Array<{ severity: 'l' | 'm' | 'h' | 'c' | null }>): 'bad' | 'warn' {
+  return items.some(item => item.severity === 'h' || item.severity === 'c') ? 'bad' : 'warn'
+}
+
+/** the authors whose themes are made in-house – by the host of the theme's (or its parent's) Author URI */
+const OWN_THEME_HOSTS = ['meden.com.pl', 'kwiatkowski.co']
+
+/** the theme – or its parent – made in-house: its Author URI on meden.com.pl or kwiatkowski.co (or their subdomains) */
+export function ownTheme (project: Pick<Project, 'themeDetails'>): boolean {
+  const details = project.themeDetails
+
+  return [details?.authorUri, details?.parentAuthorUri].some(uri => {
+    const host = (() => {
+      try {
+        return uri ? new URL(/^https?:\/\//i.test(uri) ? uri : `https://${uri}`).hostname.toLowerCase() : ''
+      } catch {
+        return ''
+      }
+    })()
+
+    return OWN_THEME_HOSTS.some(own => host === own || host.endsWith(`.${own}`))
+  })
+}

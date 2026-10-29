@@ -3,6 +3,7 @@
   <HoverTip v-if="project.themeDetails?.version || rows.length > 0" anchor-class="theme-hit">
     <span class="theme-hit__body" tabindex="0">
       <span class="has-tip">{{ project.theme }}</span>
+      <Check v-if="own" aria-label="Motyw zrobiony u nas" class="own-theme" />
       <span v-if="project.themeDetails?.version" class="cell-sub mono">{{ project.themeDetails.version }}</span>
     </span>
 
@@ -22,16 +23,25 @@
     </template>
   </HoverTip>
 
-  <template v-else>{{ project.theme }}</template>
+  <template v-else>
+    {{ project.theme }}
+    <Check v-if="own" v-tip="'Motyw zrobiony u nas'" aria-label="Motyw zrobiony u nas" class="own-theme" />
+  </template>
 </template>
 
 <script lang="ts" setup>
   import type { Project } from '@/types'
+  import { Check } from 'lucide-vue-next'
   import { computed } from 'vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
+  import { vTip } from '@/directives/tip'
+  import { ownTheme } from '@/utils/projects'
 
-  /** The "Motyw" cell: the theme, its version under it; author and parent theme in the tooltip. */
+  /** The "Motyw" cell: the theme (a tick when made in-house), its version under it; author and parent in the tooltip. */
   const props = defineProps<{ project: Project }>()
+
+  /** the theme or its parent by meden.com.pl / kwiatkowski.co (Author URI) */
+  const own = computed(() => ownTheme(props.project))
 
   /** the tooltip under its header (name, version): author, parent theme and its author */
   const rows = computed(() => {
@@ -42,8 +52,10 @@
 
     return [
       { label: 'Autor', value: details?.author },
+      { label: 'Strona autora', value: details?.authorUri },
       { label: 'Motyw nadrzędny', value: parent },
       { label: 'Autor nadrzędnego', value: parent ? details?.parentAuthor : null },
+      { label: 'Strona autora nadrzędnego', value: parent ? details?.parentAuthorUri : null },
     ].filter((row): row is { label: string, value: string } => Boolean(row.value))
   })
 </script>
@@ -54,6 +66,16 @@
   overflow: hidden;
   text-overflow: ellipsis;
   outline: none;
+}
+
+/* made in-house – the positive green, as the checkmarks in the table */
+.own-theme {
+  width: 13px;
+  height: 13px;
+  margin-left: 4px;
+  color: var(--positive);
+  stroke-width: 2.5;
+  vertical-align: -1px;
 }
 
 /* the theme with more in its tooltip (version, author, parent) */

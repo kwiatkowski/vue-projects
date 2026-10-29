@@ -18,7 +18,7 @@
 
   <!-- the plugins' known vulnerabilities: the plugin, its version, what fixes it -->
   <template v-if="vulnerabilities.length > 0">
-    <div class="info-tip__head info-tip__head--bad">Podatności: {{ vulnerabilities.length }}</div>
+    <div class="info-tip__head" :class="`info-tip__head--${vulnerabilityTone(vulnerabilities)}`">Podatności: {{ vulnerabilities.length }}</div>
 
     <dl class="info-tip info-tip--right">
       <template v-for="item in vulnerabilities" :key="item.id">
@@ -57,7 +57,7 @@
   import type { Project } from '@/types'
   import { computed } from 'vue'
   import { useProjectsStore } from '@/stores/projects'
-  import { formatDay, pendingUpdates, SEVERITY_LABELS, sslDaysLeft, sslState } from '@/utils/projects'
+  import { formatDay, pendingUpdates, SEVERITY_LABELS, sslDaysLeft, sslState, vulnerabilityTone } from '@/utils/projects'
 
   /**
    * What the report's mark says – the same in its tooltip and in its menu: when the site reported and what sent it, the
@@ -79,10 +79,15 @@
 </script>
 
 <style scoped>
-/* the vulnerabilities: their severity – critical and high in red, the rest orange */
-.info-tip__head--bad {
+/* the vulnerabilities: red with a high or critical one, else orange; their severity – the same */
+.info-tip__head--bad,
+.info-tip__head--warn {
   margin: 8px 0 4px;
   color: var(--danger);
+}
+
+.info-tip__head--warn {
+  color: var(--warn);
 }
 
 .vuln-severity--c,

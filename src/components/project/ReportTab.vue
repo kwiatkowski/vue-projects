@@ -64,7 +64,7 @@
 
     <!-- the plugins' known vulnerabilities (WPVulnerability – Wordfence, WPScan, Patchstack, CVE), the link to each -->
     <div v-if="vulnerabilities.length > 0" class="vulns">
-      <div class="vulns__head"><ShieldAlert /> Podatności wtyczek: {{ vulnerabilities.length }}</div>
+      <div class="vulns__head" :class="`vulns__head--${vulnerabilityTone(vulnerabilities)}`"><ShieldAlert /> Podatności wtyczek: {{ vulnerabilities.length }}</div>
 
       <ul class="plugins">
         <li v-for="item in vulnerabilities" :key="item.id" class="plugin vuln">
@@ -185,7 +185,7 @@
   import { vTip } from '@/directives/tip'
   import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
-  import { ago, formatDateTime, SEVERITY_LABELS, UPDATE_LABELS, updateScope } from '@/utils/projects'
+  import { ago, formatDateTime, SEVERITY_LABELS, UPDATE_LABELS, updateScope, vulnerabilityTone } from '@/utils/projects'
 
   /** "Raport strony": what the site last sent, updating it, the report's settings and token */
   const { form, initial, project, busy, siteReport, loadReport } = useProjectForm()
@@ -477,6 +477,11 @@
   color: var(--danger);
   font-size: 13px;
   font-weight: 600;
+}
+
+/* only medium or low ones – orange */
+.vulns__head--warn {
+  color: var(--warn);
 }
 
 .vulns__head svg,

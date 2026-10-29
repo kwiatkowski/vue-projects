@@ -171,8 +171,11 @@ export interface PluginUpdate {
 export interface ThemeDetails {
   version: string | null
   author: string | null
+  /** the theme's "Author URI" – plugin_meden 1.17.0 / MK Core 2026.10.29 on */
+  authorUri?: string | null
   parentVersion: string | null
   parentAuthor: string | null
+  parentAuthorUri?: string | null
 }
 
 /** A plugin of a reported site; update – the version waiting for it, null when up to date. */

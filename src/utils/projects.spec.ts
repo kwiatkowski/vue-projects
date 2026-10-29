@@ -1,6 +1,6 @@
 import type { Project } from '@/types'
 import { describe, expect, it } from 'vitest'
-import { ago, bareDomain, compareManual, compareVersions, formatDateTime, formatDay, groupProjects, latestWordpress, matches, moveId, newestWordpress, pendingUpdates, repoHost, reportStale, reportState, siteUrl, sortProjects, stagingCheck } from './projects'
+import { ago, bareDomain, compareManual, compareVersions, formatDateTime, formatDay, groupProjects, latestWordpress, matches, moveId, newestWordpress, ownTheme, pendingUpdates, repoHost, reportStale, reportState, siteUrl, sortProjects, stagingCheck, vulnerabilityTone } from './projects'
 
 const p = (name: string, extra: Partial<Project> = {}): Partial<Project> => ({ name, domains: [name], status: 'online', ...extra })
 
@@ -165,5 +165,26 @@ describe('stagingCheck', () => {
     expect(stagingCheck({ code: 403, checkedAt: at }).tone).toBe('warn')
     expect(stagingCheck({ code: 503, checkedAt: at })).toEqual({ text: 'tryb konserwacji lub przeciążenie (HTTP 503)', tone: 'down' })
     expect(stagingCheck({ code: 418, checkedAt: at })).toEqual({ text: 'HTTP 418', tone: 'down' })
+  })
+})
+
+describe('ownTheme', () => {
+  const theme = (authorUri: string | null, parentAuthorUri: string | null = null) => ({ themeDetails: { version: null, author: null, authorUri, parentVersion: null, parentAuthor: null, parentAuthorUri } })
+
+  it('meden.com.pl or kwiatkowski.co – the theme\'s or its parent\'s Author URI', () => {
+    expect(ownTheme(theme('https://meden.com.pl'))).toBe(true)
+    expect(ownTheme(theme('https://kwiatkowski.co/'))).toBe(true)
+    expect(ownTheme(theme('www.meden.com.pl'))).toBe(true)
+    expect(ownTheme(theme(null, 'https://meden.com.pl'))).toBe(true)
+    expect(ownTheme(theme('https://notmeden.com.pl'))).toBe(false)
+    expect(ownTheme(theme('https://wordpress.org'))).toBe(false)
+    expect(ownTheme({ themeDetails: null })).toBe(false)
+  })
+})
+
+describe('vulnerabilityTone', () => {
+  it('red with a high or critical one, else orange', () => {
+    expect(vulnerabilityTone([{ severity: 'm' }, { severity: null }])).toBe('warn')
+    expect(vulnerabilityTone([{ severity: 'm' }, { severity: 'h' }])).toBe('bad')
   })
 })
