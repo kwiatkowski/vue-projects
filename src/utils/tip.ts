@@ -36,3 +36,27 @@ export function placeTip (box: DOMRect, size: DOMRect): { below: boolean, positi
     },
   }
 }
+
+/**
+ * Where a tooltip of this anchor goes: <body>, or – the anchor in an open dialog, which covers everything in <body> –
+ * the dialog's own layer (BaseDialog's .dialog__layer), never among the dialog's other nodes.
+ */
+export function tipLayer (anchor: Element | null | undefined): string | HTMLElement {
+  return anchor?.closest('dialog')?.querySelector<HTMLElement>(':scope > .dialog__layer') ?? 'body'
+}
+
+const layerIds = new WeakMap<HTMLElement, number>()
+let lastLayerId = 0
+
+/** a key per target – a Teleport keyed by it is made anew for a new target instead of moved */
+export function layerKeyOf (layer: string | HTMLElement): string {
+  if (typeof layer === 'string') {
+    return layer
+  }
+
+  if (!layerIds.has(layer)) {
+    layerIds.set(layer, ++lastLayerId)
+  }
+
+  return `layer-${layerIds.get(layer)}`
+}

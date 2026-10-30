@@ -12,7 +12,8 @@
     <slot />
   </span>
 
-  <Teleport :to="layer">
+  <!-- a new target – a new Teleport (keyed), not one moved between <body> and a dialog -->
+  <Teleport :key="layerKey" :to="layer">
     <div
       v-if="open"
       ref="tip"
@@ -30,8 +31,8 @@
 </template>
 
 <script lang="ts" setup>
-  import { nextTick, onBeforeUnmount, ref, useTemplateRef } from 'vue'
-  import { placeTip } from '@/utils/tip'
+  import { computed, nextTick, onBeforeUnmount, ref, useTemplateRef } from 'vue'
+  import { layerKeyOf, placeTip, tipLayer } from '@/utils/tip'
 
   /**
    * A tooltip in the app's style instead of the browser's `title`: `text`, or the `tip` slot for more lines.
@@ -60,6 +61,7 @@
 
   /** <body>, or the open <dialog> the anchor is in – a modal dialog covers everything in <body> */
   const layer = ref<string | HTMLElement>('body')
+  const layerKey = computed(() => layerKeyOf(layer.value))
 
   async function show (): Promise<void> {
     stay()
@@ -69,7 +71,7 @@
       return
     }
 
-    layer.value = anchor.value?.closest('dialog') ?? 'body'
+    layer.value = tipLayer(anchor.value)
     position.value = { visibility: 'hidden', left: '0px', top: '0px' }
     open.value = true
     emit('show')

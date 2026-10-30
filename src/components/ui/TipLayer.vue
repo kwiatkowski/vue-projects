@@ -1,5 +1,6 @@
 <template>
-  <Teleport :to="layer">
+  <!-- a new target – a new Teleport (keyed), not one moved between <body> and a dialog -->
+  <Teleport :key="layerKey" :to="layer">
     <div
       v-if="shownTip.anchor"
       ref="tip"
@@ -12,9 +13,9 @@
 </template>
 
 <script lang="ts" setup>
-  import { nextTick, ref, useTemplateRef, watch } from 'vue'
+  import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
   import { shownTip } from '@/directives/tip'
-  import { placeTip } from '@/utils/tip'
+  import { layerKeyOf, placeTip, tipLayer } from '@/utils/tip'
 
   /** v-tip's tooltip – one for the whole app, placed as HoverTip's */
   const tip = useTemplateRef<HTMLElement>('tip')
@@ -23,6 +24,7 @@
 
   /** <body>, or the open <dialog> the anchor is in – a modal dialog covers everything in <body> */
   const layer = ref<string | HTMLElement>('body')
+  const layerKey = computed(() => layerKeyOf(layer.value))
 
   function hide (): void {
     shownTip.anchor = null
@@ -50,7 +52,7 @@
       return
     }
 
-    layer.value = anchor.closest('dialog') ?? 'body'
+    layer.value = tipLayer(anchor)
     // measured first while invisible, then placed
     position.value = { visibility: 'hidden', left: '0px', top: '0px' }
     listen(true)

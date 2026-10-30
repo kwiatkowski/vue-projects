@@ -10,6 +10,10 @@
     @close="open = false"
     @pointerdown="onPointerDown"
   >
+    <!-- the tooltips of what is inside go here – a modal dialog covers everything in <body>; their own box, not among
+         the card's nodes (a tooltip moved in and out next to the card broke its patching: insertBefore on null) -->
+    <div class="dialog__layer" />
+
     <form v-if="open" class="dialog__card" novalidate @submit.prevent="emit('submit')">
       <header class="dialog__head">
         <h2 :id="titleId" class="dialog__title">{{ title }}</h2>
@@ -105,6 +109,11 @@
   background: var(--surface);
   color: var(--text);
   box-shadow: var(--shadow-pop);
+}
+
+/* no box of its own – the tooltips in it are placed as anywhere else */
+.dialog__layer {
+  display: contents;
 }
 
 /* Esc on a form that can't close yet leaves the focus on the dialog itself – no ring around the whole card */
