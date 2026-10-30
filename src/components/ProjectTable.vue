@@ -314,7 +314,7 @@
   /** the staging's Basic Auth for its menu – the owner's only, with a login and a kept password */
   function stagingAuth (project: Project) {
     return props.full && project.stagingAuthUser && project.hasStagingAuthPassword
-      ? { user: project.stagingAuthUser, password: () => projectsApi.password(project.id, 'staging').then(result => result.password) }
+      ? { user: project.stagingAuthUser, panelOnly: project.stagingAuthScope === 'panel', password: () => projectsApi.password(project.id, 'staging').then(result => result.password) }
       : null
   }
 

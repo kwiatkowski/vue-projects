@@ -76,6 +76,8 @@ export interface Project extends Record<Flag, boolean> {
   authScope: 'site' | 'panel' | null
   /** the staging's HTTP Basic Auth – the list checks the staging with it */
   stagingAuthUser: string | null
+  /** what the staging's Basic Auth guards: the whole staging (null, 'site') or only its panel */
+  stagingAuthScope: 'site' | 'panel' | null
   /** RRRR-MM-DD */
   /** id of the linked Todo project */
   todoProject: number | null

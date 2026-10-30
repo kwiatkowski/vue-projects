@@ -30,7 +30,7 @@
         </a>
 
         <button
-          v-if="auth"
+          v-if="row.locked"
           :aria-label="`Otwórz z loginem i hasłem: ${row.label}`"
           class="btn btn--icon btn--sm"
           type="button"
@@ -45,7 +45,7 @@
         </button>
 
         <button
-          v-if="auth"
+          v-if="row.locked"
           :aria-label="`Kopiuj adres z loginem i hasłem: ${row.label}`"
           class="btn btn--icon btn--sm"
           type="button"
@@ -76,7 +76,7 @@
     label: string
     status?: StagingCheck | null
     /** the staging behind Basic Auth: its login and how to get its password (the owner's only) */
-    auth?: { user: string, password: () => Promise<string | null> } | null
+    auth?: { user: string, panelOnly?: boolean, password: () => Promise<string | null> } | null
   }>()
 
   /** the list's check in words and its tone: the icon green, orange (it works, the list can't get in) or red */
@@ -97,8 +97,9 @@
   const host = computed(() => props.url.replace(/^https?:\/\//, '').replace(/\/$/, ''))
 
   const rows = computed(() => [
-    { label: props.label, url: props.url, icon: Globe },
-    ...(props.adminUrl ? [{ label: 'Panel', url: props.adminUrl, icon: LogIn }] : []),
+    // Basic Auth guarding only the panel – the lock beside the panel alone
+    { label: props.label, url: props.url, icon: Globe, locked: Boolean(props.auth) && !props.auth?.panelOnly },
+    ...(props.adminUrl ? [{ label: 'Panel', url: props.adminUrl, icon: LogIn, locked: Boolean(props.auth) }] : []),
   ])
 
   const notify = useNotifyStore()

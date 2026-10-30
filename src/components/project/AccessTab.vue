@@ -1,9 +1,14 @@
 <template>
   <!-- one section per environment: its addresses (open, copy), then its logins -->
   <div class="access">
-    <!-- the panel's login and password – the same on production, staging and the local copy -->
-    <fieldset class="group group--login">
-      <legend class="eyebrow group__title"><KeyRound /> Logowanie do panelu <span class="group__note">– wszystkie środowiska</span></legend>
+    <!-- the panel's login and password – the same on production, staging and the local copy: a quiet card over the
+         environments, its name in plain text with a key -->
+    <div aria-labelledby="access-login-title" class="login-card" role="group">
+      <div class="login-card__head">
+        <span class="login-card__icon"><KeyRound /></span>
+        <strong id="access-login-title">Logowanie do panelu</strong>
+        <span class="faint">wszystkie środowiska</span>
+      </div>
 
       <div class="grid">
         <label class="field">
@@ -24,7 +29,7 @@
           <PasswordInput v-model="secrets.values.panel" v-model:shown="secrets.shown.panel" :loading="secrets.loading.panel" what="Hasło" />
         </label>
       </div>
-    </fieldset>
+    </div>
 
     <fieldset v-for="group in ACCESS_GROUPS" :key="group.key" class="group">
       <!-- the same icons as the list's Stage and Lokalnie columns -->
@@ -44,7 +49,7 @@
                   :aria-label="`Kopiuj z Basic Auth: ${group.label} – ${link.label}`"
                   class="btn btn--icon btn--sm input-copy"
                   type="button"
-                  @click="copy(panelAuthUrl, `${group.label} – ${link.label} z Basic Auth`)"
+                  @click="copy(panelAuthUrl(link.field), `${group.label} – ${link.label} z Basic Auth`)"
                 ><span class="locked"><Copy /><LockKeyhole class="locked__badge" /></span></button>
               </HoverTip>
 
@@ -52,7 +57,7 @@
                 <a
                   :aria-label="`Otwórz: ${group.label} – ${link.label}`"
                   class="btn btn--icon btn--sm input-copy"
-                  :href="(lockedPanel(link.field) ? panelAuthUrl : form[link.field]) ?? undefined"
+                  :href="(lockedPanel(link.field) ? panelAuthUrl(link.field) : form[link.field]) ?? undefined"
                   rel="noopener"
                   target="_blank"
                 >
@@ -74,78 +79,65 @@
         </label>
       </div>
 
-      <!-- HTTP Basic Auth in front of the whole site (the list fetches the report with it) or only the panel – behind a
-           button until it is used, shown at once when it is -->
-      <template v-if="group.key === 'production'">
-        <button v-if="!authShown" class="btn btn--sm btn--outline auth-add" type="button" @click="authOpen = true">
+      <!-- HTTP Basic Auth in front of the whole site (the list checks it, fetches the report with it) or only the panel –
+           behind a button until it is used, shown at once when it is -->
+      <template v-if="group.key !== 'local'">
+        <button v-if="!authShown(group.key)" class="btn btn--sm btn--outline auth-add" type="button" @click="authOpen[group.key] = true">
           <Plus /> Basic Auth
         </button>
 
-        <div v-else class="auth-scope">
-          <span class="auth-scope__label">Basic Auth chroni</span>
+        <template v-else>
+          <div class="auth-scope">
+            <span class="auth-scope__label">Basic Auth chroni</span>
 
-          <div aria-label="Co chroni Basic Auth" class="seg" role="radiogroup">
-            <button
-              v-for="option in AUTH_SCOPES"
-              :key="option.value"
-              :aria-checked="authScope === option.value"
-              role="radio"
-              type="button"
-              @click="form.authScope = option.value"
-            >{{ option.label }}</button>
+            <div :aria-label="`Co chroni Basic Auth – ${group.label}`" class="seg" role="radiogroup">
+              <button
+                v-for="option in AUTH_SCOPES"
+                :key="option.value"
+                :aria-checked="scopeOf(group.key) === option.value"
+                role="radio"
+                type="button"
+                @click="form[AUTH[group.key].scope] = option.value"
+              >{{ option.label }}</button>
+            </div>
+
+            <span class="faint auth-scope__note">{{ scopeOf(group.key) === 'panel' ? PANEL_NOTE : AUTH[group.key].siteNote }}</span>
           </div>
 
-          <span class="faint auth-scope__note">{{ AUTH_SCOPES.find(option => option.value === authScope)?.note }}</span>
-        </div>
+          <div class="grid">
+            <label class="field">
+              <span>Basic Auth – login</span>
+
+              <CopyInput
+                v-model="form[AUTH[group.key].user]"
+                autocomplete="off"
+                class="mono"
+                :tip="`Kopiuj login Basic Auth – ${group.label}`"
+                type="text"
+                :what="`Login Basic Auth – ${group.label}`"
+              />
+            </label>
+
+            <label class="field">
+              <span>Basic Auth – hasło</span>
+
+              <PasswordInput
+                v-model="secrets.values[AUTH[group.key].kind]"
+                v-model:shown="secrets.shown[AUTH[group.key].kind]"
+                :loading="secrets.loading[AUTH[group.key].kind]"
+                :what="`Hasło Basic Auth – ${group.label}`"
+              />
+            </label>
+          </div>
+        </template>
       </template>
-
-      <div v-if="group.key === 'production' && authShown" class="grid">
-        <label class="field">
-          <span>Basic Auth – login</span>
-
-          <CopyInput
-            v-model="form.authUser"
-            autocomplete="off"
-            class="mono"
-            tip="Kopiuj login Basic Auth"
-            type="text"
-            what="Login Basic Auth"
-          />
-        </label>
-
-        <label class="field">
-          <span>Basic Auth – hasło</span>
-          <PasswordInput v-model="secrets.values.auth" v-model:shown="secrets.shown.auth" :loading="secrets.loading.auth" what="Hasło Basic Auth" />
-        </label>
-      </div>
-
-      <!-- the staging behind HTTP Basic Auth: the list checks it with these (green Stage icon when it answers 200) -->
-      <div v-if="group.key === 'staging'" class="grid">
-        <label class="field">
-          <span>Basic Auth – login</span>
-
-          <CopyInput
-            v-model="form.stagingAuthUser"
-            autocomplete="off"
-            class="mono"
-            tip="Kopiuj login Basic Auth stagingu"
-            type="text"
-            what="Login Basic Auth stagingu"
-          />
-        </label>
-
-        <label class="field">
-          <span>Basic Auth – hasło</span>
-          <PasswordInput v-model="secrets.values.staging" v-model:shown="secrets.shown.staging" :loading="secrets.loading.staging" what="Hasło Basic Auth stagingu" />
-        </label>
-      </div>
     </fieldset>
   </div>
 </template>
 
 <script lang="ts" setup>
   import { ArrowUpRight, Copy, FlaskConical, KeyRound, Laptop, LockKeyhole, Plus } from 'lucide-vue-next'
-  import { type Component, computed, ref, watch } from 'vue'
+  import { type Component, ref, watch } from 'vue'
   import { useProjectForm } from '@/components/project/form'
   import CopyInput from '@/components/ui/CopyInput.vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
@@ -154,33 +146,58 @@
   /** "Dostęp": the panel's login, each environment's addresses and Basic Auth */
   const { form, project, secrets, copy } = useProjectForm()
 
-  /** what the production's Basic Auth guards – the list sends it only for the whole site */
+  /** what an environment's Basic Auth guards – the list sends it only for the whole site */
   const AUTH_SCOPES = [
-    { value: 'site', label: 'Całą stronę', note: 'lista używa go przy sprawdzaniu strony i pobieraniu raportu' },
-    { value: 'panel', label: 'Tylko panel', note: 'lista go nie wysyła – panel otwiera się z loginem i hasłem' },
+    { value: 'site', label: 'Całą stronę' },
+    { value: 'panel', label: 'Tylko panel' },
   ] as const
 
-  const authScope = computed(() => form.value.authScope === 'panel' ? 'panel' : 'site')
+  const PANEL_NOTE = 'lista go nie wysyła – panel otwiera się z loginem i hasłem'
+
+  /** production's and staging's Basic Auth: their fields, the password's kind, the panel it may guard alone */
+  const AUTH = {
+    production: { user: 'authUser', scope: 'authScope', kind: 'auth', panel: 'adminUrl', kept: 'hasAuthPassword', siteNote: 'lista używa go przy sprawdzaniu strony i pobieraniu raportu' },
+    staging: { user: 'stagingAuthUser', scope: 'stagingAuthScope', kind: 'staging', panel: 'stagingAdminUrl', kept: 'hasStagingAuthPassword', siteNote: 'lista sprawdza z nim, czy staging odpowiada' },
+  } as const
+
+  type AuthEnv = keyof typeof AUTH
+
+  const scopeOf = (env: AuthEnv) => form.value[AUTH[env].scope] === 'panel' ? 'panel' : 'site'
 
   /** the Basic Auth fields: shown when used (a login, a password kept or typed), else behind „+ Basic Auth” */
-  const authOpen = ref(false)
-  const authShown = computed(() => authOpen.value || Boolean(form.value.authUser) || Boolean(secrets.values.auth) || Boolean(project.value?.hasAuthPassword))
+  const authOpen = ref<Record<AuthEnv, boolean>>({ production: false, staging: false })
+
+  function authShown (env: AuthEnv): boolean {
+    const auth = AUTH[env]
+
+    return authOpen.value[env] || Boolean(form.value[auth.user]) || Boolean(secrets.values[auth.kind]) || Boolean(project.value?.[auth.kept])
+  }
 
   watch(() => project.value?.id, () => {
-    authOpen.value = false
+    authOpen.value = { production: false, staging: false }
   })
 
-  /** the panel's address with the Basic Auth login and password in it – the browser passes them on; null without them */
-  const panelAuthUrl = computed(() => {
-    const user = (form.value.authUser ?? '').trim()
-    const password = secrets.values.auth
+  /** the environment whose panel this field is – the panels alone can be guarded */
+  const envOfPanel = (field: AccessField): AuthEnv | null => (Object.keys(AUTH) as AuthEnv[]).find(env => AUTH[env].panel === field) ?? null
 
-    if (authScope.value !== 'panel' || !user || !password || !form.value.adminUrl) {
+  /** the panel's address with the Basic Auth login and password in it – the browser passes them on; null without them */
+  function panelAuthUrl (field: AccessField): string | null {
+    const env = envOfPanel(field)
+
+    if (!env || scopeOf(env) !== 'panel') {
+      return null
+    }
+
+    const user = (form.value[AUTH[env].user] ?? '').trim()
+    const password = secrets.values[AUTH[env].kind]
+    const url = form.value[field]
+
+    if (!user || !password || !url) {
       return null
     }
 
     try {
-      const address = new URL(form.value.adminUrl)
+      const address = new URL(url)
       address.username = encodeURIComponent(user)
       address.password = encodeURIComponent(password)
 
@@ -188,10 +205,10 @@
     } catch {
       return null
     }
-  })
+  }
 
-  /** the production panel's field gets the locked open and copy */
-  const lockedPanel = (field: AccessField) => field === 'adminUrl' && panelAuthUrl.value !== null
+  /** a panel behind its own Basic Auth gets the locked open and copy */
+  const lockedPanel = (field: AccessField) => panelAuthUrl(field) !== null
 
   /** the addresses – each with a button that opens it */
   type AccessField = 'adminUrl' | 'stagingUrl' | 'stagingAdminUrl' | 'localUrl' | 'localAdminUrl'
@@ -278,16 +295,41 @@
   stroke-width: 2.25;
 }
 
-/* the panel's login – the same on every environment, so set apart from them: a tinted card */
-.access > .group.group--login {
+/* the panel's login – the same on every environment, so set apart from them: a quiet card, its name with a key */
+.login-card {
+  display: grid;
+  gap: 12px;
   padding: 14px 16px 16px;
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: var(--accent-soft);
+  background: var(--panel);
 }
 
-.group--login .group__title {
+.login-card__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.login-card__head .faint {
+  font-size: 12px;
+}
+
+.login-card__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
   color: var(--accent-text);
+}
+
+.login-card__icon svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 2.25;
 }
 
 /* the environments one under another, the first without a line over it */
@@ -296,7 +338,8 @@
   gap: 18px;
 }
 
-.access > .group:first-child {
+/* the first environment right under the login card – no line over it */
+.access > .login-card + .group {
   padding-top: 0;
   border-top: 0;
 }
