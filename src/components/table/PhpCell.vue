@@ -1,7 +1,7 @@
 <template>
   <!-- the version in its status's colour; the tooltip: what that means, the branch's newest release and support, the
-       limits the site runs with -->
-  <HoverTip v-if="project.php" anchor-class="php-hit">
+       limits the site runs with – it can be entered, to select and copy them -->
+  <HoverTip v-if="project.php" anchor-class="php-hit" interactive>
     <span class="mono php" :class="`php--${status.tone}`" tabindex="0">{{ project.php }}</span>
 
     <template #tip>
