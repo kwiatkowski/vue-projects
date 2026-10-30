@@ -10,7 +10,12 @@
     >
       <RefreshCw v-if="reportMark(project) === 'running'" />
       <TriangleAlert v-else-if="reportMark(project) === 'failed'" />
-      <template v-else-if="reportMark(project).startsWith('vulnerable')"><ShieldAlert /><span class="mono">{{ project.vulnerabilities?.length }}</span></template>
+
+      <template v-else-if="reportMark(project).startsWith('vulnerable')">
+        <ShieldAlert /><span class="mono">{{ project.vulnerabilities?.length }}</span>
+        <!-- what waits for an update too – the shield would hide it -->
+        <span v-if="updateCount(project) > 0" class="report__also"><ArrowUp /><span class="mono">{{ updateCount(project) }}</span></span>
+      </template>
 
       <template v-else-if="reportMark(project) === 'todo'">
         <template v-if="updateCount(project) > 0"><ArrowUp /><span class="mono">{{ updateCount(project) }}</span></template>
@@ -156,6 +161,15 @@
 .report .mono {
   line-height: 1;
   text-box: trim-both cap alphabetic;
+}
+
+/* the updates beside a shield – orange, as the arrow alone; a little apart from the shield's number */
+.report__also {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  margin-left: 6px;
+  color: var(--warn);
 }
 
 .report--ok {
