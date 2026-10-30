@@ -71,6 +71,14 @@
     </div>
 
     <p v-else class="faint">Lista jeszcze nie sprawdzała certyfikatu – sprawdzi go przy najbliższym pobieraniu raportów.</p>
+
+    <!-- the site's other domains – each its own certificate and answer -->
+    <dl v-if="others.length > 0" class="ssl__others">
+      <template v-for="row in others" :key="row.domain">
+        <dt class="mono">{{ row.domain }}</dt>
+        <dd><span :class="`ssl__tone--${row.tone}`">{{ row.text }}</span><span v-if="row.ssl" class="faint"> · {{ row.ssl }}</span></dd>
+      </template>
+    </dl>
   </fieldset>
 </template>
 
@@ -78,10 +86,13 @@
   import { computed } from 'vue'
   import { useProjectForm } from '@/components/project/form'
   import CopyInput from '@/components/ui/CopyInput.vue'
-  import { formatDateTime, formatDay, sslDaysLeft, sslState } from '@/utils/projects'
+  import { domainChecks, formatDateTime, formatDay, sslDaysLeft, sslState } from '@/utils/projects'
 
   /** "Serwer": the hosting, its panel and account; the certificate as the list saw it */
   const { form, project } = useProjectForm()
+
+  /** the site's other domains: what they answer, their certificates */
+  const others = computed(() => project.value ? domainChecks(project.value) : [])
 
   /** the certificate: fine, running out soon, or why not; until when and how long still */
   const sslInfo = computed(() => {
@@ -103,6 +114,31 @@
 </script>
 
 <style scoped>
+/* the other domains under the home page's certificate – domain, then what it answers and its certificate */
+.ssl__others {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  margin: 16px 0 0;
+  font-size: 13px;
+}
+
+.ssl__others dd {
+  margin: 0;
+}
+
+.ssl__tone--ok {
+  color: var(--positive);
+}
+
+.ssl__tone--warn {
+  color: var(--warn);
+}
+
+.ssl__tone--down {
+  color: var(--danger);
+}
+
 /* the certificate under the server's fields; its state in the colour of the report's mark */
 .ssl {
   margin-top: 20px;

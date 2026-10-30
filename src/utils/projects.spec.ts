@@ -1,6 +1,6 @@
 import type { Project } from '@/types'
 import { describe, expect, it } from 'vitest'
-import { ago, bareDomain, compareManual, compareVersions, formatDateTime, formatDay, groupProjects, LATEST_PLUGIN_MEDEN, latestWordpress, matches, moveId, newestReporters, newestWordpress, ownTheme, parseReporter, pendingUpdates, phpStatus, repoHost, reporterUpdate, reportStale, reportState, siteUrl, sortProjects, stagingCheck, vulnerabilityTone } from './projects'
+import { ago, bareDomain, compareManual, compareVersions, domainChecks, formatDateTime, formatDay, groupProjects, LATEST_PLUGIN_MEDEN, latestWordpress, matches, moveId, newestReporters, newestWordpress, ownTheme, parseReporter, pendingUpdates, phpStatus, repoHost, reporterUpdate, reportStale, reportState, siteUrl, sortProjects, stagingCheck, vulnerabilityTone } from './projects'
 
 const p = (name: string, extra: Partial<Project> = {}): Partial<Project> => ({ name, domains: [name], status: 'online', ...extra })
 
@@ -225,5 +225,24 @@ describe('phpStatus', () => {
     expect(phpStatus({ php: '8.1', phpVersion: '8.1.31' }, branches).tone).toBe('eol')
     expect(phpStatus({ php: '7.4', phpVersion: null }, branches).tone).toBe('eol')
     expect(phpStatus({ php: '8.3', phpVersion: null }, branches).tone).toBe('unknown')
+  })
+})
+
+describe('domainChecks', () => {
+  const now = new Date('2026-10-30T12:00:00Z')
+  const ssl = (validTo: string, ok = true) => ({ ok, error: ok ? null : 'certyfikat wygasł', validTo, issuer: null, checkedAt: '2026-10-30T11:00:00Z' })
+
+  it('answers as the home page counts it, the worse of the answer and the certificate', () => {
+    const rows = domainChecks({ domainChecks: [
+      { domain: 'a.bg', code: 301, ssl: ssl('2027-01-27T00:00:00Z') },
+      { domain: 'b.bg', code: 200, ssl: ssl('2026-11-05T00:00:00Z') },
+      { domain: 'c.bg', code: 200, ssl: ssl('2026-10-01T00:00:00Z', false) },
+      { domain: 'd.bg', code: 0, error: 'dns' },
+      { domain: 'e.bg' },
+    ] }, now)
+
+    expect(rows.map(row => row.tone)).toEqual(['ok', 'warn', 'down', 'down', 'unknown'])
+    expect(rows[0]?.ssl).toBe('SSL do 2027.01.27')
+    expect(rows[3]?.text).toBe('nie ma takiej domeny (DNS)')
   })
 })

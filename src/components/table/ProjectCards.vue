@@ -40,6 +40,7 @@
             />
 
             <StatusChip v-if="show('status')" :status="project.status" />
+            <DomainsMark v-if="show('status')" :project="project" />
           </div>
 
           <div v-if="(show('engine') && project.engine) || (show('theme') && project.theme)" class="card__line muted">
@@ -73,6 +74,7 @@
   import { ArrowUpRight, Check } from 'lucide-vue-next'
   import CategoryMenu from '@/components/CategoryMenu.vue'
   import StatusChip from '@/components/StatusChip.vue'
+  import DomainsMark from '@/components/table/DomainsMark.vue'
   import TodoChip from '@/components/TodoChip.vue'
   import { config } from '@/config'
   import { vTip } from '@/directives/tip'

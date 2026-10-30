@@ -123,7 +123,7 @@
               />
             </td>
 
-            <td v-if="show('status')" class="fit" :class="cellChanged(project, 'status')"><StatusChip :status="project.status" /></td>
+            <td v-if="show('status')" class="fit" :class="cellChanged(project, 'status')"><StatusChip :status="project.status" /><DomainsMark :project="project" /></td>
 
             <!-- the home page over 30 days; the response time in the tooltip -->
             <td v-if="show('uptime')" class="right mono nowrap">
@@ -233,6 +233,7 @@
   import CategoryMenu from '@/components/CategoryMenu.vue'
   import SiteLinkMenu from '@/components/SiteLinkMenu.vue'
   import StatusChip from '@/components/StatusChip.vue'
+  import DomainsMark from '@/components/table/DomainsMark.vue'
   import { useTableDrag } from '@/components/table/drag'
   import EngineCell from '@/components/table/EngineCell.vue'
   import PhpCell from '@/components/table/PhpCell.vue'

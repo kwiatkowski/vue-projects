@@ -34,7 +34,7 @@
   <p v-if="!project" class="faint">Historia pojawi się po utworzeniu projektu.</p>
   <p v-else-if="loading && !history" class="faint">Wczytuję historię…</p>
 
-  <p v-else-if="!history || (!history.targets.home && !history.targets.staging && history.events.length === 0)" class="faint">
+  <p v-else-if="!history || (Object.keys(history.targets).length === 0 && history.events.length === 0)" class="faint">
     Lista jeszcze nie sprawdzała tej strony – historia zbiera się od teraz, co 5 minut.
   </p>
 
@@ -245,7 +245,10 @@
   const targets = computed(() => {
     const all = history.value?.targets ?? {}
 
-    return ([['home', 'Strona'], ['staging', 'Staging']] as const)
+    // the home page, the staging, then the site's other domains (by their host)
+    const others = Object.keys(all).filter(key => key !== 'home' && key !== 'staging').map(key => [key, key] as const)
+
+    return ([['home', 'Strona'], ['staging', 'Staging'], ...others] as const)
       .filter(([key]) => all[key])
       .map(([key, label]) => {
         const data = all[key] as TargetHistory

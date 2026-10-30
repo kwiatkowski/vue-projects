@@ -122,6 +122,18 @@ export interface Project extends Record<Flag, boolean> {
   recaptcha?: RecaptchaPlace[] | null
   /** the TLS certificate as the list saw it at its last pull */
   ssl?: SslState | null
+  /** the site's other domains (all but the first) as the list last saw them – the "Status" column */
+  domainChecks?: DomainCheck[]
+}
+
+/** One of the site's other domains (multisite, another language's address): what it answered, its certificate. */
+export interface DomainCheck {
+  domain: string
+  /** the HTTP code – 0: no answer (`error` why); missing: not checked yet */
+  code?: number
+  error?: StagingCheck['error']
+  checkedAt?: string
+  ssl?: SslState
 }
 
 /** Where the site uses reCAPTCHA (from the report): the site key, the secret only as its SHA-256. */
@@ -211,7 +223,7 @@ export interface SiteReport {
 }
 
 /** What the API takes: any field, null clears it. */
-export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'hasStagingAuthPassword' | 'hasRecaptchaSecret' | 'staging' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter' | 'updates' | 'translationUpdates' | 'recaptcha' | 'ssl'>>
+export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'hasStagingAuthPassword' | 'hasRecaptchaSecret' | 'staging' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter' | 'updates' | 'translationUpdates' | 'recaptcha' | 'ssl' | 'domainChecks'>>
 
 /** the secrets kept encrypted: the panel's password, HTTP Basic Auth's, reCAPTCHA's secret key */
 export type PasswordKind = 'panel' | 'auth' | 'staging' | 'recaptcha'
@@ -286,7 +298,8 @@ export interface HistoryEvent {
 }
 
 export interface ProjectHistory {
-  targets: { home?: TargetHistory, staging?: TargetHistory }
+  /** the home page, the staging, the site's other domains (by their host) */
+  targets: Partial<Record<string, TargetHistory>>
   /** newest first */
   events: HistoryEvent[]
 }

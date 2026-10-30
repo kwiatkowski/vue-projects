@@ -312,6 +312,28 @@ export function stagingCheck (check: StagingCheck): { text: string, tone: 'ok' |
   }
 }
 
+/**
+ * The site's other domains in words: whether each answers (as the home page counts it: 2xx, 3xx, 401) and its
+ * certificate – the tone the worse of the two.
+ */
+export function domainChecks (project: Pick<Project, 'domainChecks'>, now: Date = new Date()): Array<{ domain: string, tone: 'ok' | 'warn' | 'down' | 'unknown', text: string, ssl: string | null }> {
+  return (project.domainChecks ?? []).map(check => {
+    const up = check.code !== undefined && ((check.code >= 200 && check.code < 400) || check.code === 401)
+    const answer = check.code === undefined ? null : (up ? `odpowiada (${check.code})` : stagingCheck({ code: check.code, checkedAt: check.checkedAt ?? '', error: check.error }).text)
+    const ssl = sslState({ ssl: check.ssl ?? null }, now)
+    const days = check.ssl?.validTo ? Math.max(0, Math.floor((new Date(check.ssl.validTo).getTime() - now.getTime()) / 86_400_000)) : null
+    const sslText = ssl === null ? null : (ssl === 'bad' ? `SSL: ${check.ssl?.error ?? 'błąd'}` : `SSL do ${formatDay(check.ssl?.validTo ?? null)}${ssl === 'soon' ? ` (${days} dni)` : ''}`)
+
+    let tone: 'ok' | 'warn' | 'down' | 'unknown' = 'unknown'
+
+    if (check.code !== undefined) {
+      tone = !up || ssl === 'bad' ? 'down' : (ssl === 'soon' ? 'warn' : 'ok')
+    }
+
+    return { domain: check.domain, tone, text: answer ?? 'jeszcze nie sprawdzana', ssl: sslText }
+  })
+}
+
 /** a vulnerability's CVSS severity in words */
 export const SEVERITY_LABELS: Record<'l' | 'm' | 'h' | 'c', string> = { l: 'niska', m: 'średnia', h: 'wysoka', c: 'krytyczna' }
 
