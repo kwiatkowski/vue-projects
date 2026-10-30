@@ -357,16 +357,15 @@
     }
   }
 
-  const pulling = ref(false)
+  // the store's – the mark in the table spins with it
+  const pulling = computed(() => project.value !== undefined && project.value !== null && projects.pulling.has(project.value.id))
 
   async function pullReport (): Promise<void> {
     if (!project.value) {
       return
     }
 
-    pulling.value = true
     const result = await projects.pullReport(project.value.id)
-    pulling.value = false
 
     if (!result) {
       return

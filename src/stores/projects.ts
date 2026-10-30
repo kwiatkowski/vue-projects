@@ -308,8 +308,17 @@ export const useProjectsStore = defineStore('projects', () => {
     }
   }
 
+  /** sites whose report is being fetched – their report mark spins (in the table, its popup, the dialog) */
+  const pulling = ref<Set<number>>(new Set())
+
+  /** a fetch shows its spinning at least this long – the list's own site answers in a fifth of a second */
+  const PULL_SHOWN_MS = 700
+
   /** Fetches the site's report now; resolves to the project after it and why the report didn't come (null – it did). */
   async function pullReport (id: number): Promise<{ project: Project, error: string | null } | null> {
+    pulling.value = new Set(pulling.value).add(id)
+    const started = Date.now()
+
     try {
       const result = await projectsApi.pullReport(id)
       replace(result.project)
@@ -319,6 +328,11 @@ export const useProjectsStore = defineStore('projects', () => {
       notify.error(error)
 
       return null
+    } finally {
+      await new Promise(resolve => setTimeout(resolve, Math.max(0, PULL_SHOWN_MS - (Date.now() - started))))
+      const next = new Set(pulling.value)
+      next.delete(id)
+      pulling.value = next
     }
   }
 
@@ -621,6 +635,7 @@ export const useProjectsStore = defineStore('projects', () => {
     update,
     remove,
     regenerateToken,
+    pulling,
     pullReport,
     removeToken,
     setPassword,

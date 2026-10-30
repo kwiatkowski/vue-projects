@@ -40,9 +40,9 @@
         </button>
 
         <!-- the site sends its report now – as "Aktualizuj raport" in the project's dialog -->
-        <button class="menu__item" :disabled="pulling.has(project.id)" type="button" @click="pullReport(project.id)">
-          <RefreshCw :class="{ spin: pulling.has(project.id) }" />
-          {{ pulling.has(project.id) ? 'Aktualizuję raport…' : 'Aktualizuj raport' }}
+        <button class="menu__item" :disabled="projects.pulling.has(project.id)" type="button" @click="pullReport(project.id)">
+          <RefreshCw :class="{ spin: projects.pulling.has(project.id) }" />
+          {{ projects.pulling.has(project.id) ? 'Aktualizuję raport…' : 'Aktualizuj raport' }}
         </button>
 
         <button class="menu__item" type="button" @click="hide(); emit('open', project)">
@@ -56,7 +56,6 @@
 <script lang="ts" setup>
   import type { Project } from '@/types'
   import { ArrowUp, Check, FileText, Languages, Lock, Minus, Package, RefreshCw, ShieldAlert, TriangleAlert } from 'lucide-vue-next'
-  import { ref } from 'vue'
   import ReportSummary from '@/components/ReportSummary.vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
   import { useNotifyStore } from '@/stores/notify'
@@ -89,15 +88,8 @@
 
   const scopeOf = (project: Project) => updateScope(project, projects.latestWordpress)
 
-  /** sites whose report is being fetched from the report's popup */
-  const pulling = ref<Set<number>>(new Set())
-
   async function pullReport (id: number): Promise<void> {
-    pulling.value = new Set(pulling.value).add(id)
     const result = await projects.pullReport(id)
-    const next = new Set(pulling.value)
-    next.delete(id)
-    pulling.value = next
 
     if (!result) {
       return
@@ -117,7 +109,8 @@
 
   /** the report's mark: a tick when the site reports, an orange arrow (or lock) when it has something to update */
   function reportMark (project: Project): string {
-    if (projects.updating.has(project.id)) {
+    // updating itself, or its report being fetched – the mark spins
+    if (projects.updating.has(project.id) || projects.pulling.has(project.id)) {
       return 'running'
     }
 
