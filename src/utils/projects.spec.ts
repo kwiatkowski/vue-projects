@@ -1,6 +1,6 @@
 import type { Project } from '@/types'
 import { describe, expect, it } from 'vitest'
-import { ago, bareDomain, compareManual, compareVersions, domainChecks, formatDateTime, formatDay, groupProjects, LATEST_PLUGIN_MEDEN, latestWordpress, matches, moveId, newestReporters, newestWordpress, ownTheme, parseReporter, pendingUpdates, phpStatus, repoHost, reporterUpdate, reportStale, reportState, siteUrl, sortProjects, stagingCheck, vulnerabilityTone } from './projects'
+import { ago, bareDomain, compareManual, compareVersions, domainChecks, formatDateTime, formatDay, groupProjects, LATEST_PLUGIN_MEDEN, latestWordpress, matches, missingTranslations, moveId, newestReporters, newestWordpress, ownTheme, parseReporter, pendingUpdates, phpStatus, repoHost, reporterUpdate, reportStale, reportState, siteUrl, sortProjects, stagingCheck, vulnerabilityTone } from './projects'
 
 const p = (name: string, extra: Partial<Project> = {}): Partial<Project> => ({ name, domains: [name], status: 'online', ...extra })
 
@@ -244,5 +244,14 @@ describe('domainChecks', () => {
     expect(rows.map(row => row.tone)).toEqual(['ok', 'warn', 'down', 'down', 'unknown'])
     expect(rows[0]?.ssl).toBe('SSL do 2027.01.27')
     expect(rows[3]?.text).toBe('nie ma takiej domeny (DNS)')
+  })
+})
+
+describe('missingTranslations', () => {
+  it('takes the network sites\' too, each once', () => {
+    const item = (slug: string) => ({ type: 'plugin' as const, slug, name: slug })
+    const site = (items: ReturnType<typeof item>[]) => ({ id: 2, url: 'a.bg', name: 'a.bg', locale: 'bg_BG', theme: 't', missingTranslations: { locale: 'bg_BG', items } })
+
+    expect(missingTranslations({ missingTranslations: { locale: 'pl_PL', items: [item('a')] }, sites: [site([item('a'), item('b')])] }).map(each => each.slug)).toEqual(['a', 'b'])
   })
 })

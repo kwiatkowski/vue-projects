@@ -366,10 +366,23 @@ export function ownTheme (project: Pick<Project, 'themeDetails'>): boolean {
  * What has no translation for the site's language – the theme left out when made in-house (written in that language,
  * nothing to translate).
  */
-export function missingTranslations (project: Pick<Project, 'missingTranslations' | 'themeDetails'>): MissingTranslation[] {
+export function missingTranslations (project: Pick<Project, 'missingTranslations' | 'themeDetails' | 'sites'>): MissingTranslation[] {
   const own = ownTheme(project)
+  // multisite: the other sites' too, each once
+  const all = [project.missingTranslations?.items ?? [], ...(project.sites ?? []).map(site => site.missingTranslations.items)].flat()
+  const seen = new Set<string>()
 
-  return (project.missingTranslations?.items ?? []).filter(item => !(own && item.type === 'theme'))
+  return all.filter(item => {
+    const key = `${item.type}:${item.slug}`
+
+    if (seen.has(key) || (own && item.type === 'theme')) {
+      return false
+    }
+
+    seen.add(key)
+
+    return true
+  })
 }
 
 /** "plugin_meden 1.17.0" / "mk-core 2026.10.29" – what sends the site's report, and its version */
@@ -383,7 +396,7 @@ export function parseReporter (reporter: string | null | undefined): { name: str
  * The newest plugin_meden released – its repository is private, the list can't ask GitHub. Bump it with every
  * release of plugin_meden (the tag vX.Y.Z), so the sites on an older one show it at once.
  */
-export const LATEST_PLUGIN_MEDEN = '1.19.0'
+export const LATEST_PLUGIN_MEDEN = '1.20.0'
 
 /**
  * The newest version of each reporter: the highest any site sends – at least the released plugin_meden

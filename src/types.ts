@@ -106,6 +106,8 @@ export interface Project extends Record<Flag, boolean> {
   phpIni?: Record<string, string> | null
   /** what has no translation for the site's language at all – WordPress, plugins, the theme; null: not reported */
   missingTranslations?: { locale: string, items: MissingTranslation[] } | null
+  /** multisite: the network's sites, from the last report (plugin_meden 1.20.0); null – a single site */
+  sites?: ReportSite[] | null
   /** the alerts muted until – null: not muted (the owner's) */
   mutedUntil?: string | null
   updatedAt: string | null
@@ -223,7 +225,7 @@ export interface SiteReport {
 }
 
 /** What the API takes: any field, null clears it. */
-export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'hasStagingAuthPassword' | 'hasRecaptchaSecret' | 'staging' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter' | 'updates' | 'translationUpdates' | 'recaptcha' | 'ssl' | 'domainChecks'>>
+export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'hasStagingAuthPassword' | 'hasRecaptchaSecret' | 'staging' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter' | 'updates' | 'translationUpdates' | 'recaptcha' | 'ssl' | 'domainChecks' | 'sites'>>
 
 /** the secrets kept encrypted: the panel's password, HTTP Basic Auth's, reCAPTCHA's secret key */
 export type PasswordKind = 'panel' | 'auth' | 'staging' | 'recaptcha'
@@ -235,6 +237,16 @@ export interface StagingCheck {
   code: number
   checkedAt: string
   error?: 'dns' | 'refused' | 'timeout' | 'ssl' | 'redirects' | 'other'
+}
+
+/** One site of a multisite network – its address (domain and path), language, theme, what it misses a translation of. */
+export interface ReportSite {
+  id: number
+  url: string
+  name: string
+  locale: string
+  theme: string
+  missingTranslations: { locale: string, items: MissingTranslation[] }
 }
 
 export interface MissingTranslation {

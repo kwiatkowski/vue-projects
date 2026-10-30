@@ -55,8 +55,20 @@
 
   <!-- no translation for the site's language at all – WordPress, plugins, the theme -->
   <template v-if="missing.length > 0">
-    <div class="info-tip__head info-tip__head--todo">Brak tłumaczeń ({{ project.missingTranslations?.locale }}): {{ missing.length }}</div>
+    <div class="info-tip__head info-tip__head--todo">Brak tłumaczeń ({{ missingLocales }}): {{ missing.length }}</div>
     <div class="missing">{{ missing.map(item => item.name).join(', ') }}</div>
+  </template>
+
+  <!-- multisite: the network's sites – the address, the language, the theme; what one misses, under it -->
+  <template v-if="sites.length > 1">
+    <div class="info-tip__head">Strony sieci: {{ sites.length }}</div>
+
+    <dl class="info-tip info-tip--right">
+      <template v-for="site in sites" :key="site.id">
+        <dt class="mono">{{ site.url }}</dt>
+        <dd><span class="mono">{{ site.locale }}</span> · {{ site.theme }}</dd>
+      </template>
+    </dl>
   </template>
 
   <div v-if="menu && plugins.length === 0 && !translations" class="info-tip__head info-tip__head--ok">Wszystko aktualne</div>
@@ -81,6 +93,12 @@
   const translations = computed(() => props.project.translationUpdates?.length ?? 0)
   const vulnerabilities = computed(() => props.project.vulnerabilities ?? [])
   const missing = computed(() => missingTranslations(props.project))
+  const sites = computed(() => props.project.sites ?? [])
+  /** the languages they are missing in – multisite: of every site that misses something */
+  const missingLocales = computed(() => [...new Set([
+    props.project.missingTranslations?.locale,
+    ...sites.value.filter(site => site.missingTranslations.items.length > 0).map(site => site.locale),
+  ].filter(Boolean))].join(', '))
   const reporterNewer = computed(() => reporterUpdate(props.project, projects.latestReporters))
   const ssl = computed(() => sslState(props.project))
   const daysLeft = computed(() => sslDaysLeft(props.project))
