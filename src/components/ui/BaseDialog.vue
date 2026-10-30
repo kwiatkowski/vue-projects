@@ -7,6 +7,7 @@
     tabindex="-1"
     @cancel.prevent="requestClose"
     @click="onBackdrop"
+    @close="open = false"
     @pointerdown="onPointerDown"
   >
     <form v-if="open" class="dialog__card" novalidate @submit.prevent="emit('submit')">

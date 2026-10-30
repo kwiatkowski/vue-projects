@@ -365,9 +365,11 @@
       return
     }
 
-    const result = await projects.pullReport(project.value.id)
+    const id = project.value.id
+    const result = await projects.pullReport(id)
 
-    if (!result) {
+    // closed meanwhile, or another project opened – the list has the report already, the dialog stays as it is
+    if (!result || projects.editing === null || projects.editing === 'new' || projects.editing.id !== id) {
       return
     }
 
