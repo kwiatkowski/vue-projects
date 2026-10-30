@@ -118,6 +118,11 @@
             </div>
 
             <span class="faint auth-scope__note">{{ scopeOf(group.key) === 'panel' ? PANEL_NOTE : AUTH[group.key].siteNote }}</span>
+
+            <!-- off: the login, the password and the scope cleared – gone once saved -->
+            <button class="btn btn--sm auth-off" type="button" @click="authOff(group.key)">
+              <X /> Wyłącz Basic Auth
+            </button>
           </div>
 
           <div class="grid">
@@ -152,7 +157,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ArrowUpRight, Copy, FlaskConical, KeyRound, Laptop, LockKeyhole, Plus } from 'lucide-vue-next'
+  import { ArrowUpRight, Copy, FlaskConical, KeyRound, Laptop, LockKeyhole, Plus, X } from 'lucide-vue-next'
   import { type Component, computed, ref, watch } from 'vue'
   import { useProjectForm } from '@/components/project/form'
   import CopyInput from '@/components/ui/CopyInput.vue'
@@ -173,8 +178,8 @@
 
   /** production's and staging's Basic Auth: their fields, the password's kind, the panel it may guard alone */
   const AUTH = {
-    production: { user: 'authUser', scope: 'authScope', kind: 'auth', panel: 'adminUrl', kept: 'hasAuthPassword', siteNote: 'lista używa go przy sprawdzaniu strony i pobieraniu raportu' },
-    staging: { user: 'stagingAuthUser', scope: 'stagingAuthScope', kind: 'staging', panel: 'stagingAdminUrl', kept: 'hasStagingAuthPassword', siteNote: 'lista sprawdza z nim, czy staging odpowiada' },
+    production: { user: 'authUser', scope: 'authScope', kind: 'auth', panel: 'adminUrl', siteNote: 'lista używa go przy sprawdzaniu strony i pobieraniu raportu' },
+    staging: { user: 'stagingAuthUser', scope: 'stagingAuthScope', kind: 'staging', panel: 'stagingAdminUrl', siteNote: 'lista sprawdza z nim, czy staging odpowiada' },
   } as const
 
   type AuthEnv = keyof typeof AUTH
@@ -187,7 +192,19 @@
   function authShown (env: AuthEnv): boolean {
     const auth = AUTH[env]
 
-    return authOpen.value[env] || Boolean(form.value[auth.user]) || Boolean(secrets.values[auth.kind]) || Boolean(project.value?.[auth.kept])
+    // a kept password counts while it loads – once loaded (or cleared) its value says
+    return authOpen.value[env] || Boolean(form.value[auth.user]) || Boolean(secrets.values[auth.kind]) || secrets.loading[auth.kind]
+  }
+
+  /** Basic Auth off: its fields cleared and folded behind „+ Basic Auth” – saving removes them (the password too) */
+  function authOff (env: AuthEnv): void {
+    const auth = AUTH[env]
+    form.value[auth.user] = ''
+    // an empty text, as the form keeps a cleared field (saved as null)
+    ;(form.value as Record<string, unknown>)[auth.scope] = ''
+    secrets.values[auth.kind] = ''
+    secrets.shown[auth.kind] = false
+    authOpen.value[env] = false
   }
 
   watch(() => project.value?.id, () => {
@@ -307,6 +324,11 @@
 
 .auth-scope__note {
   font-size: 12px;
+}
+
+/* turning it off – at the row's end */
+.auth-off {
+  margin-left: auto;
 }
 
 /* a group's name with its icon before it */
