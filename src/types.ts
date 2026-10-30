@@ -72,6 +72,8 @@ export interface Project extends Record<Flag, boolean> {
   login: string | null
   /** HTTP Basic Auth in front of the site – the list fetches the report with it (the password apart, like the panel's) */
   authUser: string | null
+  /** what that Basic Auth guards: the whole site (null, 'site') or only the panel – the list sends it only for the site */
+  authScope: 'site' | 'panel' | null
   /** the staging's HTTP Basic Auth – the list checks the staging with it */
   stagingAuthUser: string | null
   /** RRRR-MM-DD */

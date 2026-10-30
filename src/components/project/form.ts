@@ -10,7 +10,7 @@ export type Form = Required<Omit<ProjectInput, 'status'>> & { status: Status | n
 
 export const TEXT_FIELDS = [
   'server', 'serverUrl', 'serverAccount', 'php', 'engine', 'version', 'theme', 'repo', 'notes',
-  'adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login', 'authUser', 'stagingAuthUser', 'recaptchaSiteKey', 'googleMapsKey',
+  'adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login', 'authUser', 'authScope', 'stagingAuthUser', 'recaptchaSiteKey', 'googleMapsKey',
 ] as const
 
 export const FLAG_LABELS: Record<Flag, string> = {
