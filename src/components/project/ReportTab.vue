@@ -622,6 +622,10 @@
 }
 
 .spin {
+  /* about its own middle, on its own layer – as the list's report mark */
+  flex-shrink: 0;
+  transform-origin: 50% 50%;
+  will-change: transform;
   animation: spin 1s linear infinite;
 }
 

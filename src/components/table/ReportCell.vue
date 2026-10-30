@@ -191,6 +191,11 @@
 
 .report--running svg,
 .report-actions .spin {
+  /* about its own middle, on its own layer – inline, at a half pixel, the icon wobbled while turning */
+  display: block;
+  flex-shrink: 0;
+  transform-origin: 50% 50%;
+  will-change: transform;
   animation: spin 1s linear infinite;
 }
 
