@@ -2,8 +2,8 @@
   <!-- one section per environment: its addresses (open, copy), then its logins -->
   <div class="access">
     <!-- the panel's login and password – the same on production, staging and the local copy -->
-    <fieldset class="group">
-      <legend class="eyebrow">Logowanie do panelu <span class="group__note">– wszystkie środowiska</span></legend>
+    <fieldset class="group group--login">
+      <legend class="eyebrow group__title"><KeyRound /> Logowanie do panelu <span class="group__note">– wszystkie środowiska</span></legend>
 
       <div class="grid">
         <label class="field">
@@ -27,7 +27,8 @@
     </fieldset>
 
     <fieldset v-for="group in ACCESS_GROUPS" :key="group.key" class="group">
-      <legend class="eyebrow">{{ group.label }}</legend>
+      <!-- the same icons as the list's Stage and Lokalnie columns -->
+      <legend class="eyebrow group__title"><component :is="group.icon" v-if="group.icon" /> {{ group.label }}</legend>
 
       <div :class="group.links.length > 1 ? 'grid' : 'stack'">
         <label v-for="link in group.links" :key="link.field" class="field">
@@ -143,8 +144,8 @@
 </template>
 
 <script lang="ts" setup>
-  import { ArrowUpRight, Copy, LockKeyhole, Plus } from 'lucide-vue-next'
-  import { computed, ref, watch } from 'vue'
+  import { ArrowUpRight, Copy, FlaskConical, KeyRound, Laptop, LockKeyhole, Plus } from 'lucide-vue-next'
+  import { type Component, computed, ref, watch } from 'vue'
   import { useProjectForm } from '@/components/project/form'
   import CopyInput from '@/components/ui/CopyInput.vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
@@ -196,15 +197,15 @@
   type AccessField = 'adminUrl' | 'stagingUrl' | 'stagingAdminUrl' | 'localUrl' | 'localAdminUrl'
 
   /** one section per environment, its addresses (the logins follow in the template) */
-  const ACCESS_GROUPS: Array<{ key: 'production' | 'staging' | 'local', label: string, links: Array<{ field: AccessField, label: string, placeholder: string }> }> = [
+  const ACCESS_GROUPS: Array<{ key: 'production' | 'staging' | 'local', label: string, icon?: Component, links: Array<{ field: AccessField, label: string, placeholder: string }> }> = [
     { key: 'production', label: 'Produkcja', links: [
       { field: 'adminUrl', label: 'Panel', placeholder: 'https://…/wp/wp-login.php' },
     ] },
-    { key: 'staging', label: 'Staging', links: [
+    { key: 'staging', label: 'Staging', icon: FlaskConical, links: [
       { field: 'stagingUrl', label: 'Adres', placeholder: 'https://….medendev.eu/' },
       { field: 'stagingAdminUrl', label: 'Panel', placeholder: 'https://…/wp/wp-login.php' },
     ] },
-    { key: 'local', label: 'Lokalnie', links: [
+    { key: 'local', label: 'Lokalnie', icon: Laptop, links: [
       { field: 'localUrl', label: 'Adres', placeholder: 'https://….local/' },
       { field: 'localAdminUrl', label: 'Panel', placeholder: 'https://….local/wp/wp-login.php' },
     ] },
@@ -262,6 +263,31 @@
 
 .auth-scope__note {
   font-size: 12px;
+}
+
+/* a group's name with its icon before it */
+.group__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.group__title svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.25;
+}
+
+/* the panel's login – the same on every environment, so set apart from them: a tinted card */
+.access > .group.group--login {
+  padding: 14px 16px 16px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+}
+
+.group--login .group__title {
+  color: var(--accent-text);
 }
 
 /* the environments one under another, the first without a line over it */
