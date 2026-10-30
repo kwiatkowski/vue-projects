@@ -81,6 +81,8 @@ export interface Project extends Record<Flag, boolean> {
   notes: string | null
   /** reCAPTCHA v3's site key – its secret apart, encrypted (projectsApi.password(id, 'recaptcha')) */
   recaptchaSiteKey: string | null
+  /** Google Maps' API key – public in the site's pages anyway, kept as it is */
+  googleMapsKey: string | null
   /** ISO 8601 – the last report the site sent about itself */
   reportedAt: string | null
   token: string | null

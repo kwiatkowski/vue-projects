@@ -234,7 +234,7 @@
     { key: 'server', label: 'Serwer', icon: Server, fields: ['server', 'serverUrl', 'serverAccount'] },
     { key: 'tech', label: 'Technologia', icon: Cpu, fields: ['engine', 'version', 'theme', 'php'] },
     { key: 'access', label: 'Dostęp', icon: KeyRound, fields: ['adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login', 'authUser', 'stagingAuthUser'] },
-    { key: 'integrations', label: 'Integracje', icon: Puzzle, fields: ['recaptchaSiteKey'] },
+    { key: 'integrations', label: 'Integracje', icon: Puzzle, fields: ['recaptchaSiteKey', 'googleMapsKey'] },
     { key: 'notes', label: 'Notatki', icon: NotebookPen, fields: ['notes'] },
     { key: 'todo', label: 'Todo', icon: ListChecks, fields: ['todoProject'] },
   ]

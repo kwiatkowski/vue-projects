@@ -37,6 +37,24 @@
       <p v-else class="faint recaptcha-places__none">Raport strony jeszcze tego nie sprawdza ({{ project.reporter ?? 'starsza wersja' }}) – potrzebny plugin_meden 1.15.0.</p>
     </template>
   </fieldset>
+
+  <!-- Google Maps: the API key – in the site's pages anyway, so kept as it is (not encrypted) -->
+  <fieldset class="group maps">
+    <legend class="eyebrow">Google Maps</legend>
+
+    <label class="field">
+      <span>Klucz API</span>
+
+      <CopyInput
+        v-model="form.googleMapsKey"
+        autocomplete="off"
+        class="mono"
+        tip="Kopiuj klucz API"
+        type="text"
+        what="Klucz API Google Maps"
+      />
+    </label>
+  </fieldset>
 </template>
 
 <script lang="ts" setup>
@@ -90,6 +108,11 @@
 </script>
 
 <style scoped>
+/* the next group under reCAPTCHA – as the certificate under the server's fields */
+.maps {
+  margin-top: 20px;
+}
+
 /* where the site uses reCAPTCHA – a tick with the project's keys, a cross with others, a dash otherwise */
 .recaptcha-places {
   display: grid;
