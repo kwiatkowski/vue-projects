@@ -258,10 +258,9 @@
   stroke-width: 2.75;
 }
 
-/* the Basic Auth behind a button – under the panel's address */
+/* the Basic Auth behind a button – under the panel's address, the group's own gap above it */
 .auth-add {
   justify-self: start;
-  margin-top: 12px;
 }
 
 /* what the Basic Auth guards – a label, the switch, what it means */
@@ -270,7 +269,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 12px;
-  margin: 14px 0 10px;
+  margin-top: 4px;
   font-size: 13px;
 }
 
