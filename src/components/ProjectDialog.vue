@@ -110,6 +110,16 @@
             @click="tab = item.key"
           >
             <component :is="item.icon" /> {{ item.label }}
+            <!-- something in it: a dot for the notes, the open tasks' count for Todo (red when one is overdue) -->
+            <span v-if="item.key === 'notes' && form.notes?.trim()" aria-label="jest notatka" class="tabs__dot" />
+
+            <span
+              v-if="item.key === 'todo' && (project?.todo?.open ?? 0) > 0"
+              :aria-label="`otwarte zadania: ${project?.todo?.open}`"
+              class="tabs__count mono"
+              :class="{ 'tabs__count--late': (project?.todo?.overdue ?? 0) > 0 }"
+            >{{ project?.todo?.open }}</span>
+
             <PenLine v-if="tabChanged(item.key)" aria-label="zmienione" class="tabs__changed" />
           </button>
         </div>
@@ -512,6 +522,32 @@
 .tabs__tab[aria-selected='true'] {
   border-bottom-color: var(--accent);
   color: var(--text);
+}
+
+/* the notes tab with a note in it – a small dot in the accent */
+.tabs__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* the open tasks' count – a small box as the list's Todo column; red with an overdue one */
+.tabs__count {
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 17px;
+  text-align: center;
+}
+
+.tabs__count--late {
+  background: var(--danger-soft);
+  color: var(--danger);
 }
 
 .tabs__tab .tabs__changed {
