@@ -40,9 +40,25 @@
           <span>{{ link.label }}</span>
 
           <span class="input-row input-row--inside" :class="lockedPanel(link.field) ? 'input-row--three' : 'input-row--two'">
-            <input v-model.trim="form[link.field]" class="input" :placeholder="link.placeholder" type="url">
+            <!-- production's address is its main domain – set on the left, shown here as the others' -->
+            <input
+              v-if="link.field === 'home'"
+              class="input"
+              :placeholder="link.placeholder"
+              readonly
+              type="url"
+              :value="homeUrl"
+            >
 
-            <template v-if="form[link.field]">
+            <input
+              v-else
+              v-model.trim="form[link.field]"
+              class="input"
+              :placeholder="link.placeholder"
+              type="url"
+            >
+
+            <template v-if="valueOf(link.field)">
               <!-- the panel behind its own Basic Auth: opened, or copied, with the login and password in the address -->
               <HoverTip v-if="lockedPanel(link.field)" anchor-class="field-icon field-icon--third" text="Kopiuj z loginem i hasłem Basic Auth">
                 <button
@@ -57,7 +73,7 @@
                 <a
                   :aria-label="`Otwórz: ${group.label} – ${link.label}`"
                   class="btn btn--icon btn--sm input-copy"
-                  :href="(lockedPanel(link.field) ? panelAuthUrl(link.field) : form[link.field]) ?? undefined"
+                  :href="(lockedPanel(link.field) ? panelAuthUrl(link.field) : valueOf(link.field)) || undefined"
                   rel="noopener"
                   target="_blank"
                 >
@@ -71,7 +87,7 @@
                   :aria-label="`Kopiuj: ${group.label} – ${link.label}`"
                   class="btn btn--icon btn--sm input-copy"
                   type="button"
-                  @click="copy(form[link.field], `${group.label} – ${link.label}`)"
+                  @click="copy(valueOf(link.field), `${group.label} – ${link.label}`)"
                 ><Copy /></button>
               </HoverTip>
             </template>
@@ -137,11 +153,12 @@
 
 <script lang="ts" setup>
   import { ArrowUpRight, Copy, FlaskConical, KeyRound, Laptop, LockKeyhole, Plus } from 'lucide-vue-next'
-  import { type Component, ref, watch } from 'vue'
+  import { type Component, computed, ref, watch } from 'vue'
   import { useProjectForm } from '@/components/project/form'
   import CopyInput from '@/components/ui/CopyInput.vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
   import PasswordInput from '@/components/ui/PasswordInput.vue'
+  import { bareDomain, siteUrl } from '@/utils/projects'
 
   /** "Dostęp": the panel's login, each environment's addresses and Basic Auth */
   const { form, project, secrets, copy } = useProjectForm()
@@ -181,8 +198,8 @@
   const envOfPanel = (field: AccessField): AuthEnv | null => (Object.keys(AUTH) as AuthEnv[]).find(env => AUTH[env].panel === field) ?? null
 
   /** the panel's address with the Basic Auth login and password in it – the browser passes them on; null without them */
-  function panelAuthUrl (field: AccessField): string | null {
-    const env = envOfPanel(field)
+  function panelAuthUrl (field: AccessField | 'home'): string | null {
+    const env = field === 'home' ? null : envOfPanel(field)
 
     if (!env || scopeOf(env) !== 'panel') {
       return null
@@ -190,7 +207,7 @@
 
     const user = (form.value[AUTH[env].user] ?? '').trim()
     const password = secrets.values[AUTH[env].kind]
-    const url = form.value[field]
+    const url = valueOf(field)
 
     if (!user || !password || !url) {
       return null
@@ -208,14 +225,25 @@
   }
 
   /** a panel behind its own Basic Auth gets the locked open and copy */
-  const lockedPanel = (field: AccessField) => panelAuthUrl(field) !== null
+  const lockedPanel = (field: AccessField | 'home') => panelAuthUrl(field) !== null
+
+  /** production's address – the main domain (the first one on the left) */
+  const homeUrl = computed(() => {
+    const domain = bareDomain(form.value.domains[0] ?? '')
+
+    return domain ? siteUrl(domain) : ''
+  })
+
+  /** what a field holds – production's address from the domains */
+  const valueOf = (field: AccessField | 'home') => field === 'home' ? homeUrl.value : (form.value[field] ?? '')
 
   /** the addresses – each with a button that opens it */
   type AccessField = 'adminUrl' | 'stagingUrl' | 'stagingAdminUrl' | 'localUrl' | 'localAdminUrl'
 
   /** one section per environment, its addresses (the logins follow in the template) */
-  const ACCESS_GROUPS: Array<{ key: 'production' | 'staging' | 'local', label: string, icon?: Component, links: Array<{ field: AccessField, label: string, placeholder: string }> }> = [
+  const ACCESS_GROUPS: Array<{ key: 'production' | 'staging' | 'local', label: string, icon?: Component, links: Array<{ field: AccessField | 'home', label: string, placeholder: string }> }> = [
     { key: 'production', label: 'Produkcja', links: [
+      { field: 'home', label: 'Adres', placeholder: 'Główna domena – dodaj po lewej' },
       { field: 'adminUrl', label: 'Panel', placeholder: 'https://…/wp/wp-login.php' },
     ] },
     { key: 'staging', label: 'Staging', icon: FlaskConical, links: [
