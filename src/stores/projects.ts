@@ -481,7 +481,16 @@ export const useProjectsStore = defineStore('projects', () => {
         notify.show(state.state === 'nothing' ? `${name}: nic nowego do zainstalowania.` : `${name}: zaktualizowano.`)
       }
 
-      // the site has sent its new report – the mark and the list of updates follow
+      // the site's new report, fetched now – the site sends one itself, but not always (the list's own site: its
+      // `wp projects-report` is the list's); the mark and the list of updates follow
+      if (state.state !== 'failed') {
+        const pulled = await projectsApi.pullReport(id).catch(() => null)
+
+        if (pulled) {
+          replace(pulled.project)
+        }
+      }
+
       await refresh()
     } catch (error) {
       notify.error(error)
