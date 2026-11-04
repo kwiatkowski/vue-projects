@@ -261,6 +261,7 @@ describe('outageText', () => {
     const text = outageText({ code: 500, error: null, since: '2026-11-04T11:05:00Z' })
 
     expect(text.short).toBe('HTTP 500')
+    expect(text.meaning).toBe('błąd PHP lub WordPressa')
     expect(text.long).toBe(`błąd PHP lub WordPressa (HTTP 500) · od ${formatDateTime('2026-11-04T11:05:00Z')}`)
   })
 
@@ -269,7 +270,10 @@ describe('outageText', () => {
     expect(outageText({ code: 0, error: 'timeout', since: '2026-11-04T11:05:00Z' }).long).toMatch(/^brak odpowiedzi w 20 s · od /)
   })
 
-  it('nieznany kod – sam kod', () => {
-    expect(outageText({ code: 418, since: '2026-11-04T11:05:00Z' }).long).toMatch(/^HTTP 418 · od /)
+  it('nieznany kod – kod i ogólne znaczenie', () => {
+    const text = outageText({ code: 418, since: '2026-11-04T11:05:00Z' })
+
+    expect(text.meaning).toBe('nietypowa odpowiedź serwera')
+    expect(text.long).toMatch(/^nietypowa odpowiedź serwera \(HTTP 418\) · od /)
   })
 })

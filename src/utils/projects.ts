@@ -323,18 +323,16 @@ const SHORT_FAILURES: Record<NonNullable<StagingCheck['error']>, string> = {
 }
 
 /**
- * Why a site is down, in words: short – next to the status ("HTTP 500", "DNS"); long – its tooltip, with what the code
- * usually means and since when ("błąd PHP lub WordPressa (HTTP 500) · od 2026.11.04 12:05").
+ * Why a site is down, in words: short – the code or the failure ("HTTP 500", "DNS"); meaning – what it usually means
+ * ("błąd PHP lub WordPressa"); long – both and since when, for a one-line tooltip.
  */
-export function outageText (down: DownCheck): { short: string, long: string } {
+export function outageText (down: DownCheck): { short: string, meaning: string, long: string } {
   const since = formatDateTime(down.since)
-  const meaning = down.code === 0 ? STAGING_FAILURES[down.error ?? 'other'] ?? STAGING_FAILURES.other : STAGING_CODES[down.code]
-  const what = down.code === 0 ? meaning : (meaning ? `${meaning} (HTTP ${down.code})` : `HTTP ${down.code}`)
+  const short = down.code === 0 ? SHORT_FAILURES[down.error ?? 'other'] ?? SHORT_FAILURES.other : `HTTP ${down.code}`
+  const meaning = (down.code === 0 ? STAGING_FAILURES[down.error ?? 'other'] : STAGING_CODES[down.code]) ?? (down.code === 0 ? STAGING_FAILURES.other : 'nietypowa odpowiedź serwera')
+  const what = down.code === 0 ? meaning : `${meaning} (${short})`
 
-  return {
-    short: down.code === 0 ? SHORT_FAILURES[down.error ?? 'other'] ?? SHORT_FAILURES.other : `HTTP ${down.code}`,
-    long: since ? `${what} · od ${since}` : what!,
-  }
+  return { short, meaning, long: since ? `${what} · od ${since}` : what }
 }
 
 /**

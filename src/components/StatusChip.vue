@@ -1,27 +1,46 @@
 <template>
-  <span
-    v-if="status"
-    v-tip="why?.long"
-    class="chip"
-    :class="[`chip--${STATUS_TONES[status]}`, { 'chip--still': !PULSING.has(status) }]"
-    :tabindex="why ? 0 : undefined"
-  >
+  <!-- down: the status alone, why in the popup – as the report's: the code, what it means, since when, how long -->
+  <HoverTip v-if="status && why" anchor-class="status-hit">
+    <span class="chip" :class="`chip--${STATUS_TONES[status]}`" tabindex="0">
+      <span class="dot" />
+      {{ STATUS_LABELS[status] }}
+    </span>
+
+    <template #tip>
+      <div class="report-tip__title">
+        <strong>Strona nie działa</strong>
+        <span class="mono status-tip__code">{{ why.short }}</span>
+      </div>
+
+      <dl class="info-tip info-tip--after">
+        <dt>Przyczyna</dt>
+        <dd>{{ why.meaning }}</dd>
+        <dt>Od</dt>
+        <dd class="mono">{{ formatDateTime(down!.since) }}</dd>
+        <dt>Trwa</dt>
+        <dd>{{ lasting }}</dd>
+      </dl>
+    </template>
+  </HoverTip>
+
+  <span v-else-if="status" class="chip" :class="[`chip--${STATUS_TONES[status]}`, { 'chip--still': !PULSING.has(status) }]">
     <span class="dot" />
     {{ STATUS_LABELS[status] }}
-    <!-- down: why – the code or the failure; the tooltip says what it means and since when -->
-    <span v-if="why" class="chip__why">· {{ why.short }}</span>
   </span>
 </template>
 
 <script lang="ts" setup>
   import type { DownCheck, Status } from '@/types'
   import { computed } from 'vue'
-  import { vTip } from '@/directives/tip'
-  import { outageText, STATUS_LABELS, STATUS_TONES } from '@/utils/projects'
+  import HoverTip from '@/components/ui/HoverTip.vue'
+  import { formatDuration } from '@/utils/history'
+  import { formatDateTime, outageText, STATUS_LABELS, STATUS_TONES } from '@/utils/projects'
 
   const props = defineProps<{ status: Status | null | undefined, down?: DownCheck | null }>()
 
   const why = computed(() => props.status === 'offline' && props.down ? outageText(props.down) : null)
+  /** how long it has been down – when the popup opens */
+  const lasting = computed(() => props.down ? formatDuration(Math.round((Date.now() - new Date(props.down.since).getTime()) / 60_000)) : '')
 
   /** only a site that is up or down pulses – one in progress or suspended doesn't */
   const PULSING = new Set<Status>(['online', 'offline'])
@@ -39,11 +58,9 @@
   color: var(--positive);
 }
 
-/* the reason – the status' colour, the code in the numbers' font */
-.chip__why {
-  font-family: var(--mono);
-  font-size: 12px;
-  white-space: nowrap;
+/* the popup's code – in the offline colour */
+.status-tip__code {
+  color: var(--danger);
 }
 
 /* suspended – a dark dot, no pulse, the label greyed */
