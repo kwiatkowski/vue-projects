@@ -422,6 +422,32 @@
   scrollbar-width: none;
 }
 
+/* every control of the toolbar alike – the fields, the statuses, the buttons: 36px tall, the fields' darker edge, their
+   6px corners and background */
+.search .input,
+.toolbar__category :deep(.select-field__trigger),
+.toolbar__status :deep(.select-field__trigger) {
+  height: 36px;
+  min-height: 36px;
+}
+
+.toolbar__filters {
+  border-color: var(--line-strong);
+  border-radius: 6px;
+}
+
+.toolbar__filters button {
+  border-radius: 4px;
+}
+
+.toolbar__toggle,
+.toolbar__updates,
+.toolbar__update-all,
+.toolbar__columns {
+  border-radius: 6px;
+  background: var(--panel);
+}
+
 /* the phones' status list: its count a little apart from the status (a chip or "Wszystkie") */
 .toolbar__status .count {
   margin-left: 6px;
@@ -538,19 +564,19 @@
   box-sizing: content-box;
 }
 
-/* the ticked projects' actions, in the search's place – as tall as it and the category (37px: the field's padding
-   and line height go past its 36px min-height), so the list under them stays put */
+/* the ticked projects' actions, in the search's place – as every control of the toolbar, so the list under them stays
+   put */
 .bulk {
   display: flex;
   flex: 0 1 auto;
   align-items: center;
   gap: 10px;
   min-width: 0;
-  height: 37px;
+  height: 36px;
   padding: 0 4px 0 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--panel);
   font-size: 13px;
   white-space: nowrap;
 }
