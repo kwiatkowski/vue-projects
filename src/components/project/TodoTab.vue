@@ -1,5 +1,5 @@
 <template>
-  <label class="field">
+  <label class="field" :class="{ 'field--changed': fieldChanged('todoProject') }">
     <span>Powiązany projekt w Todo – jego otwarte zadania widać na liście</span>
 
     <SelectField v-model="form.todoProject" label="Projekt w Todo" :options="todoOptions">
@@ -44,7 +44,7 @@
   import { formatDay } from '@/utils/projects'
 
   /** "Todo": the linked Todo project and its open tasks */
-  const { form, project } = useProjectForm()
+  const { form, project, fieldChanged } = useProjectForm()
   const projects = useProjectsStore()
 
   const todoOptions = computed(() => projects.todoProjects.map(todo => ({ value: todo.id, label: todo.name })))

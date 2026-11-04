@@ -6,7 +6,7 @@
     <SectionCard :icon="KeyRound" note="wszystkie środowiska" title="Logowanie do panelu">
 
       <div class="grid">
-        <label class="field">
+        <label class="field" :class="{ 'field--changed': fieldChanged('login') }">
           <span>Login</span>
 
           <CopyInput
@@ -19,7 +19,7 @@
           />
         </label>
 
-        <label class="field">
+        <label class="field" :class="{ 'field--changed': fieldChanged('secret:panel') }">
           <span>Hasło</span>
           <PasswordInput v-model="secrets.values.panel" v-model:shown="secrets.shown.panel" :loading="secrets.loading.panel" what="Hasło" />
         </label>
@@ -41,7 +41,7 @@
 
       <!-- the Basic Auth button (a shield with a plus) in the addresses' row, after the panel – as the domain's plus -->
       <div :class="[group.links.length > 1 ? 'grid' : 'stack', { 'grid--action': addsAuth(group.key) }]">
-        <label v-for="link in group.links" :key="link.field" class="field">
+        <label v-for="link in group.links" :key="link.field" class="field" :class="{ 'field--changed': fieldChanged(link.field) }">
           <span>{{ link.label }}</span>
 
           <span class="input-row input-row--inside" :class="lockedPanel(link.field) ? 'input-row--three' : 'input-row--two'">
@@ -136,7 +136,7 @@
           </div>
 
           <div class="grid">
-            <label class="field">
+            <label class="field" :class="{ 'field--changed': fieldChanged(AUTH[group.key].user) }">
               <span>Basic Auth – login</span>
 
               <CopyInput
@@ -149,7 +149,7 @@
               />
             </label>
 
-            <label class="field">
+            <label class="field" :class="{ 'field--changed': fieldChanged(`secret:${AUTH[group.key].kind}`) }">
               <span>Basic Auth – hasło</span>
 
               <PasswordInput
@@ -178,7 +178,7 @@
   import { bareDomain, siteUrl, envStatus as statusOf } from '@/utils/projects'
 
   /** "Dostęp": the panel's login, each environment's addresses and Basic Auth */
-  const { form, project, secrets, copy } = useProjectForm()
+  const { form, project, secrets, copy, fieldChanged } = useProjectForm()
 
   /** what an environment's Basic Auth guards – the list sends it only for the whole site */
   const AUTH_SCOPES = [

@@ -26,7 +26,7 @@
           <span v-if="nameError" class="error-text">{{ nameError }}</span>
         </div>
 
-        <label class="field">
+        <label class="field" :class="{ 'field--changed': fieldChanged('domains') }">
           <span>Domeny <span class="faint">– pierwsza jest główna (link na liście)</span></span>
 
           <div class="domains">
@@ -57,12 +57,12 @@
           </div>
         </label>
 
-        <label class="field">
+        <label class="field" :class="{ 'field--changed': fieldChanged('categoryId') }">
           <span>Kategoria</span>
           <SelectField v-model="form.categoryId" label="Kategoria" :options="categoryOptions" />
         </label>
 
-        <label class="field">
+        <label class="field" :class="{ 'field--changed': fieldChanged('status') }">
           <!-- whether the list watches the site; watched – beside it the status the checks set (online / offline) and,
                down, why – the tooltip: what it means, since when -->
           <span class="monitoring-label">
@@ -79,7 +79,7 @@
           />
         </label>
 
-        <label class="field">
+        <label class="field" :class="{ 'field--changed': fieldChanged('repo') }">
           <span>Repozytorium <span class="reported-mark">*</span></span>
 
           <CopyInput
@@ -211,7 +211,7 @@
 </template>
 
 <script lang="ts" setup>
-  import type { Project, SiteReport } from '@/types'
+  import type { PasswordKind, Project, SiteReport } from '@/types'
   import { Activity, AlertTriangle, Check, Cpu, History, KeyRound, ListChecks, NotebookPen, PenLine, Plus, Puzzle, Server, Trash2, X } from 'lucide-vue-next'
   import { type Component, computed, defineAsyncComponent, nextTick, provide, ref, useTemplateRef, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
@@ -283,6 +283,16 @@
   const tab = ref<Tab>('report')
 
   /** a tab with unsaved changes in its fields (the passwords count for "Dostęp", reCAPTCHA's secret for "Integracje") */
+  function fieldChanged (field: string): boolean {
+    if (field.startsWith('secret:')) {
+      return secrets.changed(field.slice(7) as PasswordKind)
+    }
+
+    const before = JSON.parse(initial.value || '{}') as Record<string, unknown>
+
+    return field in before && JSON.stringify((form.value as Record<string, unknown>)[field]) !== JSON.stringify(before[field])
+  }
+
   function tabChanged (key: Tab): boolean {
     const before = JSON.parse(initial.value || '{}') as Record<string, unknown>
     const fields = TABS.find(item => item.key === key)?.fields ?? []
@@ -379,7 +389,7 @@
     }
   }
 
-  provide(projectFormKey, { form, initial, project, busy, siteReport, loadReport, locked, secrets, copy })
+  provide(projectFormKey, { form, initial, project, busy, siteReport, loadReport, locked, secrets, copy, fieldChanged })
 
   /** something typed since it opened (or since the last save) – the passwords too */
   const dirty = computed(() => JSON.stringify(form.value) !== initial.value || secrets.anyChanged.value)

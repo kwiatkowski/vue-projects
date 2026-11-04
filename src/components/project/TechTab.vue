@@ -1,6 +1,6 @@
 <template>
   <div class="stack">
-    <label class="field">
+    <label class="field" :class="{ 'field--changed': fieldChanged('engine') }">
       <span>Silnik <span class="reported-mark">*</span></span>
 
       <SelectField
@@ -12,7 +12,7 @@
       />
     </label>
 
-    <label class="field">
+    <label class="field" :class="{ 'field--changed': fieldChanged('version') }">
       <span>Wersja <span class="reported-mark">*</span></span>
 
       <SelectField
@@ -28,12 +28,12 @@
       </SelectField>
     </label>
 
-    <label class="field">
+    <label class="field" :class="{ 'field--changed': fieldChanged('theme') }">
       <span>Motyw <span class="reported-mark">*</span></span>
       <input v-model.trim="form.theme" class="input" :disabled="locked('theme')" type="text">
     </label>
 
-    <label class="field">
+    <label class="field" :class="{ 'field--changed': fieldChanged('php') }">
       <span>PHP <span class="reported-mark">*</span></span>
 
       <SelectField
@@ -59,7 +59,7 @@
   import { useProjectsStore } from '@/stores/projects'
 
   /** "Technologia": the engine, its version, the theme, PHP */
-  const { form, locked } = useProjectForm()
+  const { form, locked, fieldChanged } = useProjectForm()
   const projects = useProjectsStore()
 
   /** what's known, newest first – with the project's own value, even an unusual one, so it isn't lost */

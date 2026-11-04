@@ -4,7 +4,7 @@
     <legend class="eyebrow">reCAPTCHA v3</legend>
 
     <div class="stack">
-      <label class="field">
+      <label class="field" :class="{ 'field--changed': fieldChanged('recaptchaSiteKey') }">
         <span>Klucz witryny</span>
 
         <CopyInput
@@ -17,7 +17,7 @@
         />
       </label>
 
-      <label class="field">
+      <label class="field" :class="{ 'field--changed': fieldChanged('secret:recaptcha') }">
         <span>Klucz tajny</span>
         <PasswordInput v-model="secrets.values.recaptcha" v-model:shown="secrets.shown.recaptcha" :loading="secrets.loading.recaptcha" what="Klucz tajny reCAPTCHA" />
       </label>
@@ -42,7 +42,7 @@
   <fieldset class="group maps">
     <legend class="eyebrow">Google Maps</legend>
 
-    <label class="field">
+    <label class="field" :class="{ 'field--changed': fieldChanged('googleMapsKey') }">
       <span>Klucz API</span>
 
       <CopyInput
@@ -66,7 +66,7 @@
   import PasswordInput from '@/components/ui/PasswordInput.vue'
 
   /** "Integracje": reCAPTCHA v3's keys, and where the site uses them */
-  const { form, project, secrets } = useProjectForm()
+  const { form, project, secrets, fieldChanged } = useProjectForm()
 
   const recaptchaSecretHash = useSecretHash(() => secrets.values.recaptcha)
 

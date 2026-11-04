@@ -71,6 +71,8 @@ export interface ProjectForm {
   secrets: Secrets
   /** copies a text, says so in a toast */
   copy: (text: string | null | undefined, what: string) => Promise<void>
+  /** a field changed since opened (or saved) – a form field by its name, a password or the secret as `secret:<kind>` */
+  fieldChanged: (field: string) => boolean
 }
 
 export const projectFormKey: InjectionKey<ProjectForm> = Symbol('projectForm')

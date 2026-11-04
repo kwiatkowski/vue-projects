@@ -1,6 +1,6 @@
 <template>
   <div class="stack">
-    <label class="field">
+    <label class="field" :class="{ 'field--changed': fieldChanged('server') }">
       <span>Hosting</span>
 
       <CopyInput
@@ -12,7 +12,7 @@
       />
     </label>
 
-    <label class="field">
+    <label class="field" :class="{ 'field--changed': fieldChanged('serverUrl') }">
       <span>Adres panelu</span>
 
       <CopyInput
@@ -24,7 +24,7 @@
       />
     </label>
 
-    <label class="field">
+    <label class="field" :class="{ 'field--changed': fieldChanged('serverAccount') }">
       <span>Nazwa konta</span>
 
       <CopyInput
@@ -89,7 +89,7 @@
   import { domainChecks, formatDateTime, formatDay, sslDaysLeft, sslState } from '@/utils/projects'
 
   /** "Serwer": the hosting, its panel and account; the certificate as the list saw it */
-  const { form, project } = useProjectForm()
+  const { form, project, fieldChanged } = useProjectForm()
 
   /** the site's other domains: what they answer, their certificates */
   const others = computed(() => project.value ? domainChecks(project.value) : [])
