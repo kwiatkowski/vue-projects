@@ -447,8 +447,10 @@ label.field > span:first-child {
   letter-spacing: normal;
 }
 
+/* the example in an empty field – quieter than any text: the faint grey, half-way to the field */
 .input::placeholder {
   color: var(--text-3);
+  opacity: .55;
 }
 
 .input:hover {

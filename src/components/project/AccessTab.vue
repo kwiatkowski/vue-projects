@@ -31,6 +31,8 @@
     <SectionCard
       v-for="group in ACCESS_GROUPS"
       :key="group.key"
+      v-model:open="envOpen[group.key]"
+      collapsible
       :icon="group.icon"
       :title="group.label"
     >
@@ -214,9 +216,30 @@
     authOpen.value[env] = false
   }
 
+  /**
+   * The environments unfolded – the ones with something in them (an address, a panel, Basic Auth); an empty one folded to
+   * its bar. A new project: production open, the others folded.
+   */
+  const envOpen = ref<Record<'production' | 'staging' | 'local', boolean>>({ production: true, staging: false, local: false })
+
+  function envsInUse (): Record<'production' | 'staging' | 'local', boolean> {
+    const site = project.value
+
+    if (!site) {
+      return { production: true, staging: false, local: false }
+    }
+
+    return {
+      production: Boolean(site.domains.length > 0 || site.adminUrl || site.authUser || site.hasAuthPassword),
+      staging: Boolean(site.stagingUrl || site.stagingAdminUrl || site.stagingAuthUser || site.hasStagingAuthPassword),
+      local: Boolean(site.localUrl || site.localAdminUrl),
+    }
+  }
+
   watch(() => project.value?.id, () => {
     authOpen.value = { production: false, staging: false }
-  })
+    envOpen.value = envsInUse()
+  }, { immediate: true })
 
   /** the environment whose panel this field is – the panels alone can be guarded */
   const envOfPanel = (field: AccessField): AuthEnv | null => (Object.keys(AUTH) as AuthEnv[]).find(env => AUTH[env].panel === field) ?? null
