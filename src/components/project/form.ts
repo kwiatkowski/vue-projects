@@ -16,9 +16,9 @@ export const TEXT_FIELDS = [
 export const FLAG_LABELS: Record<Flag, string> = {
   deploy: 'Deploy (git na produkcji)',
   bedrock: 'Bedrock',
-  security: 'Wordfence',
-  acf: 'ACF',
-  miModal: 'MI Modal',
+  security: 'Plugin: Wordfence',
+  acf: 'Plugin: ACF',
+  miModal: 'Plugin: MI Modal',
 }
 
 /** the flags a site's report sets – a star by them */

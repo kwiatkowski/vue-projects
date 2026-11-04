@@ -14,6 +14,7 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 - Nowy status **„Bez monitoringu”** – dla strony, która działa, ale nie chcesz jej pilnować: raport z wtyczki dalej przychodzi (aktualizacje, wtyczki, motywy), a strona nie jest sprawdzana – bez dostępności, maili o awarii i czerwonej liczby na karcie. Pozycja w filtrze statusów pojawia się, gdy jakiś projekt go ma.
 - W oknie projektu pole **Monitorowanie** zamiast wyboru statusu: **Monitoruj** (online / offline ustawia się samo – widać go obok), **Nie monitoruj** albo **Zawieszony**. Status „w budowie” usunięty – zastępuje go „Nie monitoruj”.
 - Pola uzupełniane przez raport (Deploy, Bedrock, Wordfence, ACF, MI Modal) wyglądają na zablokowane – przerywana ramka i przygaszony napis, jak zablokowane pola tekstowe.
+- W konfiguracji projektu wtyczki podpisane wprost: „Plugin: Wordfence”, „Plugin: ACF”, „Plugin: MI Modal”.
 - Pasek filtrów w jednej grupie z lewej – wyszukiwarka, kategoria, status, „Do aktualizacji” (włączony ma zielone tło jak wybrany status); z prawej tylko „Aktualizuj wszystkie” i „Wyświetl”.
 - Wszystkie elementy paska filtrów jednakowe: ta sama wysokość, obramowanie, zaokrąglenie i tło.
 - **Status** i **Raport** jako listy rozwijane z liczbami – Raport filtruje to, co czeka na aktualizację (wszystko, WordPress, wtyczki, tłumaczenia), i nieaktywne wtyczki lub motywy.
