@@ -219,10 +219,11 @@
   import { blank, FLAG_LABELS, type Form, fromProject, type LockedField, projectFormKey, REPORTED_FLAGS, TEXT_FIELDS } from '@/components/project/form'
   import HistoryTab from '@/components/project/HistoryTab.vue'
   import IntegrationsTab from '@/components/project/IntegrationsTab.vue'
-  import { recaptchaUses, useSecretHash } from '@/components/project/recaptcha'
+  import { useSecretHash } from '@/components/project/recaptcha'
   import ReportTab from '@/components/project/ReportTab.vue'
   import { useSecrets } from '@/components/project/secrets'
   import ServerTab from '@/components/project/ServerTab.vue'
+  import { accessTabState, integrationsTabState, reportTabState, serverTabState, type TabState, techTabState } from '@/components/project/tabState'
   import TechTab from '@/components/project/TechTab.vue'
   import TodoTab from '@/components/project/TodoTab.vue'
   import StatusChip from '@/components/StatusChip.vue'
@@ -230,11 +231,12 @@
   import CopyInput from '@/components/ui/CopyInput.vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
   import SelectField from '@/components/ui/SelectField.vue'
+  import { config } from '@/config'
   import { vTip } from '@/directives/tip'
   import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
-  import { bareDomain, envStatus, outageText } from '@/utils/projects'
+  import { bareDomain, outageText } from '@/utils/projects'
   import '@/components/project/project-form.css'
 
   /** The project's dialog: the name and what defines the project on the left, the tabs (components/project/) right. */
@@ -311,35 +313,14 @@
   const secrets = useSecrets()
   const recaptchaHash = useSecretHash(() => secrets.values.recaptcha)
 
-  /** a tab's dot: there and fine (green), or something wrong (red) – none, when there is nothing to say */
-  interface TabState { tone: 'ok' | 'bad', label: string }
-
-  /** Dostęp: production and staging as last checked – red when one is down, green when the checked ones work */
-  function accessState (): TabState | null {
-    const states = (['production', 'staging'] as const).map(env => envStatus(project.value, env)).filter(state => state !== null)
-
-    if (states.includes('offline')) {
-      return { tone: 'bad', label: 'środowisko nie działa' }
-    }
-
-    return states.length > 0 ? { tone: 'ok', label: 'środowiska działają' } : null
-  }
-
-  /** Integracje: reCAPTCHA on the site with other keys – red; with the ones typed here – green */
-  function integrationsState (): TabState | null {
-    const uses = recaptchaUses(project.value?.recaptcha, form.value.recaptchaSiteKey, recaptchaHash.value)
-
-    if (uses.some(use => use.tone === 'bad')) {
-      return { tone: 'bad', label: 'klucze reCAPTCHA niezgodne' }
-    }
-
-    return uses.some(use => use.tone === 'ok') ? { tone: 'ok', label: 'klucze reCAPTCHA zgodne' } : null
-  }
-
+  /** each tab's dot – what is in it at a glance (tabState.ts) */
   const tabState = computed<Partial<Record<Tab, TabState | null>>>(() => ({
+    report: reportTabState(project.value, projects.latestWordpress),
+    server: serverTabState(project.value),
+    tech: techTabState(project.value, projects.latestWordpress, config.phpBranches ?? {}),
+    access: accessTabState(project.value),
+    integrations: integrationsTabState(project.value, form.value.recaptchaSiteKey, recaptchaHash.value),
     notes: form.value.notes?.trim() ? { tone: 'ok', label: 'jest notatka' } : null,
-    access: accessState(),
-    integrations: integrationsState(),
   }))
   const siteReport = ref<SiteReport | null>(null)
 
@@ -595,6 +576,10 @@
 
 .tabs__dot--ok {
   background: var(--accent);
+}
+
+.tabs__dot--warn {
+  background: var(--warn);
 }
 
 .tabs__dot--bad {
