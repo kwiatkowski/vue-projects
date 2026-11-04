@@ -16,6 +16,7 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 - Pola uzupełniane przez raport (Deploy, Bedrock, Wordfence, ACF, MI Modal) wyglądają na zablokowane – przerywana ramka i przygaszony napis, jak zablokowane pola tekstowe.
 - W konfiguracji projektu wtyczki podpisane wprost: „Plugin: Wordfence”, „Plugin: ACF”, „Plugin: MI Modal”.
 - Okno projektu ma stałą wysokość – przełączanie zakładek nie powiększa go ani nie zmniejsza; dłuższa zakładka przewija się w środku.
+- Wszystkie pola, listy rozwijane i pola tekstowe mają ten sam krój i rozmiar – wcześniej adresy, loginy, hasła i klucze były mniejsze, część innym krojem.
 - Pasek filtrów w jednej grupie z lewej – wyszukiwarka, kategoria, status, „Do aktualizacji” (włączony ma zielone tło jak wybrany status); z prawej tylko „Aktualizuj wszystkie” i „Wyświetl”.
 - Wszystkie elementy paska filtrów jednakowe: ta sama wysokość, obramowanie, zaokrąglenie i tło.
 - **Status** i **Raport** jako listy rozwijane z liczbami – Raport filtruje to, co czeka na aktualizację (wszystko, WordPress, wtyczki, tłumaczenia), i nieaktywne wtyczki lub motywy.

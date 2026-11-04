@@ -437,6 +437,16 @@ label.field > span:first-child {
   transition: border-color .12s, box-shadow .12s;
 }
 
+/* every field, text area and select the same: the body's font at 14px – not what it sits in (a field's label is 12px)
+   nor the mono of logins, passwords and keys */
+.input,
+.input.mono {
+  font-family: var(--font);
+  font-size: 14px;
+  font-variant-numeric: normal;
+  letter-spacing: normal;
+}
+
 .input::placeholder {
   color: var(--text-3);
 }
