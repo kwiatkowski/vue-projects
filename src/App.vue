@@ -34,10 +34,14 @@
   import TipLayer from '@/components/ui/TipLayer.vue'
   import ToastHost from '@/components/ui/ToastHost.vue'
   import ViewDialog from '@/components/ViewDialog.vue'
+  import { useTabBadge } from '@/composables/tabBadge'
   import { config } from '@/config'
   import { useProjectsStore } from '@/stores/projects'
 
   const projects = useProjectsStore()
+
+  // the tab: how many sites are down – a red number on the favicon, "(1) Projekty" in the title
+  useTabBadge(() => projects.items.filter(project => project.status === 'offline').length)
 
   // quietly, only while the tab is visible: every few seconds a tiny check whether the list changed on the server (a
   // site's report, an edit elsewhere) – then it refreshes at once; every minute the whole list anyway (Todo's tasks

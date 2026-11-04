@@ -8,6 +8,7 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 - **Wybór motywu** zamiast przełącznika słońce / księżyc: Ciemny (domyślny), Jasny oraz **Meden jasny** i **Meden ciemny** w kolorach meden.com.pl.
 - Okno **„Co nowego”** z podsumowaniem zmian dnia – samo po nowej wersji, ręcznie z wersji na górnej belce i z menu konta.
 - Filtry statusu bez „W budowie”.
+- Karta przeglądarki pokazuje, ile stron nie działa – **czerwona liczba na ikonie** i „(1) Projekty” w tytule, jak w Todo; w tle ikona miga.
 - Pasek filtrów w jednej grupie z lewej – wyszukiwarka, kategoria, status, „Do aktualizacji” (włączony ma zielone tło jak wybrany status); z prawej tylko „Aktualizuj wszystkie” i „Wyświetl”.
 - Wszystkie elementy paska filtrów jednakowe: ta sama wysokość, obramowanie, zaokrąglenie i tło.
 - **Status** i **Raport** jako listy rozwijane z liczbami – Raport filtruje to, co czeka na aktualizację (wszystko, WordPress, wtyczki, tłumaczenia), i nieaktywne wtyczki lub motywy.
