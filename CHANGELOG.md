@@ -12,7 +12,8 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 - Gdy żadna strona nie leży, a coś czeka na aktualizację (WordPress, wtyczki, tłumaczenia) – **pomarańczowa liczba** takich projektów na ikonie karty.
 - Pozycje „Wszystkie kategorie / statusy / raporty” bez liczby – liczby zostały przy konkretnych wyborach.
 - Nowy status **„Bez monitoringu”** – dla strony, która działa, ale nie chcesz jej pilnować: raport z wtyczki dalej przychodzi (aktualizacje, wtyczki, motywy), a strona nie jest sprawdzana – bez dostępności, maili o awarii i czerwonej liczby na karcie. Pozycja w filtrze statusów pojawia się, gdy jakiś projekt go ma.
-- Pole **Status** w oknie projektu nie jest już zablokowane przy stronach z raportem – można wybrać „w budowie”, „bez monitoringu” albo „zawieszony”; online / offline dalej ustawia się samo.
+- W oknie projektu pole **Monitorowanie** zamiast wyboru statusu: **Monitoruj** (online / offline ustawia się samo – widać go obok), **Nie monitoruj** albo **Zawieszony**. Status „w budowie” usunięty – zastępuje go „Nie monitoruj”.
+- Pola uzupełniane przez raport (Deploy, Bedrock, Wordfence, ACF, MI Modal) wyglądają na zablokowane – przerywana ramka i przygaszony napis, jak zablokowane pola tekstowe.
 - Pasek filtrów w jednej grupie z lewej – wyszukiwarka, kategoria, status, „Do aktualizacji” (włączony ma zielone tło jak wybrany status); z prawej tylko „Aktualizuj wszystkie” i „Wyświetl”.
 - Wszystkie elementy paska filtrów jednakowe: ta sama wysokość, obramowanie, zaokrąglenie i tło.
 - **Status** i **Raport** jako listy rozwijane z liczbami – Raport filtruje to, co czeka na aktualizację (wszystko, WordPress, wtyczki, tłumaczenia), i nieaktywne wtyczki lub motywy.

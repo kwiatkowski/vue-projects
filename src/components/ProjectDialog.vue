@@ -61,16 +61,20 @@
         </label>
 
         <label class="field">
-          <!-- down: why, from the list's last look at the home page – the tooltip: what it means, since when -->
-          <span>Status <span class="reported-mark">*</span> <span v-if="down" v-tip="down.long" class="status-why">– {{ down.short }}</span></span>
+          <!-- whether the list watches the site; watched – beside it the status the checks set (online / offline) and,
+               down, why – the tooltip: what it means, since when -->
+          <span class="monitoring-label">
+            Monitorowanie
+            <StatusChip v-if="monitoring === 'watch' && checked" :status="checked" />
+            <span v-if="monitoring === 'watch' && down" v-tip="down.long" class="status-why">– {{ down.short }}</span>
+          </span>
 
           <SelectField
-            v-model="form.status"
-            label="Status"
-            :options="statusOptions"
-          >
-            <template #option="{ option }"><StatusChip :status="option.value" /></template>
-          </SelectField>
+            v-model="monitoring"
+            empty="watch"
+            label="Monitorowanie"
+            :options="MONITORING"
+          />
         </label>
 
         <label class="field">
@@ -199,7 +203,7 @@
 </template>
 
 <script lang="ts" setup>
-  import type { Project, SiteReport, Status } from '@/types'
+  import type { Project, SiteReport } from '@/types'
   import { Activity, AlertTriangle, Check, Cpu, History, KeyRound, ListChecks, NotebookPen, PenLine, Plus, Puzzle, Server, Trash2, X } from 'lucide-vue-next'
   import { type Component, computed, defineAsyncComponent, nextTick, provide, ref, useTemplateRef, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
@@ -220,7 +224,7 @@
   import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
-  import { bareDomain, outageText, STATUS_LABELS } from '@/utils/projects'
+  import { bareDomain, outageText } from '@/utils/projects'
   import '@/components/project/project-form.css'
 
   /** The project's dialog: the name and what defines the project on the left, the tabs (components/project/) right. */
@@ -232,13 +236,22 @@
   const NotesEditor = defineAsyncComponent(loadNotesEditor)
   setTimeout(() => void loadNotesEditor().catch(() => {}), 3000)
 
-  /**
-   * The statuses to choose: all of them – or, for a site that reports, online / offline only as it is now (the checks
-   * set it, not the hand) next to the ones set by hand: in progress, not watched, suspended.
-   */
-  const statusOptions = computed(() => (Object.keys(STATUS_LABELS) as Status[])
-    .filter(value => !reporting.value || !['online', 'offline'].includes(value) || value === (project.value?.status === 'offline' ? 'offline' : 'online'))
-    .map(value => ({ value, label: STATUS_LABELS[value] })))
+  /** watched – the checks set online / offline; not watched or suspended – set by hand, nothing checked */
+  type Monitoring = 'watch' | 'unmonitored' | 'suspended'
+  const MONITORING: Array<{ value: Monitoring, label: string }> = [
+    { value: 'watch', label: 'Monitoruj' },
+    { value: 'unmonitored', label: 'Nie monitoruj' },
+    { value: 'suspended', label: 'Zawieszony' },
+  ]
+  /** online / offline as the last check left it – none for a new site or one not checked yet */
+  const checked = computed(() => project.value?.status === 'online' || project.value?.status === 'offline' ? project.value.status : null)
+  /** the status behind the choice: watching keeps what the checks said (none yet – the first check after saving sets it) */
+  const monitoring = computed<Monitoring | null>({
+    get: () => form.value.status === 'unmonitored' || form.value.status === 'suspended' ? form.value.status : 'watch',
+    set: value => {
+      form.value.status = value === 'unmonitored' || value === 'suspended' ? value : checked.value
+    },
+  })
   const categoryOptions = computed(() => projects.sortedCategories.map(category => ({ value: category.id, label: category.name })))
 
   type Tab = 'report' | 'history' | 'server' | 'tech' | 'access' | 'integrations' | 'notes' | 'todo'
@@ -601,6 +614,12 @@
 }
 
 /* why the site is down – next to the status' label, in the offline colour */
+.monitoring-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .status-why {
   color: var(--danger);
   font-family: var(--mono);

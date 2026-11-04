@@ -42,7 +42,7 @@
   /** how long it has been down – when the popup opens */
   const lasting = computed(() => props.down ? formatDuration(Math.round((Date.now() - new Date(props.down.since).getTime()) / 60_000)) : '')
 
-  /** only a site that is up or down pulses – one in progress, not watched or suspended doesn't */
+  /** only a site that is up or down pulses – one not watched or suspended doesn't */
   const PULSING = new Set<Status>(['online', 'offline'])
 </script>
 

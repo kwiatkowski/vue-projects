@@ -33,7 +33,7 @@ describe('sortProjects', () => {
   })
 
   it('orders statuses from working to gone', () => {
-    const list = [p('a', { status: 'suspended' }), p('b', { status: null }), p('c', { status: 'online' }), p('d', { status: 'dev' })]
+    const list = [p('a', { status: 'suspended' }), p('b', { status: null }), p('c', { status: 'online' }), p('d', { status: 'unmonitored' })]
 
     expect(sortProjects(list, 'status').map(x => x.name)).toEqual(['c', 'd', 'a', 'b'])
   })

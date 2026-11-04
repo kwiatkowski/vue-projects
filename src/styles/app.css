@@ -755,8 +755,20 @@ input[type='checkbox']:checked::after {
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
+/* locked (the report fills it): a dashed edge and no green – as a locked field; the tick and the label faint */
 input[type='checkbox']:disabled {
-  opacity: .5;
+  border-style: dashed;
+  border-color: var(--line-strong);
+  background: var(--surface);
+  cursor: not-allowed;
+}
+
+input[type='checkbox']:disabled::after {
+  background: var(--text-3);
+}
+
+label:has(> input[type='checkbox']:disabled) {
+  color: var(--text-3);
   cursor: not-allowed;
 }
 
