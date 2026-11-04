@@ -8,11 +8,11 @@
       :type="shown ? 'text' : 'password'"
     >
 
-    <!-- the eye – left of copy, or in copy's place when there is no password to copy -->
+    <!-- the eye – left of copy, or in copy's place when there is no password to copy; as copy, shown on hover -->
     <HoverTip :anchor-class="model ? 'field-icon field-icon--second' : 'field-icon'" :text="shown ? 'Ukryj hasło' : 'Pokaż hasło'">
       <button
         :aria-label="shown ? 'Ukryj hasło' : 'Pokaż hasło'"
-        class="btn btn--icon btn--sm"
+        class="btn btn--icon btn--sm input-copy"
         type="button"
         @click="shown = !shown"
       >

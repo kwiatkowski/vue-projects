@@ -32,8 +32,8 @@
     </div>
 
     <fieldset v-for="group in ACCESS_GROUPS" :key="group.key" class="group">
-      <!-- the same icons as the list's Stage and Lokalnie columns -->
-      <legend class="eyebrow group__title"><component :is="group.icon" v-if="group.icon" /> {{ group.label }}</legend>
+      <!-- production's globe; staging and development – the same icons as the list's Stage and Local columns -->
+      <legend class="eyebrow group__title"><component :is="group.icon" /> {{ group.label }}</legend>
 
       <div :class="group.links.length > 1 ? 'grid' : 'stack'">
         <label v-for="link in group.links" :key="link.field" class="field">
@@ -157,7 +157,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ArrowUpRight, Copy, FlaskConical, KeyRound, Laptop, LockKeyhole, Plus, X } from 'lucide-vue-next'
+  import { ArrowUpRight, Copy, FlaskConical, Globe, KeyRound, Laptop, LockKeyhole, Plus, X } from 'lucide-vue-next'
   import { type Component, computed, ref, watch } from 'vue'
   import { useProjectForm } from '@/components/project/form'
   import CopyInput from '@/components/ui/CopyInput.vue'
@@ -258,16 +258,16 @@
   type AccessField = 'adminUrl' | 'stagingUrl' | 'stagingAdminUrl' | 'localUrl' | 'localAdminUrl'
 
   /** one section per environment, its addresses (the logins follow in the template) */
-  const ACCESS_GROUPS: Array<{ key: 'production' | 'staging' | 'local', label: string, icon?: Component, links: Array<{ field: AccessField | 'home', label: string, placeholder: string }> }> = [
-    { key: 'production', label: 'Produkcja', links: [
+  const ACCESS_GROUPS: Array<{ key: 'production' | 'staging' | 'local', label: string, icon: Component, links: Array<{ field: AccessField | 'home', label: string, placeholder: string }> }> = [
+    { key: 'production', label: 'Production', icon: Globe, links: [
       { field: 'home', label: 'Adres', placeholder: 'Główna domena – dodaj po lewej' },
       { field: 'adminUrl', label: 'Panel', placeholder: 'https://…/wp/wp-login.php' },
     ] },
     { key: 'staging', label: 'Staging', icon: FlaskConical, links: [
-      { field: 'stagingUrl', label: 'Adres', placeholder: 'https://….medendev.eu/' },
+      { field: 'stagingUrl', label: 'Adres', placeholder: 'https://…/' },
       { field: 'stagingAdminUrl', label: 'Panel', placeholder: 'https://…/wp/wp-login.php' },
     ] },
-    { key: 'local', label: 'Lokalnie', icon: Laptop, links: [
+    { key: 'local', label: 'Development', icon: Laptop, links: [
       { field: 'localUrl', label: 'Adres', placeholder: 'https://….local/' },
       { field: 'localAdminUrl', label: 'Panel', placeholder: 'https://….local/wp/wp-login.php' },
     ] },

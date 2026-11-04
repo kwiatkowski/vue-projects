@@ -176,7 +176,7 @@
             </td>
 
             <td v-if="show('local')" class="center cell-link" :class="cellChanged(project, 'localUrl', 'localAdminUrl')" @click.stop>
-              <SiteLinkMenu v-if="project.localUrl" :admin-url="project.localAdminUrl" label="Lokalnie" :url="project.localUrl">
+              <SiteLinkMenu v-if="project.localUrl" :admin-url="project.localAdminUrl" label="Development" :url="project.localUrl">
                 <Laptop />
               </SiteLinkMenu>
             </td>
