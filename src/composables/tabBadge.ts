@@ -2,7 +2,7 @@ import { watchEffect } from 'vue'
 
 /**
  * The browser tab tells when sites are down – as Todo's does with what's due: "(1) Projekty", and the favicon turns
- * into the number on red. While the tab is in the background it gently blinks back to the app's mark.
+ * into the number on red. In front it stays still; in the background the square stays red and only the number blinks.
  */
 
 const BLINK_MS = 1500
@@ -15,11 +15,12 @@ const markUrl = `data:image/svg+xml,${encodeURIComponent(MARK)}`
 const icons = new Map<string, string>()
 
 /**
- * The number instead of the mark: white on a red rounded square, "9+" from ten on. Drawn on a canvas so the digits'
- * real ink box can be measured and put dead centre – SVG text baselines differ between browsers and fonts.
+ * The number instead of the mark: white on a red rounded square, "9+" from ten on; null – the red square alone (the
+ * blink's other half). Drawn on a canvas so the digits' real ink box can be measured and put dead centre – SVG text
+ * baselines differ between browsers and fonts.
  */
-function countIcon (count: number): string {
-  const text = count > 9 ? '9+' : String(count)
+function countIcon (count: number | null): string {
+  const text = count === null ? '' : (count > 9 ? '9+' : String(count))
   const cached = icons.get(text)
 
   if (cached) {
@@ -40,6 +41,13 @@ function countIcon (count: number): string {
   context.beginPath()
   context.roundRect(0, 0, size, size, 16)
   context.fill()
+
+  if (!text) {
+    const url = canvas.toDataURL('image/png')
+    icons.set(text, url)
+
+    return url
+  }
 
   context.fillStyle = '#fff'
   context.font = `400 ${text.length > 1 ? 32 : 38}px system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif`
@@ -81,12 +89,13 @@ export function useTabBadge (down: () => number): void {
   function paint (): void {
     const count = down()
     const link = iconLink()
-    const href = count > 0 && showBadge ? countIcon(count) : markUrl
+    // the red square stays while a site is down – only its number blinks
+    const href = count > 0 ? countIcon(showBadge ? count : null) : markUrl
     link.type = href.startsWith('data:image/png') ? 'image/png' : 'image/svg+xml'
     link.href = href
   }
 
-  // blinking only while the tab is out of sight – in front it would just distract
+  // the number blinks only while the tab is out of sight – in front it stays still
   function syncBlink (): void {
     clearInterval(timer)
     showBadge = true
