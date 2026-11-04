@@ -31,11 +31,23 @@
       </div>
     </div>
 
-    <fieldset v-for="group in ACCESS_GROUPS" :key="group.key" class="group">
-      <!-- production's globe; staging and development – the same icons as the list's Stage and Local columns -->
-      <legend class="eyebrow group__title"><component :is="group.icon" /> {{ group.label }}</legend>
+    <!-- each environment a card of its own, as the login's: its icon in its colour (production's globe green, staging's
+         flask blue, development's laptop grey – the last two as the list's Stage and Local columns) -->
+    <div
+      v-for="group in ACCESS_GROUPS"
+      :key="group.key"
+      :aria-labelledby="`access-${group.key}-title`"
+      class="login-card env-card"
+      :class="`env-card--${group.key}`"
+      role="group"
+    >
+      <div class="login-card__head">
+        <span class="login-card__icon"><component :is="group.icon" /></span>
+        <strong :id="`access-${group.key}-title`">{{ group.label }}</strong>
+      </div>
 
-      <div :class="group.links.length > 1 ? 'grid' : 'stack'">
+      <!-- the Basic Auth button in the addresses' row, after the panel – as "+ Domena" after the domain -->
+      <div :class="[group.links.length > 1 ? 'grid' : 'stack', { 'grid--action': addsAuth(group.key) }]">
         <label v-for="link in group.links" :key="link.field" class="field">
           <span>{{ link.label }}</span>
 
@@ -93,16 +105,16 @@
             </template>
           </span>
         </label>
+
+        <button v-if="group.key !== 'local' && addsAuth(group.key)" class="btn btn--outline field-action" type="button" @click="authOpen[group.key] = true">
+          <Plus /> Basic Auth
+        </button>
       </div>
 
       <!-- HTTP Basic Auth in front of the whole site (the list checks it, fetches the report with it) or only the panel –
-           behind a button until it is used, shown at once when it is -->
+           behind the button above until it is used, shown at once when it is -->
       <template v-if="group.key !== 'local'">
-        <button v-if="!authShown(group.key)" class="btn btn--sm btn--outline auth-add" type="button" @click="authOpen[group.key] = true">
-          <Plus /> Basic Auth
-        </button>
-
-        <template v-else>
+        <template v-if="authShown(group.key)">
           <div class="auth-scope">
             <span class="auth-scope__label">Basic Auth chroni</span>
 
@@ -152,7 +164,7 @@
           </div>
         </template>
       </template>
-    </fieldset>
+    </div>
   </div>
 </template>
 
@@ -188,6 +200,11 @@
 
   /** the Basic Auth fields: shown when used (a login, a password kept or typed), else behind „+ Basic Auth” */
   const authOpen = ref<Record<AuthEnv, boolean>>({ production: false, staging: false })
+
+  /** the "+ Basic Auth" button: an environment that can have one (not development) and has none shown yet */
+  function addsAuth (env: AuthEnv | 'local'): boolean {
+    return env !== 'local' && !authShown(env)
+  }
 
   function authShown (env: AuthEnv): boolean {
     const auth = AUTH[env]
@@ -303,11 +320,6 @@
   stroke-width: 2.75;
 }
 
-/* the Basic Auth behind a button – under the panel's address, the group's own gap above it */
-.auth-add {
-  justify-self: start;
-}
-
 /* what the Basic Auth guards – a label, the switch, what it means */
 .auth-scope {
   display: flex;
@@ -329,19 +341,6 @@
 /* turning it off – at the row's end */
 .auth-off {
   margin-left: auto;
-}
-
-/* a group's name with its icon before it */
-.group__title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.group__title svg {
-  width: 14px;
-  height: 14px;
-  stroke-width: 2.25;
 }
 
 /* the panel's login – the same on every environment, so set apart from them: a quiet card, its name with a key */
@@ -381,15 +380,46 @@
   stroke-width: 2.25;
 }
 
-/* the environments one under another, the first without a line over it */
+/* the login and the environments – cards one under another */
 .access {
   display: grid;
-  gap: 18px;
+  gap: 12px;
 }
 
-/* the first environment right under the login card – no line over it */
-.access > .login-card + .group {
-  padding-top: 0;
-  border-top: 0;
+/* the login's key neutral – the colours tell the environments apart */
+.access > .login-card:not(.env-card) .login-card__icon {
+  background: var(--surface);
+  color: var(--text-2);
+}
+
+.env-card--production .login-card__icon {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+.env-card--staging .login-card__icon {
+  background: var(--info-soft);
+  color: var(--info);
+}
+
+.env-card--local .login-card__icon {
+  background: var(--surface);
+  color: var(--text-2);
+}
+
+/* the addresses and, after them, the "+ Basic Auth" button – level with the fields */
+.project-form .grid--action {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  align-items: end;
+}
+
+@media (max-width: 640px) {
+  .project-form .grid--action {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .grid--action .field-action {
+    justify-self: start;
+  }
 }
 </style>

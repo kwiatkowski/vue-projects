@@ -630,6 +630,12 @@ textarea.input--title {
   }
 }
 
+/* a button after a field, in its row ("+ Domena", "+ Basic Auth"): as tall as the field */
+.field-action {
+  flex: none;
+  height: 36px;
+}
+
 /* ---------- segmented control ---------- */
 
 .seg {

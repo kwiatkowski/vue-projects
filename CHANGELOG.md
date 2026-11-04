@@ -18,6 +18,7 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 - Okno projektu ma stałą wysokość – przełączanie zakładek nie powiększa go ani nie zmniejsza; dłuższa zakładka przewija się w środku.
 - Wszystkie pola, listy rozwijane i pola tekstowe mają ten sam krój i rozmiar – wcześniej adresy, loginy, hasła i klucze były mniejsze, część innym krojem.
 - Zakładka Dostęp: sekcje **Production**, **Staging** i **Development**, każda z ikoną (Production – globus); bez przykładowych adresów medendev.eu w podpowiedziach; ikona oka przy hasłach pojawia się po najechaniu na pole, jak kopiowanie.
+- Zakładka Dostęp: każde środowisko w osobnej karcie z kolorową ikoną (Production zielona, Staging niebieska, Development szara); „+ Basic Auth” w jednej linii z adresami, a „+ Domena” w linii z ostatnią domeną – oba przyciski w tym samym stylu.
 - Pasek filtrów w jednej grupie z lewej – wyszukiwarka, kategoria, status, „Do aktualizacji” (włączony ma zielone tło jak wybrany status); z prawej tylko „Aktualizuj wszystkie” i „Wyświetl”.
 - Wszystkie elementy paska filtrów jednakowe: ta sama wysokość, obramowanie, zaokrąglenie i tło.
 - **Status** i **Raport** jako listy rozwijane z liczbami – Raport filtruje to, co czeka na aktualizację (wszystko, WordPress, wtyczki, tłumaczenia), i nieaktywne wtyczki lub motywy.

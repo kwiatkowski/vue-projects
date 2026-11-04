@@ -48,11 +48,12 @@
                 type="button"
                 @click="form.domains.splice(index, 1)"
               ><X /></button>
-            </div>
 
-            <button class="btn btn--sm domains__add" type="button" @click="addDomain">
-              <Plus /> Dodaj domenę
-            </button>
+              <!-- after the last domain, in its row – as "+ Basic Auth" after the panel's address -->
+              <button v-if="index === form.domains.length - 1" class="btn btn--outline field-action" type="button" @click="addDomain">
+                <Plus /> Domena
+              </button>
+            </div>
           </div>
         </label>
 
@@ -602,10 +603,6 @@
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-.domains__add {
-  justify-self: start;
 }
 
 @media (max-width: 860px) {
