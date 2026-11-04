@@ -22,6 +22,7 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 - Karty środowisk i logowania na tle okna, z niskim paskiem nagłówka (szara ikona, nazwa) – ten sam układ będzie można użyć w innych zakładkach.
 - Puste środowisko (bez adresu, panelu i Basic Auth) jest zwinięte do paska – klik w pasek rozwija; nazwy środowisk bez pogrubienia; podpowiedzi w pustych polach jaśniejsze, mniej rzucają się w oczy.
 - „+ Domena” i „+ Basic Auth” to teraz kwadratowe ikony z dymkiem (plus i tarcza z plusem).
+- W oknie projektu przewija się tylko otwarta zakładka – lewa kolumna i paski zakładek stoją w miejscu.
 - Pasek filtrów w jednej grupie z lewej – wyszukiwarka, kategoria, status, „Do aktualizacji” (włączony ma zielone tło jak wybrany status); z prawej tylko „Aktualizuj wszystkie” i „Wyświetl”.
 - Wszystkie elementy paska filtrów jednakowe: ta sama wysokość, obramowanie, zaokrąglenie i tło.
 - **Status** i **Raport** jako listy rozwijane z liczbami – Raport filtruje to, co czeka na aktualizację (wszystko, WordPress, wtyczki, tłumaczenia), i nieaktywne wtyczki lub motywy.

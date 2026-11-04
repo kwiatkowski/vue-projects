@@ -155,9 +155,12 @@
   height: 100%;
 }
 
+/* its first row (the content) takes the height left – the content may scroll its own parts within it */
 .dialog--fixed .dialog__body {
   flex: 1;
+  grid-template-rows: minmax(0, 1fr);
   align-content: start;
+  min-height: 0;
 }
 
 /* header and footer as panel-toned bars around the body */

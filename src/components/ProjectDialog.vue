@@ -612,6 +612,44 @@
   }
 }
 
+/* side by side: the dialog's height is fixed, so the left column and the tabs stay put – only the open tab scrolls
+   (the left column on its own, should it be taller); 3px inside, so the fields' focus rings aren't cut off */
+@media (min-width: 861px) {
+  .cols {
+    align-items: stretch;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .col {
+    align-content: start;
+    min-height: 0;
+    margin: -3px;
+    padding: 3px;
+    overflow-y: auto;
+  }
+
+  .col:last-child {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .tabs {
+    flex: none;
+  }
+
+  .tab-panel {
+    flex: 1;
+    align-content: start;
+    min-height: 0;
+    margin: -3px;
+    padding: 3px;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+  }
+}
+
 /* why the site is down – next to the status' label, in the offline colour */
 .monitoring-label {
   display: flex;
