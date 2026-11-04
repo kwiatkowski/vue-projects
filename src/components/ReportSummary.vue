@@ -143,10 +143,10 @@
   color: var(--warn);
 }
 
-/* what lies unused – a gap over it, in the secondary text colour */
+/* what lies unused – set apart from what is above it, in the main text colour */
 .info-tip__head--unused {
-  margin: 8px 0 4px;
-  color: var(--text-2);
+  margin: 12px 0 4px;
+  color: var(--text);
 }
 
 /* what has no translation – the names in one wrapped line */
