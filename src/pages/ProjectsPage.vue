@@ -69,30 +69,9 @@
             <!-- how many projects each holds – as the statuses' counts -->
             <template #option="{ option }">{{ option.label }} <span class="mono faint count">{{ categoryCounts[option.value] ?? 0 }}</span></template>
           </SelectField>
-
-          <!-- only the projects with something to update – WordPress, plugins, translations (from the reports) -->
-          <button
-            v-if="canFilterUpdates"
-            :aria-pressed="onlyUpdates"
-            class="btn btn--outline toolbar__updates"
-            type="button"
-            @click="onlyUpdates = !onlyUpdates"
-          >
-            <RefreshCw /> Do aktualizacji <span class="mono faint count">{{ updatesCount }}</span>
-          </button>
-
-          <!-- the owner: every project with something waiting, after a question -->
-          <button
-            v-if="config.canManage && updatesCount > 0"
-            class="btn btn--outline toolbar__update-all"
-            :disabled="projects.batch !== null"
-            type="button"
-            @click="updateAll"
-          >
-            <ArrowUp /> Aktualizuj wszystkie
-          </button>
         </template>
 
+        <!-- the filters, from the widest to the narrowest: the text, the category, the status, what waits for an update -->
         <div aria-label="Status" class="seg toolbar__filters" role="radiogroup">
           <button
             v-for="option in filters"
@@ -124,14 +103,40 @@
           </template>
         </SelectField>
 
-        <!-- which columns this browser shows – of those one may see -->
-        <button class="btn btn--outline toolbar__columns" type="button" @click="columns.viewOpen = true">
-          <Columns3 /> Wyświetl
+        <!-- only the projects with something to update – WordPress, plugins, translations (from the reports); a switch, as
+             the statuses: on – the accent's tint -->
+        <button
+          v-if="canFilterUpdates"
+          :aria-pressed="onlyUpdates"
+          class="btn btn--outline toolbar__updates"
+          type="button"
+          @click="onlyUpdates = !onlyUpdates"
+        >
+          <RefreshCw /> Do aktualizacji <span class="mono faint count">{{ updatesCount }}</span>
         </button>
 
-        <button v-if="sort" class="btn btn--sm toolbar__order" type="button" @click="sort = null">
-          <ListOrdered /> Własna kolejność
-        </button>
+        <!-- what to do and how the list looks – at the right edge, also when the toolbar wraps onto a second row -->
+        <div class="toolbar__actions">
+          <!-- the owner: every project with something waiting, after a question -->
+          <button
+            v-if="config.canManage && updatesCount > 0 && !bulk"
+            class="btn btn--outline toolbar__update-all"
+            :disabled="projects.batch !== null"
+            type="button"
+            @click="updateAll"
+          >
+            <ArrowUp /> Aktualizuj wszystkie
+          </button>
+
+          <button v-if="sort" class="btn btn--sm toolbar__order" type="button" @click="sort = null">
+            <ListOrdered /> Własna kolejność
+          </button>
+
+          <!-- which columns this browser shows – of those one may see -->
+          <button class="btn btn--outline toolbar__columns" type="button" @click="columns.viewOpen = true">
+            <Columns3 /> Wyświetl
+          </button>
+        </div>
       </div>
 
     </header>
@@ -417,7 +422,16 @@
   scrollbar-width: none;
 }
 
-.toolbar__filters {
+/* the phones' status list: its count a little apart from the status (a chip or "Wszystkie") */
+.toolbar__status .count {
+  margin-left: 6px;
+}
+
+/* the actions on the right edge – their own row's too, when the toolbar wraps */
+.toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px 12px;
   margin-left: auto;
 }
 
@@ -496,7 +510,8 @@
 /* on – as the other buttons of the toolbar that are on (the phones' filter toggle) */
 .toolbar__updates[aria-pressed='true'] {
   border-color: var(--accent);
-  color: var(--text);
+  background: var(--accent-soft);
+  color: var(--accent-text);
 }
 
 .toolbar__toggle {
@@ -568,6 +583,11 @@
 
   .toolbar__filters {
     display: none;
+  }
+
+  /* phones: the actions fold under the filter button with the rest, each a full row */
+  .toolbar__actions {
+    display: contents;
   }
 
   .search {
