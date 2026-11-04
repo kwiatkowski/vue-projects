@@ -116,6 +116,11 @@ export interface Project extends Record<Flag, boolean> {
   missingTranslations?: { locale: string, items: MissingTranslation[] } | null
   /** multisite: the network's sites, from the last report (plugin_meden 1.20.0); null – a single site */
   sites?: ReportSite[] | null
+  /** what lies unused: the plugins switched off, the themes no site uses nor builds on (null – an older reporter) */
+  inactivePlugins?: UnusedItem[]
+  inactiveThemes?: UnusedItem[] | null
+  /** the themes waiting for an update (null – an older reporter) */
+  themeUpdates?: UnusedItem[] | null
   /** the alerts muted until – null: not muted (the owner's) */
   mutedUntil?: string | null
   updatedAt: string | null
@@ -207,6 +212,25 @@ export interface ThemeDetails {
 }
 
 /** A plugin of a reported site; update – the version waiting for it, null when up to date. */
+/** A plugin or theme in the list's summary: its name, version and the one waiting for it. */
+export interface UnusedItem {
+  name: string
+  version: string
+  update?: string
+}
+
+/** One installed theme as the site reports it (plugin_meden 1.21.0, MK Core). */
+export interface ReportTheme {
+  name: string
+  slug: string
+  version: string
+  /** a site uses it – on a multisite any of the network's */
+  active: boolean
+  /** a used theme builds on it */
+  parent: boolean
+  update: string | null
+}
+
 export interface ReportPlugin {
   name: string
   version: string
@@ -226,6 +250,7 @@ export interface SiteReport {
   }
   plugins?: ReportPlugin[]
   pluginUpdates?: number
+  themes?: ReportTheme[]
   environment?: string
   reporter?: string
   /** the site's git origin as https – null without git */

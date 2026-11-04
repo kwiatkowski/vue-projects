@@ -1,6 +1,6 @@
 <template>
   <!-- a header: when (or why not), and what sent it on the right -->
-  <div class="report-tip__title" :class="{ 'report-tip__title--alone': plugins.length === 0 && !translations && !menu && !project.ssl && vulnerabilities.length === 0 && missing.length === 0 }">
+  <div class="report-tip__title" :class="{ 'report-tip__title--alone': plugins.length === 0 && themes.length === 0 && unused.length === 0 && !translations && !menu && !project.ssl && vulnerabilities.length === 0 && missing.length === 0 }">
     <strong>{{ title }}</strong>
     <!-- what sends the report – orange with the newer version when plugin_meden / MK Core is older -->
     <span v-if="project.reporter" class="mono" :class="reporterNewer ? 'reporter--old' : 'faint'">
@@ -48,6 +48,18 @@
     </dl>
   </template>
 
+  <!-- the themes waiting for an update – installed → available -->
+  <template v-if="themes.length > 0">
+    <div class="info-tip__head info-tip__head--todo">Do aktualizacji motywy: {{ themes.length }}</div>
+
+    <dl class="info-tip info-tip--right">
+      <template v-for="item in themes" :key="item.name">
+        <dt>{{ item.name }}</dt>
+        <dd class="mono">{{ item.version }} → <span class="info-tip__new">{{ item.update }}</span></dd>
+      </template>
+    </dl>
+  </template>
+
   <div v-if="translations" class="info-tip__head info-tip__head--todo report-tip__row">
     <span>Do aktualizacji tłumaczenia:</span>
     <span class="mono">{{ translations }}</span>
@@ -71,7 +83,19 @@
     </dl>
   </template>
 
-  <div v-if="menu && plugins.length === 0 && !translations" class="info-tip__head info-tip__head--ok">Wszystko aktualne</div>
+  <!-- what lies unused: the plugins switched off, the themes no site uses (nor builds on) – worth removing -->
+  <template v-if="unused.length > 0">
+    <div class="info-tip__head info-tip__head--unused">Nieużywane: {{ unused.length }}</div>
+
+    <dl class="info-tip info-tip--right">
+      <template v-for="item in unused" :key="`${item.kind}-${item.name}`">
+        <dt>{{ item.name }} <span class="mono faint">{{ item.version }}</span></dt>
+        <dd class="faint">{{ item.kind }}</dd>
+      </template>
+    </dl>
+  </template>
+
+  <div v-if="menu && plugins.length === 0 && themes.length === 0 && !translations" class="info-tip__head info-tip__head--ok">Wszystko aktualne</div>
 </template>
 
 <script lang="ts" setup>
@@ -90,6 +114,11 @@
   const projects = useProjectsStore()
 
   const plugins = computed(() => pendingUpdates(props.project, projects.latestWordpress))
+  const themes = computed(() => props.project.themeUpdates ?? [])
+  const unused = computed(() => [
+    ...(props.project.inactivePlugins ?? []).map(item => ({ ...item, kind: 'wtyczka' })),
+    ...(props.project.inactiveThemes ?? []).map(item => ({ ...item, kind: 'motyw' })),
+  ])
   const translations = computed(() => props.project.translationUpdates?.length ?? 0)
   const vulnerabilities = computed(() => props.project.vulnerabilities ?? [])
   const missing = computed(() => missingTranslations(props.project))
@@ -111,6 +140,12 @@
 /* an older plugin_meden / MK Core */
 .reporter--old {
   color: var(--warn);
+}
+
+/* what lies unused – a gap over it, in the secondary text colour */
+.info-tip__head--unused {
+  margin: 8px 0 4px;
+  color: var(--text-2);
 }
 
 /* what has no translation – the names in one wrapped line */

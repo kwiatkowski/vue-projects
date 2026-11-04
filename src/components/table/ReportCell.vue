@@ -26,6 +26,9 @@
 
       <Check v-else-if="reportMark(project) === 'ok'" />
       <Minus v-else />
+
+      <!-- what lies unused – the plugins switched off, the themes no site uses: grey, beside the mark -->
+      <span v-if="unusedCount(project) > 0 && reportState(project) !== 'off'" class="report__unused"><Archive /><span class="mono">{{ unusedCount(project) }}</span></span>
     </span>
 
     <template #tip="{ hide }">
@@ -60,7 +63,7 @@
 
 <script lang="ts" setup>
   import type { Project } from '@/types'
-  import { ArrowUp, Check, FileText, Languages, Lock, Minus, Package, RefreshCw, ShieldAlert, TriangleAlert } from 'lucide-vue-next'
+  import { Archive, ArrowUp, Check, FileText, Languages, Lock, Minus, Package, RefreshCw, ShieldAlert, TriangleAlert } from 'lucide-vue-next'
   import ReportSummary from '@/components/ReportSummary.vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
   import { useNotifyStore } from '@/stores/notify'
@@ -107,9 +110,14 @@
     }
   }
 
-  /** WordPress, plugins and translations waiting – the number next to the report's arrow */
+  /** WordPress, plugins, themes and translations waiting – the number next to the report's arrow */
   function updateCount (project: Project) {
-    return pendingUpdates(project, projects.latestWordpress).length + (project.translationUpdates?.length ?? 0)
+    return pendingUpdates(project, projects.latestWordpress).length + (project.themeUpdates?.length ?? 0) + (project.translationUpdates?.length ?? 0)
+  }
+
+  /** the plugins switched off and the themes no site uses – the grey number beside the mark */
+  function unusedCount (project: Project) {
+    return (project.inactivePlugins?.length ?? 0) + (project.inactiveThemes?.length ?? 0)
   }
 
   /** the report's mark: a tick when the site reports, an orange arrow (or lock) when it has something to update */
@@ -132,7 +140,7 @@
     }
 
     // something to do: updates, a certificate ending soon, missing translations, an older plugin_meden / MK Core
-    return state === 'ok' && (scopeOf(project) || sslState(project) === 'soon' || missingTranslations(project).length > 0 || reporterUpdate(project, projects.latestReporters)) ? 'todo' : state
+    return state === 'ok' && (scopeOf(project) || (project.themeUpdates?.length ?? 0) > 0 || sslState(project) === 'soon' || missingTranslations(project).length > 0 || reporterUpdate(project, projects.latestReporters)) ? 'todo' : state
   }
 
 </script>
@@ -174,6 +182,21 @@
 
 .report--ok {
   color: var(--positive);
+}
+
+/* what lies unused – grey, a little apart from the mark: tidying up, not urgent */
+.report__unused {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  margin-left: 6px;
+  color: var(--text-3);
+}
+
+.report__unused svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.25;
 }
 
 /* only medium or low vulnerabilities – orange, as something to do */

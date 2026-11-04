@@ -44,6 +44,7 @@
         <dd>
           <strong class="mono">{{ siteReport.plugins.length }}</strong>
           <span class="faint">{{ activePlugins }} aktywnych</span>
+          <span v-if="inactivePlugins > 0" class="chip chip--soft">{{ inactivePlugins }} nieaktywnych</span>
           <span v-if="pluginUpdates.length > 0" class="chip chip--warn">{{ pluginUpdates.length }} do aktualizacji</span>
           <span v-else class="site__ok">aktualne</span>
         </dd>
@@ -60,6 +61,35 @@
 
                 <span class="plugin__version mono">
                   {{ plugin.version }}<template v-if="plugin.update"> → <strong>{{ plugin.update }}</strong></template>
+                </span>
+              </li>
+            </ul>
+          </details>
+        </dd>
+      </template>
+
+      <!-- every installed theme: the used one, its parent, the unused ones (worth removing), the updates waiting -->
+      <template v-if="siteReport.themes">
+        <dt>Motywy</dt>
+
+        <dd>
+          <strong class="mono">{{ siteReport.themes.length }}</strong>
+          <span v-if="unusedThemes > 0" class="chip chip--soft">{{ unusedThemes }} nieużywanych</span>
+          <span v-if="themeUpdates > 0" class="chip chip--warn">{{ themeUpdates }} do aktualizacji</span>
+          <span v-else class="site__ok">aktualne</span>
+        </dd>
+
+        <dd class="site__plugins">
+          <details :open="themeUpdates > 0">
+            <summary class="faint">Lista motywów</summary>
+
+            <ul class="plugins">
+              <li v-for="theme in sortedThemes" :key="theme.slug" class="plugin" :class="{ 'plugin--off': !theme.active && !theme.parent }">
+                <span class="plugin__name">{{ theme.name }}</span>
+                <span class="faint">{{ themeRole(theme) }}</span>
+
+                <span class="plugin__version mono">
+                  {{ theme.version }}<template v-if="theme.update"> → <strong>{{ theme.update }}</strong></template>
                 </span>
               </li>
             </ul>
@@ -193,7 +223,7 @@
 </template>
 
 <script lang="ts" setup>
-  import type { Project, ReportPlugin, UpdateState } from '@/types'
+  import type { Project, ReportPlugin, ReportTheme, UpdateState } from '@/types'
   import { ArrowUp, Copy, KeyRound, RefreshCw, ShieldAlert, Trash2 } from 'lucide-vue-next'
   import { computed, onBeforeUnmount, ref, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
@@ -227,6 +257,35 @@
 
   const activePlugins = computed(() => siteReport.value?.plugins?.filter(plugin => plugin.active).length ?? 0)
   const pluginUpdates = computed(() => siteReport.value?.plugins?.filter(plugin => plugin.update) ?? [])
+  const inactivePlugins = computed(() => siteReport.value?.plugins?.filter(plugin => !plugin.active && !plugin.mu).length ?? 0)
+  const unusedThemes = computed(() => siteReport.value?.themes?.filter(theme => !theme.active && !theme.parent).length ?? 0)
+  const themeUpdates = computed(() => siteReport.value?.themes?.filter(theme => theme.update).length ?? 0)
+
+  /** used – by the site (on a multisite, any of the network's); parent – a used theme builds on it */
+  function themeRole (theme: ReportTheme) {
+    if (theme.active) {
+      return 'używany'
+    }
+
+    return theme.parent ? 'nadrzędny' : 'nieużywany'
+  }
+
+  /** waiting for an update first, then the used one and its parent, the unused last – by name within each */
+  const sortedThemes = computed(() => {
+    const rank = (theme: ReportTheme) => {
+      if (theme.update) {
+        return 0
+      }
+
+      if (theme.active) {
+        return 1
+      }
+
+      return theme.parent ? 2 : 3
+    }
+
+    return (siteReport.value?.themes ?? []).toSorted((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name, 'pl'))
+  })
 
   /** waiting for an update first, then the active ones, the inactive last – by name within each */
   const sortedPlugins = computed(() => {

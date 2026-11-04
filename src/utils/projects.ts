@@ -419,7 +419,7 @@ export function parseReporter (reporter: string | null | undefined): { name: str
  * The newest plugin_meden released – its repository is private, the list can't ask GitHub. Bump it with every
  * release of plugin_meden (the tag vX.Y.Z), so the sites on an older one show it at once.
  */
-export const LATEST_PLUGIN_MEDEN = '1.20.0'
+export const LATEST_PLUGIN_MEDEN = '1.21.0'
 
 /**
  * The newest version of each reporter: the highest any site sends – at least the released plugin_meden
