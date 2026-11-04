@@ -36,6 +36,8 @@
       :icon="group.icon"
       :title="group.label"
     >
+      <!-- production and staging: online / offline as the list's last check left it – development isn't checked -->
+      <template v-if="envStatus(group.key)" #status><StatusChip :status="envStatus(group.key)" /></template>
 
       <!-- the Basic Auth button (a shield with a plus) in the addresses' row, after the panel – as the domain's plus -->
       <div :class="[group.links.length > 1 ? 'grid' : 'stack', { 'grid--action': addsAuth(group.key) }]">
@@ -168,11 +170,12 @@
   import { ArrowUpRight, Copy, FlaskConical, Globe, KeyRound, Laptop, LockKeyhole, ShieldPlus, X } from 'lucide-vue-next'
   import { type Component, computed, ref, watch } from 'vue'
   import { useProjectForm } from '@/components/project/form'
+  import StatusChip from '@/components/StatusChip.vue'
   import CopyInput from '@/components/ui/CopyInput.vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
   import PasswordInput from '@/components/ui/PasswordInput.vue'
   import SectionCard from '@/components/ui/SectionCard.vue'
-  import { bareDomain, siteUrl } from '@/utils/projects'
+  import { bareDomain, siteUrl, stagingCheck } from '@/utils/projects'
 
   /** "Dostęp": the panel's login, each environment's addresses and Basic Auth */
   const { form, project, secrets, copy } = useProjectForm()
@@ -278,6 +281,24 @@
 
   /** a panel behind its own Basic Auth gets the locked open and copy */
   const lockedPanel = (field: AccessField | 'home') => panelAuthUrl(field) !== null
+
+  /**
+   * An environment's state for its header: production – the project's status when it is checked (online / offline);
+   * staging – its last check (answering, even behind a login: online; else offline); development, never checked – none.
+   */
+  function envStatus (env: 'production' | 'staging' | 'local'): 'online' | 'offline' | null {
+    const site = project.value
+
+    if (env === 'production') {
+      return site?.status === 'online' || site?.status === 'offline' ? site.status : null
+    }
+
+    if (env === 'staging' && site?.stagingUrl && site.staging) {
+      return stagingCheck(site.staging).tone === 'down' ? 'offline' : 'online'
+    }
+
+    return null
+  }
 
   /** production's address – the main domain (the first one on the left) */
   const homeUrl = computed(() => {

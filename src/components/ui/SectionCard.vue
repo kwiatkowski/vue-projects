@@ -14,6 +14,8 @@
         <span v-if="icon" class="section-card__icon"><component :is="icon" /></span>
         <span :id="titleId" class="section-card__title">{{ title }}</span>
         <span v-if="note" class="faint section-card__note">{{ note }}</span>
+        <!-- after the name: a short state of what the section is about (a status chip …) – plain, not a control -->
+        <span v-if="$slots.status" class="section-card__status"><slot name="status" /></span>
         <ChevronDown v-if="collapsible" class="section-card__chevron" />
       </component>
 
@@ -92,6 +94,12 @@ button.section-card__label:focus-visible {
 .section-card__title {
   font-size: 13px;
   font-weight: 400;
+}
+
+.section-card__status {
+  display: inline-flex;
+  margin-left: 4px;
+  font-size: 12px;
 }
 
 .section-card__chevron {
