@@ -1,7 +1,7 @@
 <template>
-  <!-- a bordered section on the dialog's own background: a header bar (an icon in its tone, the name, a remark, actions
-       on the right) over its content -->
-  <section :aria-labelledby="titleId" class="section-card" :class="`section-card--${tone}`">
+  <!-- a bordered section on the dialog's own background: a low header bar (an icon, the name, a remark, actions on the
+       right) over its content -->
+  <section :aria-labelledby="titleId" class="section-card">
     <header class="section-card__head">
       <span v-if="icon" class="section-card__icon"><component :is="icon" /></span>
       <h3 :id="titleId" class="section-card__title">{{ title }}</h3>
@@ -22,9 +22,7 @@
     icon?: Component
     /** a remark after the name, in grey */
     note?: string
-    /** the icon's colour: green, blue or grey */
-    tone?: 'accent' | 'info' | 'neutral'
-  }>(), { icon: undefined, note: undefined, tone: 'neutral' })
+  }>(), { icon: undefined, note: undefined })
 
   const titleId = useId()
 </script>
@@ -42,8 +40,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  min-height: 44px;
-  padding: 8px 16px;
+  min-height: 36px;
+  padding: 6px 16px;
   border-bottom: 1px solid var(--line);
   background: var(--panel);
 }
@@ -64,14 +62,10 @@
   margin-left: auto;
 }
 
+/* the icon plain, in the label's grey – no patch of colour behind it */
 .section-card__icon {
-  display: inline-grid;
+  display: inline-flex;
   flex: none;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-sm);
-  background: var(--surface);
   color: var(--text-2);
 }
 
@@ -79,16 +73,6 @@
   width: 14px;
   height: 14px;
   stroke-width: 2.25;
-}
-
-.section-card--accent .section-card__icon {
-  background: var(--accent-soft);
-  color: var(--accent-text);
-}
-
-.section-card--info .section-card__icon {
-  background: var(--info-soft);
-  color: var(--info);
 }
 
 .section-card__body {

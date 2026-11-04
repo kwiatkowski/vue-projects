@@ -26,14 +26,13 @@
       </div>
     </SectionCard>
 
-    <!-- each environment a section of its own, as the login's: its icon in its colour (production's globe green,
-         staging's flask blue, development's laptop grey – the last two as the list's Stage and Local columns) -->
+    <!-- each environment a section of its own, as the login's: production's globe; staging's flask and development's
+         laptop as the list's Stage and Local columns -->
     <SectionCard
       v-for="group in ACCESS_GROUPS"
       :key="group.key"
       :icon="group.icon"
       :title="group.label"
-      :tone="group.tone"
     >
 
       <!-- the Basic Auth button in the addresses' row, after the panel – as "+ Domena" after the domain -->
@@ -266,16 +265,16 @@
   type AccessField = 'adminUrl' | 'stagingUrl' | 'stagingAdminUrl' | 'localUrl' | 'localAdminUrl'
 
   /** one section per environment, its addresses (the logins follow in the template) */
-  const ACCESS_GROUPS: Array<{ key: 'production' | 'staging' | 'local', label: string, icon: Component, tone: 'accent' | 'info' | 'neutral', links: Array<{ field: AccessField | 'home', label: string, placeholder: string }> }> = [
-    { key: 'production', label: 'Production', icon: Globe, tone: 'accent', links: [
+  const ACCESS_GROUPS: Array<{ key: 'production' | 'staging' | 'local', label: string, icon: Component, links: Array<{ field: AccessField | 'home', label: string, placeholder: string }> }> = [
+    { key: 'production', label: 'Production', icon: Globe, links: [
       { field: 'home', label: 'Adres', placeholder: 'Główna domena – dodaj po lewej' },
       { field: 'adminUrl', label: 'Panel', placeholder: 'https://…/wp/wp-login.php' },
     ] },
-    { key: 'staging', label: 'Staging', icon: FlaskConical, tone: 'info', links: [
+    { key: 'staging', label: 'Staging', icon: FlaskConical, links: [
       { field: 'stagingUrl', label: 'Adres', placeholder: 'https://…/' },
       { field: 'stagingAdminUrl', label: 'Panel', placeholder: 'https://…/wp/wp-login.php' },
     ] },
-    { key: 'local', label: 'Development', icon: Laptop, tone: 'neutral', links: [
+    { key: 'local', label: 'Development', icon: Laptop, links: [
       { field: 'localUrl', label: 'Adres', placeholder: 'https://….local/' },
       { field: 'localAdminUrl', label: 'Panel', placeholder: 'https://….local/wp/wp-login.php' },
     ] },
