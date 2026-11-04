@@ -325,7 +325,7 @@
     const count = (status: Filter) => scoped.value.filter(project => matches(project, status, '')).length
     const options: Array<{ value: Filter, label: string, count: number, tone?: string }> = [
       { value: 'all', label: 'Wszystkie', count: scoped.value.length },
-      ...(['online', 'offline', 'dev', 'suspended'] as const).map(status => ({ value: status, label: STATUS_LABELS[status], count: count(status), tone: STATUS_TONES[status] })),
+      ...(['online', 'offline', 'dev', 'suspended'] as const).filter(status => status !== 'dev' || filter.value === 'dev').map(status => ({ value: status, label: STATUS_LABELS[status], count: count(status), tone: STATUS_TONES[status] })),
       { value: 'other', label: 'Bez strony', count: count('other') },
     ]
 

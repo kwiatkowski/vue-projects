@@ -11,6 +11,7 @@
       <CategoryDialog />
       <SettingsDialog />
       <AlertsDialog />
+      <ChangelogDialog />
     </template>
 
     <ViewDialog />
@@ -27,6 +28,7 @@
   import AlertsDialog from '@/components/AlertsDialog.vue'
   import AppTopbar from '@/components/AppTopbar.vue'
   import CategoryDialog from '@/components/CategoryDialog.vue'
+  import ChangelogDialog from '@/components/ChangelogDialog.vue'
   import ProjectDialog from '@/components/ProjectDialog.vue'
   import SettingsDialog from '@/components/SettingsDialog.vue'
   import TipLayer from '@/components/ui/TipLayer.vue'

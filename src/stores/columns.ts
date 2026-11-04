@@ -38,6 +38,8 @@ export const useColumnsStore = defineStore('columns', () => {
   const settingsOpen = ref(false)
   /** the owner's "Powiadomienia" */
   const alertsOpen = ref(false)
+  /** "Co nowego" – the day's summary from CHANGELOG.md */
+  const changelogOpen = ref(false)
 
   /** what this list may show */
   const available = computed<ColumnKey[]>(() => config.canManage ? [...COLUMN_KEYS] : config.columns.visible)
@@ -85,5 +87,5 @@ export const useColumnsStore = defineStore('columns', () => {
     }
   }
 
-  return { viewerColumns, guestColumns, viewerLogin, hidden, viewOpen, settingsOpen, alertsOpen, available, visible, setHidden, showAll, save }
+  return { viewerColumns, guestColumns, viewerLogin, hidden, viewOpen, settingsOpen, alertsOpen, changelogOpen, available, visible, setHidden, showAll, save }
 })

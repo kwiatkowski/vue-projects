@@ -83,19 +83,19 @@
     </dl>
   </template>
 
-  <!-- what lies unused: the plugins switched off, the themes no site uses (nor builds on) – worth removing -->
-  <template v-if="unused.length > 0">
-    <div class="info-tip__head info-tip__head--unused">Nieużywane: {{ unused.length }}</div>
+  <div v-if="menu && plugins.length === 0 && themes.length === 0 && !translations" class="info-tip__head info-tip__head--ok">Wszystko aktualne</div>
+
+  <!-- what lies unused – worth removing: the plugins switched off, then the themes no site uses (nor builds on) -->
+  <template v-for="group in unused" :key="group.title">
+    <div class="info-tip__head info-tip__head--unused">{{ group.title }}: {{ group.items.length }}</div>
 
     <dl class="info-tip info-tip--right">
-      <template v-for="item in unused" :key="`${item.kind}-${item.name}`">
-        <dt>{{ item.name }} <span class="mono faint">{{ item.version }}</span></dt>
-        <dd class="faint">{{ item.kind }}</dd>
+      <template v-for="item in group.items" :key="item.name">
+        <dt>{{ item.name }}</dt>
+        <dd class="mono faint">{{ item.version }}</dd>
       </template>
     </dl>
   </template>
-
-  <div v-if="menu && plugins.length === 0 && themes.length === 0 && !translations" class="info-tip__head info-tip__head--ok">Wszystko aktualne</div>
 </template>
 
 <script lang="ts" setup>
@@ -115,10 +115,11 @@
 
   const plugins = computed(() => pendingUpdates(props.project, projects.latestWordpress))
   const themes = computed(() => props.project.themeUpdates ?? [])
+  /** the unused plugins and themes – each its own section, only when it has any */
   const unused = computed(() => [
-    ...(props.project.inactivePlugins ?? []).map(item => ({ ...item, kind: 'wtyczka' })),
-    ...(props.project.inactiveThemes ?? []).map(item => ({ ...item, kind: 'motyw' })),
-  ])
+    { title: 'Nieużywane wtyczki', items: props.project.inactivePlugins ?? [] },
+    { title: 'Nieużywane motywy', items: props.project.inactiveThemes ?? [] },
+  ].filter(group => group.items.length > 0))
   const translations = computed(() => props.project.translationUpdates?.length ?? 0)
   const vulnerabilities = computed(() => props.project.vulnerabilities ?? [])
   const missing = computed(() => missingTranslations(props.project))

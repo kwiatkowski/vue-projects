@@ -5,8 +5,18 @@
       <span class="top__site">Lista projektów</span>
     </RouterLink>
 
-    <!-- the plugin's version (RRRR.MM.DD) – which build of the list this is -->
-    <span v-if="config.version" class="top__version mono">{{ config.version }}</span>
+    <!-- the plugin's version (RRRR.MM.DD[.N]) – which build of the list this is; the owner's click shows what's new -->
+    <button
+      v-if="config.version && config.canManage"
+      v-tip="'Co nowego'"
+      class="top__version top__version--link mono"
+      type="button"
+      @click="columns.changelogOpen = true"
+    >
+      {{ config.version }}
+    </button>
+
+    <span v-else-if="config.version" class="top__version mono">{{ config.version }}</span>
 
     <span class="top__space" />
 
@@ -43,16 +53,29 @@
       <Eye /> <span class="top__label">Podgląd: {{ VIEW_LABELS[config.preview] }} ·</span> Wróć
     </button>
 
-    <button
-      v-tip="dark ? 'Jasny motyw' : 'Ciemny motyw'"
-      :aria-label="dark ? 'Jasny motyw' : 'Ciemny motyw'"
-      class="btn btn--icon btn--sm"
-      type="button"
-      @click="toggleTheme"
-    >
-      <Sun v-if="dark" />
-      <Moon v-else />
-    </button>
+    <!-- the theme: the list's dark and light, meden.com.pl's light and dark – a swatch of each -->
+    <DropMenu label="Motyw" panel-class="theme-menu" :title="false" trigger-class="btn btn--icon btn--sm">
+      <template #trigger>
+        <Moon v-if="dark" />
+        <Sun v-else />
+      </template>
+
+      <div class="user-menu__label eyebrow">Motyw</div>
+
+      <button
+        v-for="item in THEMES"
+        :key="item.value"
+        :aria-checked="theme === item.value"
+        class="menu__item"
+        role="menuitemradio"
+        type="button"
+        @click="setTheme(item.value)"
+      >
+        <span aria-hidden="true" class="theme-swatch" :style="{ '--swatch-bg': item.bg, '--swatch-accent': item.accent }" />
+        {{ item.label }}
+        <Check v-if="theme === item.value" class="user-menu__tick" />
+      </button>
+    </DropMenu>
 
     <!-- the owner's photo opens the account's menu: whose view to look at, and logging out -->
     <DropMenu
@@ -121,6 +144,16 @@
         <Bell /> Powiadomienia
       </button>
 
+      <button
+        v-if="config.canManage"
+        class="menu__item"
+        role="menuitem"
+        type="button"
+        @click="columns.changelogOpen = true"
+      >
+        <Sparkles /> Co nowego
+      </button>
+
       <a v-if="config.logoutUrl" class="menu__item" :href="config.logoutUrl" role="menuitem">
         <LogOut /> Wyloguj
       </a>
@@ -164,12 +197,12 @@
 </template>
 
 <script lang="ts" setup>
-  import { Bell, Check, ChevronDown, Eye, FolderPlus, Layers, LogIn, LogOut, Moon, Plus, Settings, ShieldCheck, Sun, UserRound, Users } from 'lucide-vue-next'
+  import { Bell, Check, ChevronDown, Eye, FolderPlus, Layers, LogIn, LogOut, Moon, Plus, Settings, ShieldCheck, Sparkles, Sun, UserRound, Users } from 'lucide-vue-next'
   import { computed, ref } from 'vue'
   import { viewerApi } from '@/api/projects'
   import LoginDialog from '@/components/LoginDialog.vue'
   import DropMenu from '@/components/ui/DropMenu.vue'
-  import { useTheme } from '@/composables/theme'
+  import { THEMES, useTheme } from '@/composables/theme'
   import { config } from '@/config'
   import { vTip } from '@/directives/tip'
   import { useColumnsStore } from '@/stores/columns'
@@ -177,7 +210,7 @@
 
   const projects = useProjectsStore()
   const columns = useColumnsStore()
-  const { dark, toggleTheme } = useTheme()
+  const { theme, dark, setTheme } = useTheme()
 
   type View = 'admin' | 'viewer' | 'guest'
 
@@ -263,6 +296,40 @@
   color: var(--text-3);
   font-size: 11px;
   white-space: nowrap;
+}
+
+/* the owner's: a button – "Co nowego" */
+.top__version--link {
+  margin-left: -2px;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+}
+
+.top__version--link:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+/* a theme's swatch: its background with its accent as a dot */
+.theme-swatch {
+  position: relative;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--swatch-bg);
+}
+
+.theme-swatch::after {
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--swatch-accent);
+  content: '';
 }
 
 .top__space {

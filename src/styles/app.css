@@ -3,7 +3,8 @@
  * one cactus-green accent (the site's #88a24c, darkened for contrast). Geist for text, Geist Mono for
  * everything that is a number – dates, times, counters.
  *
- * Dark by default (index.html sets `data-theme` on <html> before the first paint), light when the user picks it.
+ * Dark by default (index.html sets `data-theme` on <html> before the first paint), light when the user picks it – and
+ * meden.com.pl's two: its navy (#113d89) and turquoise (#18aabf), light and dark.
  */
 
 :root {
@@ -64,7 +65,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
+  :root:not([data-theme]) {
     color-scheme: dark;
 
     --bg: #151513;
@@ -122,6 +123,64 @@
   --warn-soft: #382c17;
   --info: #86aedc;
   --info-soft: #1d2937;
+
+  --shadow: 0 1px 2px rgb(0 0 0 / 30%);
+  --shadow-pop: 0 2px 4px rgb(0 0 0 / 30%), 0 16px 48px rgb(0 0 0 / 50%);
+}
+
+/* meden.com.pl, light: white cards on a cool paper, navy text and accent (white on it), its hairline grey */
+:root[data-theme='meden-light'] {
+  color-scheme: light;
+
+  --bg: #f5f8fb;
+  --panel: #ebf0f5;
+  --surface: #ffffff;
+  --hover: rgb(17 61 137 / 5%);
+  --press: rgb(17 61 137 / 9%);
+  --line: #dce1e7;
+  --line-strong: #c3ccd7;
+
+  --text: #1d2a3d;
+  --text-2: #4d5b6e;
+  --text-3: #6a7789;
+
+  --accent: #113d89;
+  --accent-ink: #ffffff;
+  --accent-soft: #e1e9f6;
+  --accent-text: #113d89;
+
+  --shadow: 0 1px 2px rgb(17 61 137 / 6%), 0 2px 8px rgb(17 61 137 / 4%);
+  --shadow-pop: 0 2px 4px rgb(17 61 137 / 6%), 0 12px 40px rgb(17 61 137 / 14%);
+}
+
+/* meden.com.pl, dark: deep navy, turquoise accent (navy on it) */
+:root[data-theme='meden-dark'] {
+  color-scheme: dark;
+
+  --bg: #0e1a2b;
+  --panel: #122036;
+  --surface: #162740;
+  --hover: rgb(232 238 246 / 6%);
+  --press: rgb(232 238 246 / 10%);
+  --line: #233651;
+  --line-strong: #31476a;
+
+  --text: #e8eef6;
+  --text-2: #a9b7ca;
+  --text-3: #7f8ea4;
+
+  --accent: #18aabf;
+  --accent-ink: #0e1a2b;
+  --accent-soft: #0f3646;
+  --accent-text: #5ccfdf;
+  --off: #31476a;
+
+  --danger: #ee7d67;
+  --danger-soft: #3b2226;
+  --warn: #e2aa4f;
+  --warn-soft: #36301f;
+  --info: #86aedc;
+  --info-soft: #1b2c44;
 
   --shadow: 0 1px 2px rgb(0 0 0 / 30%);
   --shadow-pop: 0 2px 4px rgb(0 0 0 / 30%), 0 16px 48px rgb(0 0 0 / 50%);
