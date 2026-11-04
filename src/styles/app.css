@@ -632,9 +632,10 @@ textarea.input--title {
   }
 }
 
-/* a button after a field, in its row ("+ Domena", "+ Basic Auth"): as tall as the field */
+/* an icon button after a field, in its row (add a domain, add Basic Auth): a square as tall as the field */
 .field-action {
   flex: none;
+  width: 36px;
   height: 36px;
 }
 

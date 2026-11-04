@@ -49,10 +49,10 @@
                 @click="form.domains.splice(index, 1)"
               ><X /></button>
 
-              <!-- after the last domain, in its row – as "+ Basic Auth" after the panel's address -->
-              <button v-if="index === form.domains.length - 1" class="btn btn--outline field-action" type="button" @click="addDomain">
-                <Plus /> Domena
-              </button>
+              <!-- after the last domain, in its row – an icon with a tooltip, as Basic Auth's after the panel's address -->
+              <HoverTip v-if="index === form.domains.length - 1" text="Dodaj domenę">
+                <button aria-label="Dodaj domenę" class="btn btn--outline btn--icon field-action" type="button" @click="addDomain"><Plus /></button>
+              </HoverTip>
             </div>
           </div>
         </label>
@@ -221,6 +221,7 @@
   import StatusChip from '@/components/StatusChip.vue'
   import BaseDialog from '@/components/ui/BaseDialog.vue'
   import CopyInput from '@/components/ui/CopyInput.vue'
+  import HoverTip from '@/components/ui/HoverTip.vue'
   import SelectField from '@/components/ui/SelectField.vue'
   import { vTip } from '@/directives/tip'
   import { useNotifyStore } from '@/stores/notify'

@@ -37,7 +37,7 @@
       :title="group.label"
     >
 
-      <!-- the Basic Auth button in the addresses' row, after the panel – as "+ Domena" after the domain -->
+      <!-- the Basic Auth button (a shield with a plus) in the addresses' row, after the panel – as the domain's plus -->
       <div :class="[group.links.length > 1 ? 'grid' : 'stack', { 'grid--action': addsAuth(group.key) }]">
         <label v-for="link in group.links" :key="link.field" class="field">
           <span>{{ link.label }}</span>
@@ -97,9 +97,14 @@
           </span>
         </label>
 
-        <button v-if="group.key !== 'local' && addsAuth(group.key)" class="btn btn--outline field-action" type="button" @click="authOpen[group.key] = true">
-          <Plus /> Basic Auth
-        </button>
+        <HoverTip v-if="group.key !== 'local' && addsAuth(group.key)" text="Dodaj Basic Auth">
+          <button
+            :aria-label="`Dodaj Basic Auth – ${group.label}`"
+            class="btn btn--outline btn--icon field-action"
+            type="button"
+            @click="authOpen[group.key] = true"
+          ><ShieldPlus /></button>
+        </HoverTip>
       </div>
 
       <!-- HTTP Basic Auth in front of the whole site (the list checks it, fetches the report with it) or only the panel –
@@ -160,7 +165,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { ArrowUpRight, Copy, FlaskConical, Globe, KeyRound, Laptop, LockKeyhole, Plus, X } from 'lucide-vue-next'
+  import { ArrowUpRight, Copy, FlaskConical, Globe, KeyRound, Laptop, LockKeyhole, ShieldPlus, X } from 'lucide-vue-next'
   import { type Component, computed, ref, watch } from 'vue'
   import { useProjectForm } from '@/components/project/form'
   import CopyInput from '@/components/ui/CopyInput.vue'
