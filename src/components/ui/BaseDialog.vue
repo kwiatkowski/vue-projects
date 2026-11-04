@@ -3,7 +3,8 @@
     ref="dialog"
     :aria-labelledby="titleId"
     class="dialog"
-    :style="{ '--width': `${width}px` }"
+    :class="{ 'dialog--fixed': height }"
+    :style="{ '--width': `${width}px`, '--height': height ? `${height}px` : undefined }"
     tabindex="-1"
     @cancel.prevent="requestClose"
     @click="onBackdrop"
@@ -49,9 +50,11 @@
   const props = withDefaults(defineProps<{
     title: string
     width?: number
+    /** a fixed height (up to the window's) – the card doesn't grow or shrink with what is shown in it, e.g. tabs */
+    height?: number
     /** asked before the user closes it (×, Esc, the backdrop) – false keeps it open, e.g. to confirm unsaved changes */
     canClose?: () => boolean
-  }>(), { width: 480, canClose: undefined })
+  }>(), { width: 480, height: undefined, canClose: undefined })
 
   const emit = defineEmits<{ submit: [] }>()
 
@@ -141,6 +144,20 @@
   display: flex;
   flex-direction: column;
   max-height: inherit;
+}
+
+/* the fixed height: the body takes what the head and the footer leave, and scrolls within it */
+.dialog--fixed {
+  height: min(var(--height), calc(100dvh - 48px));
+}
+
+.dialog--fixed .dialog__card {
+  height: 100%;
+}
+
+.dialog--fixed .dialog__body {
+  flex: 1;
+  align-content: start;
 }
 
 /* header and footer as panel-toned bars around the body */

@@ -3,6 +3,7 @@
     ref="dialog"
     v-model="open"
     :can-close="canClose"
+    :height="920"
     :title="project ? 'Edycja projektu' : 'Nowy projekt'"
     :width="1360"
     @submit="save"
