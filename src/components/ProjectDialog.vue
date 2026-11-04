@@ -66,7 +66,6 @@
 
           <SelectField
             v-model="form.status"
-            :disabled="locked('status')"
             label="Status"
             :options="statusOptions"
           >
@@ -233,7 +232,13 @@
   const NotesEditor = defineAsyncComponent(loadNotesEditor)
   setTimeout(() => void loadNotesEditor().catch(() => {}), 3000)
 
-  const statusOptions = (Object.keys(STATUS_LABELS) as Status[]).map(value => ({ value, label: STATUS_LABELS[value] }))
+  /**
+   * The statuses to choose: all of them – or, for a site that reports, online / offline only as it is now (the checks
+   * set it, not the hand) next to the ones set by hand: in progress, not watched, suspended.
+   */
+  const statusOptions = computed(() => (Object.keys(STATUS_LABELS) as Status[])
+    .filter(value => !reporting.value || !['online', 'offline'].includes(value) || value === (project.value?.status === 'offline' ? 'offline' : 'online'))
+    .map(value => ({ value, label: STATUS_LABELS[value] })))
   const categoryOptions = computed(() => projects.sortedCategories.map(category => ({ value: category.id, label: category.name })))
 
   type Tab = 'report' | 'history' | 'server' | 'tech' | 'access' | 'integrations' | 'notes' | 'todo'
