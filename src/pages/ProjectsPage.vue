@@ -66,8 +66,8 @@
             :options="categoryOptions"
             @update:model-value="setCategory($event ?? '')"
           >
-            <!-- how many projects each holds – as the statuses' counts -->
-            <template #option="{ option }">{{ option.label }} <span class="mono faint count">{{ categoryCounts[option.value] ?? 0 }}</span></template>
+            <!-- how many projects each holds – as the statuses' counts; none on "all" -->
+            <template #option="{ option }">{{ option.label }} <span v-if="option.value" class="mono faint count">{{ categoryCounts[option.value] ?? 0 }}</span></template>
           </SelectField>
         </template>
 
@@ -83,7 +83,7 @@
           <template #option="{ option }">
             <StatusChip v-if="option.value in STATUS_LABELS" :status="option.value as Status" />
             <template v-else>{{ option.label }}</template>
-            <span class="mono faint count">{{ filters.find(item => item.value === option.value)?.count }}</span>
+            <span v-if="option.value !== 'all'" class="mono faint count">{{ filters.find(item => item.value === option.value)?.count }}</span>
           </template>
         </SelectField>
 
@@ -97,7 +97,7 @@
           :options="reportOptions"
           @update:model-value="report = $event ?? ''"
         >
-          <template #option="{ option }">{{ option.label }} <span class="mono faint count">{{ reportCounts[option.value] ?? 0 }}</span></template>
+          <template #option="{ option }">{{ option.label }} <span v-if="option.value" class="mono faint count">{{ reportCounts[option.value] ?? 0 }}</span></template>
         </SelectField>
 
         <!-- what to do and how the list looks – at the right edge, also when the toolbar wraps onto a second row -->
