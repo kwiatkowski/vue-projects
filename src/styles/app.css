@@ -197,8 +197,15 @@
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  /* room for the scrollbar always – a long list and a short one keep the same width, nothing shifts sideways */
-  scrollbar-gutter: stable;
+}
+
+/* the phones' cards scroll the page: room for its scrollbar always – a long list and a short one keep the same width,
+   nothing shifts sideways. On a wide screen the table scrolls itself and the page never does – a reserved gutter
+   would only widen the right margin */
+@media (max-width: 900px) {
+  html {
+    scrollbar-gutter: stable;
+  }
 }
 
 body {
