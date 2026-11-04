@@ -65,7 +65,10 @@
             :model-value="category?.slug ?? ''"
             :options="categoryOptions"
             @update:model-value="setCategory($event ?? '')"
-          />
+          >
+            <!-- how many projects each holds – as the statuses' counts -->
+            <template #option="{ option }">{{ option.label }} <span class="mono faint">{{ categoryCounts[option.value] ?? 0 }}</span></template>
+          </SelectField>
 
           <!-- only the projects with something to update – WordPress, plugins, translations (from the reports) -->
           <button
@@ -254,6 +257,12 @@
 
     void router.replace({ name: 'projects', params: renamed ? { category: renamed.slug } : {}, query: route.query })
   }, { immediate: true })
+
+  /** the projects in each category by its slug – '' all of them */
+  const categoryCounts = computed<Record<string, number>>(() => Object.fromEntries([
+    ['', projects.items.length],
+    ...projects.sortedCategories.map(item => [item.slug, projects.items.filter(project => project.categoryId === item.id).length]),
+  ]))
 
   const categoryOptions = computed(() => [
     { value: '', label: 'Wszystkie kategorie' },
