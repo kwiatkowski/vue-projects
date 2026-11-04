@@ -20,17 +20,10 @@
 
     <span class="top__space" />
 
-    <!-- adding – rare, so one quiet button: a new project (the more frequent) or a new category -->
-    <DropMenu
-      v-if="config.canManage"
-      label="Dodaj"
-      panel-class="user-menu"
-      :title="false"
-      trigger-class="btn btn--sm btn--outline"
-    >
+    <!-- adding – rare, so a bare icon as the theme's: a new project (the more frequent) or a new category -->
+    <DropMenu v-if="config.canManage" label="Dodaj" panel-class="user-menu" trigger-class="btn btn--icon btn--sm">
       <template #trigger>
-        <Plus /> <span class="top__label">Dodaj</span>
-        <ChevronDown class="top__caret" />
+        <Plus />
       </template>
 
       <button class="menu__item" role="menuitem" type="button" @click="projects.editing = 'new'">
