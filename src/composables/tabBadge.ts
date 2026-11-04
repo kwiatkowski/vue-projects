@@ -1,11 +1,17 @@
 import { watchEffect } from 'vue'
 
 /**
- * The browser tab tells when sites are down – as Todo's does with what's due: "(1) Projekty", and the favicon turns
- * into the number on red. In front it stays still; in the background the square stays red and only the number blinks.
+ * The browser tab tells what needs doing – as Todo's does with what's due: "(1) Projekty", and the favicon turns into
+ * the number: on red for the sites that are down, on orange (when none is) for the ones with something to update. In
+ * front it stays still; in the background the square keeps its colour and only the number blinks.
  */
 
-/** the number shows for a second, then the red square alone for a second */
+/** down – red; updates – orange (the light theme's --danger and --warn: white reads well on both) */
+export type BadgeTone = 'down' | 'updates'
+
+const COLOURS: Record<BadgeTone, string> = { down: '#c2412d', updates: '#b26f12' }
+
+/** the number shows for a second, then the coloured square alone for a second */
 const BLINK_MS = 1000
 
 /** the app's mark – same as public/favicon.svg */
@@ -16,13 +22,14 @@ const markUrl = `data:image/svg+xml,${encodeURIComponent(MARK)}`
 const icons = new Map<string, string>()
 
 /**
- * The number instead of the mark: white on a red rounded square, "9+" from ten on; null – the red square alone (the
- * blink's other half). Drawn on a canvas so the digits' real ink box can be measured and put dead centre – SVG text
- * baselines differ between browsers and fonts.
+ * The number instead of the mark: white on a rounded square in the tone's colour, "9+" from ten on; null – the square
+ * alone (the blink's other half). Drawn on a canvas so the digits' real ink box can be measured and put dead centre –
+ * SVG text baselines differ between browsers and fonts.
  */
-function countIcon (count: number | null): string {
+function countIcon (count: number | null, tone: BadgeTone): string {
   const text = count === null ? '' : (count > 9 ? '9+' : String(count))
-  const cached = icons.get(text)
+  const key = `${tone}:${text}`
+  const cached = icons.get(key)
 
   if (cached) {
     return cached
@@ -38,14 +45,14 @@ function countIcon (count: number | null): string {
     return markUrl
   }
 
-  context.fillStyle = '#c2412d'
+  context.fillStyle = COLOURS[tone]
   context.beginPath()
   context.roundRect(0, 0, size, size, 16)
   context.fill()
 
   if (!text) {
     const url = canvas.toDataURL('image/png')
-    icons.set(text, url)
+    icons.set(key, url)
 
     return url
   }
@@ -64,7 +71,7 @@ function countIcon (count: number | null): string {
   context.fillText(text, x, y)
 
   const url = canvas.toDataURL('image/png')
-  icons.set(text, url)
+  icons.set(key, url)
 
   return url
 }
@@ -81,17 +88,17 @@ function iconLink (): HTMLLinkElement {
   return link
 }
 
-/** Keeps the tab's title and icon in step with how many sites are down. */
-export function useTabBadge (down: () => number): void {
+/** Keeps the tab's title and icon in step with what needs doing – how many, and whether it is sites down or updates. */
+export function useTabBadge (state: () => { count: number, tone: BadgeTone }): void {
   const title = document.title || 'Projekty'
   let timer: ReturnType<typeof setInterval> | undefined
   let showBadge = true
 
   function paint (): void {
-    const count = down()
+    const { count, tone } = state()
     const link = iconLink()
-    // the red square stays while a site is down – only its number blinks
-    const href = count > 0 ? countIcon(showBadge ? count : null) : markUrl
+    // the coloured square stays – only its number blinks
+    const href = count > 0 ? countIcon(showBadge ? count : null, tone) : markUrl
     link.type = href.startsWith('data:image/png') ? 'image/png' : 'image/svg+xml'
     link.href = href
   }
@@ -101,7 +108,7 @@ export function useTabBadge (down: () => number): void {
     clearInterval(timer)
     showBadge = true
 
-    if (document.hidden && down() > 0) {
+    if (document.hidden && state().count > 0) {
       timer = setInterval(() => {
         showBadge = !showBadge
         paint()
@@ -112,7 +119,7 @@ export function useTabBadge (down: () => number): void {
   }
 
   watchEffect(() => {
-    const count = down()
+    const { count } = state()
     document.title = count > 0 ? `(${count}) ${title}` : title
     syncBlink()
   })
