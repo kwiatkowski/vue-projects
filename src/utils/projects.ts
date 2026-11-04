@@ -1,18 +1,21 @@
 import type { Category, DownCheck, MissingTranslation, PhpBranch, PluginUpdate, Project, SortKey, StagingCheck, Status, UpdateScope } from '@/types'
 
-/** in this order in the filters and the status select: online, offline, in progress, suspended */
+/** in this order in the filters and the status select: online, offline, in progress, not watched, suspended */
 export const STATUS_LABELS: Record<Status, string> = {
   online: 'online',
   offline: 'offline',
   dev: 'w budowie',
+  unmonitored: 'bez monitoringu',
   suspended: 'zawieszony',
 }
 
-/** The colour of a status – chip--{tone} in the table, the same in the filter; suspended – the dark dot, like an unset report. */
-export const STATUS_TONES: Record<Status, 'accent' | 'info' | 'danger' | 'off'> = {
+/** The colour of a status – chip--{tone} in the table, the same in the filter; suspended – the dark dot, like an unset report;
+ * not watched – a hollow dot: the site works, nobody checks it. */
+export const STATUS_TONES: Record<Status, 'accent' | 'info' | 'danger' | 'off' | 'muted'> = {
   online: 'accent',
   dev: 'info',
   suspended: 'off',
+  unmonitored: 'muted',
   offline: 'danger',
 }
 
@@ -20,7 +23,7 @@ export const STATUS_TONES: Record<Status, 'accent' | 'info' | 'danger' | 'off'> 
 export type Filter = 'all' | Status | 'other'
 
 /** Status order: what works first, what's gone last. */
-const STATUS_ORDER: Array<Status | null> = ['online', 'dev', 'offline', 'suspended', null]
+const STATUS_ORDER: Array<Status | null> = ['online', 'dev', 'offline', 'unmonitored', 'suspended', null]
 
 const collator = new Intl.Collator('pl', { numeric: true, sensitivity: 'base' })
 

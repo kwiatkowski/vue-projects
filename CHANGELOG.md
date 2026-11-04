@@ -11,6 +11,7 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 - Karta przeglądarki pokazuje, ile stron nie działa – **czerwona liczba na ikonie** i „(1) Projekty” w tytule, jak w Todo; gdy karta jest w tle, miga sama liczba na czerwonym tle.
 - Gdy żadna strona nie leży, a coś czeka na aktualizację (WordPress, wtyczki, tłumaczenia) – **pomarańczowa liczba** takich projektów na ikonie karty.
 - Pozycje „Wszystkie kategorie / statusy / raporty” bez liczby – liczby zostały przy konkretnych wyborach.
+- Nowy status **„Bez monitoringu”** – dla strony, która działa, ale nie chcesz jej pilnować: raport z wtyczki dalej przychodzi (aktualizacje, wtyczki, motywy), a strona nie jest sprawdzana – bez dostępności, maili o awarii i czerwonej liczby na karcie. Pozycja w filtrze statusów pojawia się, gdy jakiś projekt go ma.
 - Pasek filtrów w jednej grupie z lewej – wyszukiwarka, kategoria, status, „Do aktualizacji” (włączony ma zielone tło jak wybrany status); z prawej tylko „Aktualizuj wszystkie” i „Wyświetl”.
 - Wszystkie elementy paska filtrów jednakowe: ta sama wysokość, obramowanie, zaokrąglenie i tło.
 - **Status** i **Raport** jako listy rozwijane z liczbami – Raport filtruje to, co czeka na aktualizację (wszystko, WordPress, wtyczki, tłumaczenia), i nieaktywne wtyczki lub motywy.

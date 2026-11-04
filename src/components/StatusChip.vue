@@ -42,7 +42,7 @@
   /** how long it has been down – when the popup opens */
   const lasting = computed(() => props.down ? formatDuration(Math.round((Date.now() - new Date(props.down.since).getTime()) / 60_000)) : '')
 
-  /** only a site that is up or down pulses – one in progress or suspended doesn't */
+  /** only a site that is up or down pulses – one in progress, not watched or suspended doesn't */
   const PULSING = new Set<Status>(['online', 'offline'])
 </script>
 
@@ -61,6 +61,16 @@
 /* the popup's code – in the offline colour */
 .status-tip__code {
   color: var(--danger);
+}
+
+/* not watched – a hollow dot, no pulse: the site works, it just isn't checked */
+.chip--muted {
+  color: var(--text-2);
+}
+
+.chip--muted .dot {
+  background: none;
+  box-shadow: inset 0 0 0 1.5px var(--text-3);
 }
 
 /* suspended – a dark dot, no pulse, the label greyed */
