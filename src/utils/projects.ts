@@ -296,6 +296,22 @@ const STAGING_CODES: Record<number, string> = {
  * The staging's check in words, and its tone: ok – it answers 200; warn – it works, but the list can't get in (the
  * login, a block); down – it doesn't work (no answer, a missing page, a server error).
  */
+/**
+ * An environment's state: production – the project's status when it is checked (online / offline); staging – its last
+ * check (answering, even behind a login: online; else offline); development, never checked – none.
+ */
+export function envStatus (project: Partial<Project> | null | undefined, env: 'production' | 'staging' | 'local'): 'online' | 'offline' | null {
+  if (env === 'production') {
+    return project?.status === 'online' || project?.status === 'offline' ? project.status : null
+  }
+
+  if (env === 'staging' && project?.stagingUrl && project.staging) {
+    return stagingCheck(project.staging).tone === 'down' ? 'offline' : 'online'
+  }
+
+  return null
+}
+
 export function stagingCheck (check: StagingCheck): { text: string, tone: 'ok' | 'warn' | 'down' } {
   if (check.code === 200) {
     return { text: 'odpowiada (200)', tone: 'ok' }

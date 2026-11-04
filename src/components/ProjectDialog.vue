@@ -116,8 +116,14 @@
             @click="tab = item.key"
           >
             <component :is="item.icon" /> {{ item.label }}
-            <!-- something in it: a dot for the notes, the open tasks' count for Todo (red when one is overdue) -->
-            <span v-if="item.key === 'notes' && form.notes?.trim()" aria-label="jest notatka" class="tabs__dot" />
+            <!-- what is in it at a glance: a dot – green when there and fine, red when something is wrong (tabState);
+                 the open tasks' count for Todo (red when one is overdue) -->
+            <span
+              v-if="tabState[item.key]"
+              :aria-label="tabState[item.key]?.label"
+              class="tabs__dot"
+              :class="`tabs__dot--${tabState[item.key]?.tone}`"
+            />
 
             <span
               v-if="item.key === 'todo' && (project?.todo?.open ?? 0) > 0"
@@ -213,6 +219,7 @@
   import { blank, FLAG_LABELS, type Form, fromProject, type LockedField, projectFormKey, REPORTED_FLAGS, TEXT_FIELDS } from '@/components/project/form'
   import HistoryTab from '@/components/project/HistoryTab.vue'
   import IntegrationsTab from '@/components/project/IntegrationsTab.vue'
+  import { recaptchaUses, useSecretHash } from '@/components/project/recaptcha'
   import ReportTab from '@/components/project/ReportTab.vue'
   import { useSecrets } from '@/components/project/secrets'
   import ServerTab from '@/components/project/ServerTab.vue'
@@ -227,7 +234,7 @@
   import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
-  import { bareDomain, outageText } from '@/utils/projects'
+  import { bareDomain, envStatus, outageText } from '@/utils/projects'
   import '@/components/project/project-form.css'
 
   /** The project's dialog: the name and what defines the project on the left, the tabs (components/project/) right. */
@@ -302,6 +309,38 @@
   const nameInput = useTemplateRef<HTMLInputElement>('nameInput')
   const dialog = useTemplateRef<InstanceType<typeof BaseDialog>>('dialog')
   const secrets = useSecrets()
+  const recaptchaHash = useSecretHash(() => secrets.values.recaptcha)
+
+  /** a tab's dot: there and fine (green), or something wrong (red) – none, when there is nothing to say */
+  interface TabState { tone: 'ok' | 'bad', label: string }
+
+  /** Dostęp: production and staging as last checked – red when one is down, green when the checked ones work */
+  function accessState (): TabState | null {
+    const states = (['production', 'staging'] as const).map(env => envStatus(project.value, env)).filter(state => state !== null)
+
+    if (states.includes('offline')) {
+      return { tone: 'bad', label: 'środowisko nie działa' }
+    }
+
+    return states.length > 0 ? { tone: 'ok', label: 'środowiska działają' } : null
+  }
+
+  /** Integracje: reCAPTCHA on the site with other keys – red; with the ones typed here – green */
+  function integrationsState (): TabState | null {
+    const uses = recaptchaUses(project.value?.recaptcha, form.value.recaptchaSiteKey, recaptchaHash.value)
+
+    if (uses.some(use => use.tone === 'bad')) {
+      return { tone: 'bad', label: 'klucze reCAPTCHA niezgodne' }
+    }
+
+    return uses.some(use => use.tone === 'ok') ? { tone: 'ok', label: 'klucze reCAPTCHA zgodne' } : null
+  }
+
+  const tabState = computed<Partial<Record<Tab, TabState | null>>>(() => ({
+    notes: form.value.notes?.trim() ? { tone: 'ok', label: 'jest notatka' } : null,
+    access: accessState(),
+    integrations: integrationsState(),
+  }))
   const siteReport = ref<SiteReport | null>(null)
 
   /** users and plugins from the site's last report – fetched when the dialog opens */
@@ -552,7 +591,14 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
+}
+
+.tabs__dot--ok {
   background: var(--accent);
+}
+
+.tabs__dot--bad {
+  background: var(--danger);
 }
 
 /* the open tasks' count – a small box as the list's Todo column; red with an overdue one */

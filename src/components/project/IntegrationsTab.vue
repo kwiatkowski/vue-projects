@@ -59,52 +59,19 @@
 
 <script lang="ts" setup>
   import { Check, Minus, X } from 'lucide-vue-next'
-  import { computed, ref, watch } from 'vue'
+  import { computed } from 'vue'
   import { useProjectForm } from '@/components/project/form'
+  import { recaptchaUses, useSecretHash } from '@/components/project/recaptcha'
   import CopyInput from '@/components/ui/CopyInput.vue'
   import PasswordInput from '@/components/ui/PasswordInput.vue'
 
   /** "Integracje": reCAPTCHA v3's keys, and where the site uses them */
   const { form, project, secrets } = useProjectForm()
 
-  /** the typed secret's SHA-256 – the report has the site's only so; '' – none typed */
-  const recaptchaSecretHash = ref('')
-
-  watch(() => secrets.values.recaptcha, async secret => {
-    const value = secret.trim()
-    const digest = value ? new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))) : null
-    // a newer one typed meanwhile wins
-    if (secret === secrets.values.recaptcha) {
-      recaptchaSecretHash.value = digest ? [...digest].map(byte => byte.toString(16).padStart(2, '0')).join('') : ''
-    }
-  })
-
-  const RECAPTCHA_PLACES: Record<string, string> = { cf7: 'Contact Form 7', wordfence: 'Wordfence – logowanie' }
+  const recaptchaSecretHash = useSecretHash(() => secrets.values.recaptcha)
 
   /** where the site uses reCAPTCHA (the last report) – a tick when with the keys above, a cross when with others */
-  const recaptchaPlaces = computed(() => (project.value?.recaptcha ?? []).map(place => {
-    const siteKey = (form.value.recaptchaSiteKey ?? '').trim()
-    const off = place.enabled ? '' : ' – wyłączone'
-    const label = RECAPTCHA_PLACES[place.place] ?? place.place
-
-    if (!place.siteKey) {
-      return { place: place.place, label, tone: 'none', text: 'bez kluczy' }
-    }
-
-    if (!siteKey) {
-      return { place: place.place, label, tone: 'none', text: `klucz witryny ${place.siteKey.slice(0, 10)}…${off}` }
-    }
-
-    if (place.siteKey !== siteKey) {
-      return { place: place.place, label, tone: 'bad', text: `inny klucz witryny${off}` }
-    }
-
-    if (recaptchaSecretHash.value && place.secretHash && place.secretHash !== recaptchaSecretHash.value) {
-      return { place: place.place, label, tone: 'bad', text: `inny klucz tajny${off}` }
-    }
-
-    return { place: place.place, label, tone: place.enabled ? 'ok' : 'none', text: (recaptchaSecretHash.value && place.secretHash ? 'klucze zgodne' : 'klucz witryny zgodny') + off }
-  }))
+  const recaptchaPlaces = computed(() => recaptchaUses(project.value?.recaptcha, form.value.recaptchaSiteKey, recaptchaSecretHash.value))
 </script>
 
 <style scoped>

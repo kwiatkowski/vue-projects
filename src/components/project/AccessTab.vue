@@ -175,7 +175,7 @@
   import HoverTip from '@/components/ui/HoverTip.vue'
   import PasswordInput from '@/components/ui/PasswordInput.vue'
   import SectionCard from '@/components/ui/SectionCard.vue'
-  import { bareDomain, siteUrl, stagingCheck } from '@/utils/projects'
+  import { bareDomain, siteUrl, envStatus as statusOf } from '@/utils/projects'
 
   /** "Dostęp": the panel's login, each environment's addresses and Basic Auth */
   const { form, project, secrets, copy } = useProjectForm()
@@ -282,23 +282,8 @@
   /** a panel behind its own Basic Auth gets the locked open and copy */
   const lockedPanel = (field: AccessField | 'home') => panelAuthUrl(field) !== null
 
-  /**
-   * An environment's state for its header: production – the project's status when it is checked (online / offline);
-   * staging – its last check (answering, even behind a login: online; else offline); development, never checked – none.
-   */
-  function envStatus (env: 'production' | 'staging' | 'local'): 'online' | 'offline' | null {
-    const site = project.value
-
-    if (env === 'production') {
-      return site?.status === 'online' || site?.status === 'offline' ? site.status : null
-    }
-
-    if (env === 'staging' && site?.stagingUrl && site.staging) {
-      return stagingCheck(site.staging).tone === 'down' ? 'offline' : 'online'
-    }
-
-    return null
-  }
+  /** an environment's online / offline for its header – development, never checked, none */
+  const envStatus = (env: 'production' | 'staging' | 'local') => statusOf(project.value, env)
 
   /** production's address – the main domain (the first one on the left) */
   const homeUrl = computed(() => {
