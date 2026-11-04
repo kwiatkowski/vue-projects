@@ -51,7 +51,7 @@
             @click="filtersOpen = !filtersOpen"
           >
             <ListFilter />
-            <span v-if="category || filter !== 'all' || onlyUpdates" class="toolbar__dot" />
+            <span v-if="category || filter !== 'all' || report" class="toolbar__dot" />
           </button>
 
           <!-- there from the start ("Wszystkie kategorie") – the categories fill it once loaded, nothing jumps; a list
@@ -71,23 +71,7 @@
           </SelectField>
         </template>
 
-        <!-- the filters, from the widest to the narrowest: the text, the category, the status, what waits for an update -->
-        <div aria-label="Status" class="seg toolbar__filters" role="radiogroup">
-          <button
-            v-for="option in filters"
-            :key="option.value"
-            :aria-checked="filter === option.value"
-            :class="option.tone && `status status--${option.tone}`"
-            role="radio"
-            type="button"
-            @click="filter = option.value"
-          >
-            <span v-if="option.tone" class="dot" />
-            {{ option.label }} <span class="mono faint count">{{ option.count }}</span>
-          </button>
-        </div>
-
-        <!-- phones: the same statuses as a full-width select – the buttons don't fit in one row -->
+        <!-- the filters, from the widest to the narrowest: the text, the category, the status, what the report says -->
         <SelectField
           class="toolbar__status"
           empty="all"
@@ -103,17 +87,18 @@
           </template>
         </SelectField>
 
-        <!-- only the projects with something to update – WordPress, plugins, translations (from the reports); a switch, as
-             the statuses: on – the accent's tint -->
-        <button
+        <!-- what the reports say: something to update (all of it, WordPress, plugins, translations) or lying unused -->
+        <SelectField
           v-if="canFilterUpdates"
-          :aria-pressed="onlyUpdates"
-          class="btn btn--outline toolbar__updates"
-          type="button"
-          @click="onlyUpdates = !onlyUpdates"
+          class="toolbar__report"
+          empty=""
+          label="Raport"
+          :model-value="report"
+          :options="reportOptions"
+          @update:model-value="report = $event ?? ''"
         >
-          <RefreshCw /> Do aktualizacji <span class="mono faint count">{{ updatesCount }}</span>
-        </button>
+          <template #option="{ option }">{{ option.label }} <span class="mono faint count">{{ reportCounts[option.value] ?? 0 }}</span></template>
+        </SelectField>
 
         <!-- what to do and how the list looks – at the right edge, also when the toolbar wraps onto a second row -->
         <div class="toolbar__actions">
@@ -184,7 +169,7 @@
   import { config } from '@/config'
   import { useColumnsStore } from '@/stores/columns'
   import { useProjectsStore } from '@/stores/projects'
-  import { groupProjects, matches, sortProjects, STATUS_LABELS, STATUS_TONES, updateScope } from '@/utils/projects'
+  import { groupProjects, matches, pendingUpdates, sortProjects, STATUS_LABELS, STATUS_TONES, updateScope } from '@/utils/projects'
 
   const projects = useProjectsStore()
   const columns = useColumnsStore()
@@ -227,11 +212,25 @@
   const filter = ref<Filter>((route.query.status as Filter) || 'all')
   const query = ref(typeof route.query.q === 'string' ? route.query.q : '')
   const filtersOpen = ref(false)
-  /** only the projects with something to update (?aktualizacje) */
-  const onlyUpdates = ref(route.query.aktualizacje !== undefined)
+  /**
+   * What the reports say – something to update or lying unused (?raport=wtyczki); the old ?aktualizacje – all of it.
+   * The value is the address's word.
+   */
+  const REPORT_FILTERS: Array<{ value: ReportFilter, label: string, test: (project: Project) => boolean }> = [
+    { value: 'wszystko', label: 'Do aktualizacji: wszystko', test: project => hasUpdates(project) },
+    { value: 'wordpress', label: 'Do aktualizacji: WordPress', test: project => pendingUpdates(project, projects.latestWordpress).some(item => item.name === 'WordPress') },
+    { value: 'wtyczki', label: 'Do aktualizacji: wtyczki', test: project => (project.updates?.length ?? 0) > 0 },
+    { value: 'tlumaczenia', label: 'Do aktualizacji: tłumaczenia', test: project => (project.translationUpdates?.length ?? 0) > 0 },
+    { value: 'nieaktywne-wtyczki', label: 'Nieaktywne wtyczki', test: project => (project.inactivePlugins?.length ?? 0) > 0 },
+    { value: 'nieaktywne-motywy', label: 'Nieaktywne motywy', test: project => (project.inactiveThemes?.length ?? 0) > 0 },
+  ]
+  type ReportFilter = '' | 'wszystko' | 'wordpress' | 'wtyczki' | 'tlumaczenia' | 'nieaktywne-wtyczki' | 'nieaktywne-motywy'
 
-  watch([filter, query, onlyUpdates], ([status, q, updates]) => {
-    void router.replace({ query: { ...(status === 'all' ? {} : { status }), ...(q ? { q } : {}), ...(updates ? { aktualizacje: null } : {}) } })
+  const fromAddress = typeof route.query.raport === 'string' ? route.query.raport : (route.query.aktualizacje === undefined ? '' : 'wszystko')
+  const report = ref<ReportFilter>(REPORT_FILTERS.find(item => item.value === fromAddress)?.value ?? '')
+
+  watch([filter, query, report], ([status, q, chosen]) => {
+    void router.replace({ query: { ...(status === 'all' ? {} : { status }), ...(q ? { q } : {}), ...(chosen ? { raport: chosen } : {}) } })
   })
 
   // the category is the path – /projects/meden lists only the projects of "Meden"
@@ -310,7 +309,18 @@
     }
   }
 
-  const scoped = computed(() => onlyUpdates.value && canFilterUpdates.value ? inCategory.value.filter(project => hasUpdates(project)) : inCategory.value)
+  const reportOptions = computed(() => [{ value: '' as ReportFilter, label: 'Wszystkie raporty' }, ...REPORT_FILTERS.map(({ value, label }) => ({ value, label }))])
+  /** how many of the category's projects each report filter leaves – '' all of them */
+  const reportCounts = computed<Record<string, number>>(() => Object.fromEntries([
+    ['', inCategory.value.length],
+    ...REPORT_FILTERS.map(item => [item.value, inCategory.value.filter(project => item.test(project)).length]),
+  ]))
+
+  const scoped = computed(() => {
+    const chosen = REPORT_FILTERS.find(item => item.value === report.value)
+
+    return chosen && canFilterUpdates.value ? inCategory.value.filter(project => chosen.test(project)) : inCategory.value
+  })
 
   /** null – the user's own order, grouped by category; a column – a flat list sorted by it */
   const sort = ref<SortKey | null>(null)
@@ -321,7 +331,7 @@
     sort.value = key
   }
 
-  const filtered = computed(() => category.value !== null || filter.value !== 'all' || query.value.trim() !== '' || onlyUpdates.value)
+  const filtered = computed(() => category.value !== null || filter.value !== 'all' || query.value.trim() !== '' || report.value !== '')
 
   /** dragging changes the order of whole categories – only when all of them are shown */
   const canDrag = computed(() => config.canManage && sort.value === null && !filtered.value)
@@ -329,7 +339,7 @@
   const filters = computed(() => {
     const count = (status: Filter) => scoped.value.filter(project => matches(project, status, '')).length
     const options: Array<{ value: Filter, label: string, count: number, tone?: string }> = [
-      { value: 'all', label: 'Wszystkie', count: scoped.value.length },
+      { value: 'all', label: 'Wszystkie statusy', count: scoped.value.length },
       ...(['online', 'offline', 'dev', 'suspended'] as const).filter(status => status !== 'dev' || filter.value === 'dev').map(status => ({ value: status, label: STATUS_LABELS[status], count: count(status), tone: STATUS_TONES[status] })),
       { value: 'other', label: 'Bez strony', count: count('other') },
     ]
@@ -387,7 +397,7 @@
 
 .search {
   position: relative;
-  flex: 1 1 260px;
+  flex: 1 1 220px;
   max-width: 420px;
 }
 
@@ -413,42 +423,24 @@
   min-width: 2ch;
 }
 
-/* many filters on a phone – the row scrolls instead of the page */
-.toolbar__filters {
-  /* a flex item shrinks below its content only with this – otherwise it widens the page */
-  min-width: 0;
-  max-width: 100%;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
 /* every control of the toolbar alike – the fields, the statuses, the buttons: 36px tall, the fields' darker edge, their
    6px corners and background */
 .search .input,
 .toolbar__category :deep(.select-field__trigger),
-.toolbar__status :deep(.select-field__trigger) {
+.toolbar__status :deep(.select-field__trigger),
+.toolbar__report :deep(.select-field__trigger) {
   height: 36px;
   min-height: 36px;
 }
 
-.toolbar__filters {
-  border-color: var(--line-strong);
-  border-radius: 6px;
-}
-
-.toolbar__filters button {
-  border-radius: 4px;
-}
-
 .toolbar__toggle,
-.toolbar__updates,
 .toolbar__update-all,
 .toolbar__columns {
   border-radius: 6px;
   background: var(--panel);
 }
 
-/* the phones' status list: its count a little apart from the status (a chip or "Wszystkie") */
+/* the status list: its count a little apart from the status (a chip or "Wszystkie statusy") */
 .toolbar__status .count {
   margin-left: 6px;
 }
@@ -461,83 +453,30 @@
   margin-left: auto;
 }
 
-/* as tall as the search and the category (36px): 2 × 1px border + 2 × 2px padding + 30px */
-.toolbar__filters button {
-  flex: none;
-  height: 30px;
-}
-
-/* a status in its colour – as the chip in the table (the dot follows the text) */
-.status {
-  color: var(--tone);
-}
-
-.status .dot {
-  width: 6px;
-  height: 6px;
-}
-
-/* hover looks like the chosen one */
-.toolbar__filters button:hover {
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: var(--shadow);
-}
-
-.seg .status[aria-checked='true'],
-.toolbar__filters .status:hover {
-  background: var(--tone-soft);
-  color: var(--tone);
-}
-
-.status--accent {
-  --tone: var(--positive);
-  --tone-soft: var(--accent-soft);
-}
-
-.status--info {
-  --tone: var(--info);
-  --tone-soft: var(--info-soft);
-}
-
-.status--danger {
-  --tone: var(--danger);
-  --tone-soft: var(--danger-soft);
-}
-
-.status--off {
-  --tone: var(--text-2);
-  --tone-soft: var(--hover);
-}
-
-.status--off .dot {
-  background: var(--off);
-  box-shadow: 0 0 0 1px var(--line-strong);
-}
-
 .toolbar__category {
   flex: 0 1 220px;
   min-width: 0;
 }
 
-.toolbar__toggle,
 .toolbar__status {
+  flex: 0 1 200px;
+  min-width: 0;
+}
+
+.toolbar__report {
+  flex: 0 1 240px;
+  min-width: 0;
+}
+
+.toolbar__toggle {
   display: none;
 }
 
 /* as tall as the search and the filters */
 .toolbar__columns,
-.toolbar__updates,
 .toolbar__update-all {
   flex: none;
   height: 36px;
-}
-
-/* on – as the other buttons of the toolbar that are on (the phones' filter toggle) */
-.toolbar__updates[aria-pressed='true'] {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--accent-text);
 }
 
 .toolbar__toggle {
@@ -607,10 +546,6 @@
     padding-top: 14px;
   }
 
-  .toolbar__filters {
-    display: none;
-  }
-
   /* phones: the actions fold under the filter button with the rest, each a full row */
   .toolbar__actions {
     display: contents;
@@ -634,25 +569,26 @@
     white-space: normal;
   }
 
-  .toolbar__category {
+  .toolbar__category,
+  .toolbar__status,
+  .toolbar__report {
     display: none;
   }
 
   .toolbar--open .toolbar__category,
-  .toolbar--open .toolbar__status {
+  .toolbar--open .toolbar__status,
+  .toolbar--open .toolbar__report {
     display: block;
     flex: 1 1 100%;
   }
 
   /* phones: under the category and the status, folded with them */
   .toolbar__columns,
-  .toolbar__updates,
   .toolbar__update-all {
     display: none;
   }
 
   .toolbar--open .toolbar__columns,
-  .toolbar--open .toolbar__updates,
   .toolbar--open .toolbar__update-all {
     display: inline-flex;
     flex: 1 1 100%;
