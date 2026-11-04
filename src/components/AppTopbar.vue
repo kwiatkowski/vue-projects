@@ -20,27 +20,27 @@
 
     <span class="top__space" />
 
-    <template v-if="config.canManage">
-      <button
-        v-tip="'Nowa kategoria'"
-        aria-label="Nowa kategoria"
-        class="btn btn--sm btn--outline"
-        type="button"
-        @click="projects.editingCategory = 'new'"
-      >
-        <FolderPlus /> <span class="top__label">Nowa kategoria</span>
+    <!-- adding – rare, so one quiet button: a new project (the more frequent) or a new category -->
+    <DropMenu
+      v-if="config.canManage"
+      label="Dodaj"
+      panel-class="user-menu"
+      :title="false"
+      trigger-class="btn btn--sm btn--outline"
+    >
+      <template #trigger>
+        <Plus /> <span class="top__label">Dodaj</span>
+        <ChevronDown class="top__caret" />
+      </template>
+
+      <button class="menu__item" role="menuitem" type="button" @click="projects.editing = 'new'">
+        <SquarePlus /> Nowy projekt
       </button>
 
-      <button
-        v-tip="'Nowy projekt'"
-        aria-label="Nowy projekt"
-        class="btn btn--sm btn--accent"
-        type="button"
-        @click="projects.editing = 'new'"
-      >
-        <Plus /> <span class="top__label">Nowy projekt</span>
+      <button class="menu__item" role="menuitem" type="button" @click="projects.editingCategory = 'new'">
+        <FolderPlus /> Nowa kategoria
       </button>
-    </template>
+    </DropMenu>
 
     <!-- the owner's preview: says as whom, and leads back to the owner's view -->
     <button
@@ -197,7 +197,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { Bell, Check, ChevronDown, Eye, FolderPlus, Layers, LogIn, LogOut, Moon, Plus, Settings, ShieldCheck, Sparkles, Sun, UserRound, Users } from 'lucide-vue-next'
+  import { Bell, Check, ChevronDown, Eye, FolderPlus, Layers, LogIn, LogOut, Moon, Plus, Settings, ShieldCheck, Sparkles, SquarePlus, Sun, UserRound, Users } from 'lucide-vue-next'
   import { computed, ref } from 'vue'
   import { viewerApi } from '@/api/projects'
   import LoginDialog from '@/components/LoginDialog.vue'
