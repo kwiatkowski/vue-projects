@@ -59,8 +59,8 @@
           <SelectField
             v-if="projects.status !== 'ready' || projects.categories.length > 0"
             class="toolbar__category"
-            :clearable="false"
             :disabled="config.view === 'guest'"
+            empty=""
             :label="config.view !== 'guest' ? 'Kategoria' : 'Wybór kategorii po zalogowaniu'"
             :model-value="category?.slug ?? ''"
             :options="categoryOptions"
@@ -108,7 +108,7 @@
         <!-- phones: the same statuses as a full-width select – the buttons don't fit in one row -->
         <SelectField
           class="toolbar__status"
-          :clearable="false"
+          empty="all"
           label="Status"
           :model-value="filter"
           :options="filters"

@@ -56,12 +56,12 @@
 
     <!-- next to the arrow, outside the trigger (a button can't hold a button) -->
     <button
-      v-if="clearable && !disabled && model !== null"
+      v-if="clearable && !disabled && model !== null && model !== empty"
       v-tip="`Wyczyść: ${label}`"
       :aria-label="`Wyczyść: ${label}`"
       class="select-field__clear"
       type="button"
-      @click="model = null"
+      @click="model = empty ?? null"
     >
       <X />
     </button>
@@ -77,6 +77,7 @@
   /**
    * A dropdown in the app's style instead of a native select (which can't show colours): the options, the `option`
    * slot to draw one (a status chip …). Empty when nothing is chosen – no "none" option; the × clears a chosen one.
+   * A filter whose options have an "all" (`empty`) shows the × on any other choice, and the × brings "all" back.
    */
   const props = withDefaults(defineProps<{
     options: Array<{ value: T, label: string }>
@@ -86,8 +87,10 @@
     searchable?: boolean
     /** a typed value that isn't in the list can be chosen as it is (string values) */
     custom?: boolean
-    /** the × next to the arrow – off when one of the options means "none" (a filter's "all") */
+    /** the × next to the arrow – off for a value that must be set (a day, an hour) */
     clearable?: boolean
+    /** the option that means "none" – a filter's "all": no × on it, the × goes back to it */
+    empty?: T
     disabled?: boolean
   }>(), { placeholder: '', searchable: false, custom: false, clearable: true, disabled: false })
 
