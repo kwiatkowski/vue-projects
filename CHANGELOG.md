@@ -16,6 +16,7 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 - Liczby przy filtrach, „Do aktualizacji” i kategoriach mają stałe miejsce na dwie cyfry – nic nie przeskakuje, gdy lista się wczytuje.
 - Równe marginesy z lewej i prawej – bez pustego miejsca na pasek przewijania strony, która na szerokim ekranie się nie przewija.
 - Pełne raporty stron co **15 minut** zamiast co godzinę.
+- Ikona „Brak tłumaczeń” nie pokazuje już na chwilę wszystkiego, co strona zgłasza (także tego, czego nie da się pobrać), gdy wygasała pamięć paczek z translate.wordpress.org.
 - Po zaznaczeniu projektów pasek akcji pojawia się w miejscu wyszukiwarki i kategorii – lista pod nim już nie przeskakuje.
 - Strona offline: **przyczyna w dymku** przy statusie – kod HTTP albo powód braku odpowiedzi, co zwykle oznacza, od kiedy i jak długo trwa.
 - Raport: **nieużywane wtyczki i motywy** (szary znacznik z liczbą w kolumnie Raport, osobno wtyczki i motywy w dymku) i **motywy do aktualizacji** przy pomarańczowej strzałce; w oknie projektu sekcja **Motywy** (używany, nadrzędny, nieużywane).
