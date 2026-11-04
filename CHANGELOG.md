@@ -25,7 +25,7 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 - W oknie projektu przewija się tylko otwarta zakładka – lewa kolumna i paski zakładek stoją w miejscu.
 - Zakładka Dostęp: w nagłówkach Production i Staging status **online / offline** z ostatniego sprawdzenia – widać go też przy zwiniętej sekcji.
 - Na górnej belce ikona **+** (Dodaj) z menu – Nowy projekt, Nowa kategoria – zamiast dwóch osobnych przycisków, w stylu przełącznika motywu; obie ikony z dymkiem po najechaniu („Dodaj”, „Motyw”).
-- Jeden odstęp wszędzie: logo ma nad sobą tyle miejsca, ile belka po bokach, a lista – ten sam margines z lewej, z prawej, nad filtrami, między filtrami a tabelą i pod tabelą. Tabela zaokrąglona tylko u góry, tak jak przyciski i pola.
+- Jeden odstęp wszędzie (13 px): logo ma nad sobą tyle miejsca, ile belka po bokach, a lista – ten sam margines z lewej, z prawej, nad filtrami, między filtrami a tabelą i pod tabelą. Tabela zaokrąglona tylko u góry, tak jak przyciski i pola.
 - Pasek filtrów w jednej grupie z lewej – wyszukiwarka, kategoria, status, „Do aktualizacji” (włączony ma zielone tło jak wybrany status); z prawej tylko „Aktualizuj wszystkie” i „Wyświetl”.
 - Wszystkie elementy paska filtrów jednakowe: ta sama wysokość, obramowanie, zaokrąglenie i tło.
 - **Status** i **Raport** jako listy rozwijane z liczbami – Raport filtruje to, co czeka na aktualizację (wszystko, WordPress, wtyczki, tłumaczenia), i nieaktywne wtyczki lub motywy.

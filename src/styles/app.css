@@ -64,7 +64,7 @@
   /* the inset of content from the edges – the sidebar's and the page's alike */
   /* one gap round everything: the top bar's sides and the logo's top, the page's sides, above the filters, between
      them and the table, under the table */
-  --edge: 16px;
+  --edge: 13px;
 }
 
 @media (prefers-color-scheme: dark) {
