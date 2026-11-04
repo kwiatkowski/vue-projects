@@ -4,64 +4,91 @@
       <h1 class="visually-hidden">{{ category?.name ?? 'Projekty' }}</h1>
 
       <div class="toolbar" :class="{ 'toolbar--open': filtersOpen }">
-        <label class="search">
-          <Search />
+        <!-- the owner's ticked projects take the place of the search and the category: what to do with them;
+             while a batch runs – how far it got. The same height, so the list under it doesn't move -->
+        <div v-if="bulk" class="bulk">
+          <template v-if="projects.batch">
+            <span class="bulk__spinner" />
+            <span>{{ projects.batch.label }}: <span class="mono">{{ projects.batch.done }} / {{ projects.batch.total }}</span></span>
+          </template>
 
-          <input
-            v-model="query"
-            aria-label="Szukaj"
-            class="input"
-            placeholder="Szukaj: domena, motyw, serwer…"
-            type="search"
+          <template v-else>
+            <span>Zaznaczone: <strong class="mono">{{ projects.selected.size }}</strong></span>
+
+            <button class="btn btn--sm btn--outline" type="button" @click="projects.pullReports(selectedIds)">
+              <RefreshCw /> Aktualizuj raport
+            </button>
+
+            <button class="btn btn--sm btn--outline" :disabled="selectedWithUpdates.length === 0" type="button" @click="updateSelected">
+              <ArrowUp /> Aktualizuj stronę <span class="mono faint">{{ selectedWithUpdates.length }}</span>
+            </button>
+
+            <button class="btn btn--sm" type="button" @click="projects.setSelected([])">
+              <X /> Odznacz
+            </button>
+          </template>
+        </div>
+
+        <template v-else>
+          <label class="search">
+            <Search />
+
+            <input
+              v-model="query"
+              aria-label="Szukaj"
+              class="input"
+              placeholder="Szukaj: domena, motyw, serwer…"
+              type="search"
+            >
+          </label>
+
+          <!-- phones: category, status and "Do aktualizacji" fold under this button; the dot – a filter is on -->
+          <button
+            :aria-expanded="filtersOpen"
+            aria-label="Kategorie i statusy"
+            class="btn btn--icon btn--outline toolbar__toggle"
+            type="button"
+            @click="filtersOpen = !filtersOpen"
           >
-        </label>
+            <ListFilter />
+            <span v-if="category || filter !== 'all' || onlyUpdates" class="toolbar__dot" />
+          </button>
 
-        <!-- phones: category, status and "Do aktualizacji" fold under this button; the dot – a filter is on -->
-        <button
-          :aria-expanded="filtersOpen"
-          aria-label="Kategorie i statusy"
-          class="btn btn--icon btn--outline toolbar__toggle"
-          type="button"
-          @click="filtersOpen = !filtersOpen"
-        >
-          <ListFilter />
-          <span v-if="category || filter !== 'all' || onlyUpdates" class="toolbar__dot" />
-        </button>
+          <!-- there from the start ("Wszystkie kategorie") – the categories fill it once loaded, nothing jumps; a list
+               without categories drops it then -->
+          <SelectField
+            v-if="projects.status !== 'ready' || projects.categories.length > 0"
+            class="toolbar__category"
+            :clearable="false"
+            :disabled="config.view === 'guest'"
+            :label="config.view !== 'guest' ? 'Kategoria' : 'Wybór kategorii po zalogowaniu'"
+            :model-value="category?.slug ?? ''"
+            :options="categoryOptions"
+            @update:model-value="setCategory($event ?? '')"
+          />
 
-        <!-- there from the start ("Wszystkie kategorie") – the categories fill it once loaded, nothing jumps; a list
-             without categories drops it then -->
-        <SelectField
-          v-if="projects.status !== 'ready' || projects.categories.length > 0"
-          class="toolbar__category"
-          :clearable="false"
-          :disabled="config.view === 'guest'"
-          :label="config.view !== 'guest' ? 'Kategoria' : 'Wybór kategorii po zalogowaniu'"
-          :model-value="category?.slug ?? ''"
-          :options="categoryOptions"
-          @update:model-value="setCategory($event ?? '')"
-        />
+          <!-- only the projects with something to update – WordPress, plugins, translations (from the reports) -->
+          <button
+            v-if="canFilterUpdates"
+            :aria-pressed="onlyUpdates"
+            class="btn btn--outline toolbar__updates"
+            type="button"
+            @click="onlyUpdates = !onlyUpdates"
+          >
+            <RefreshCw /> Do aktualizacji <span class="mono faint">{{ updatesCount }}</span>
+          </button>
 
-        <!-- only the projects with something to update – WordPress, plugins, translations (from the reports) -->
-        <button
-          v-if="canFilterUpdates"
-          :aria-pressed="onlyUpdates"
-          class="btn btn--outline toolbar__updates"
-          type="button"
-          @click="onlyUpdates = !onlyUpdates"
-        >
-          <RefreshCw /> Do aktualizacji <span class="mono faint">{{ updatesCount }}</span>
-        </button>
-
-        <!-- the owner: every project with something waiting, after a question -->
-        <button
-          v-if="config.canManage && updatesCount > 0"
-          class="btn btn--outline toolbar__update-all"
-          :disabled="projects.batch !== null"
-          type="button"
-          @click="updateAll"
-        >
-          <ArrowUp /> Aktualizuj wszystkie
-        </button>
+          <!-- the owner: every project with something waiting, after a question -->
+          <button
+            v-if="config.canManage && updatesCount > 0"
+            class="btn btn--outline toolbar__update-all"
+            :disabled="projects.batch !== null"
+            type="button"
+            @click="updateAll"
+          >
+            <ArrowUp /> Aktualizuj wszystkie
+          </button>
+        </template>
 
         <div aria-label="Status" class="seg toolbar__filters" role="radiogroup">
           <button
@@ -104,29 +131,6 @@
         </button>
       </div>
 
-      <!-- the owner's ticked projects: what to do with them; while a batch runs – how far it got -->
-      <div v-if="config.canManage && (projects.selected.size > 0 || projects.batch)" class="bulk">
-        <template v-if="projects.batch">
-          <span class="bulk__spinner" />
-          <span>{{ projects.batch.label }}: <span class="mono">{{ projects.batch.done }} / {{ projects.batch.total }}</span></span>
-        </template>
-
-        <template v-else>
-          <span>Zaznaczone: <strong class="mono">{{ projects.selected.size }}</strong></span>
-
-          <button class="btn btn--sm btn--outline" type="button" @click="projects.pullReports(selectedIds)">
-            <RefreshCw /> Aktualizuj raport
-          </button>
-
-          <button class="btn btn--sm btn--outline" :disabled="selectedWithUpdates.length === 0" type="button" @click="updateSelected">
-            <ArrowUp /> Aktualizuj stronę <span class="mono faint">{{ selectedWithUpdates.length }}</span>
-          </button>
-
-          <button class="btn btn--sm" type="button" @click="projects.setSelected([])">
-            <X /> Odznacz
-          </button>
-        </template>
-      </div>
     </header>
 
     <template v-if="projects.status === 'ready'">
@@ -267,6 +271,7 @@
   // ---- several at once: the ticked projects, or all with updates
 
   const selectedIds = computed(() => [...projects.selected])
+  const bulk = computed(() => config.canManage && (projects.selected.size > 0 || projects.batch !== null))
   const selectedWithUpdates = computed(() => projects.items.filter(project => projects.selected.has(project.id) && hasUpdates(project)))
 
   /** updates change the sites (Composer, commit, push) – asked first, with their names */
@@ -502,18 +507,21 @@
   box-sizing: content-box;
 }
 
-/* the ticked projects' actions, under the toolbar */
+/* the ticked projects' actions, in the search's place – as tall as it and the category (37px: the field's padding
+   and line height go past its 36px min-height), so the list under them stays put */
 .bulk {
   display: flex;
-  flex-wrap: wrap;
+  flex: 0 1 auto;
   align-items: center;
-  gap: 8px 10px;
-  margin-top: 10px;
-  padding: 8px 12px;
+  gap: 10px;
+  min-width: 0;
+  height: 37px;
+  padding: 0 4px 0 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
   font-size: 13px;
+  white-space: nowrap;
 }
 
 .bulk__spinner {
@@ -553,6 +561,15 @@
 
   .toolbar__toggle {
     display: inline-flex;
+  }
+
+  /* phones: the actions wrap rather than widen the page */
+  .bulk {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    height: auto;
+    padding: 4px 4px 4px 12px;
+    white-space: normal;
   }
 
   .toolbar__category {
