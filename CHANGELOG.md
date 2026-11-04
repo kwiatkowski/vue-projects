@@ -19,7 +19,6 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 - Strona offline: **przyczyna w dymku** przy statusie – kod HTTP albo powód braku odpowiedzi, co zwykle oznacza, od kiedy i jak długo trwa.
 - Raport: **nieużywane wtyczki i motywy** (szary znacznik z liczbą w kolumnie Raport, osobno wtyczki i motywy w dymku) i **motywy do aktualizacji** przy pomarańczowej strzałce; w oknie projektu sekcja **Motywy** (używany, nadrzędny, nieużywane).
 - Filtr kategorii z **liczbą projektów** przy każdej kategorii i ✕ przy wybranej; ✕ przy statusie na telefonie – wszystkie listy rozwijane działają tak samo.
-- Projekt testowy **test-500** w kategorii HOME – strona zawsze z błędem 500, żeby było widać, jak lista oznacza stronę, która nie działa.
 
 ## 2026.10.30
 
