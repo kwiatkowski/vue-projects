@@ -123,7 +123,7 @@
               />
             </td>
 
-            <td v-if="show('status')" class="fit" :class="cellChanged(project, 'status')"><StatusChip :status="project.status" /><DomainsMark :project="project" /></td>
+            <td v-if="show('status')" class="fit" :class="cellChanged(project, 'status')"><StatusChip :down="project.down" :status="project.status" /><DomainsMark :project="project" /></td>
 
             <!-- the home page over 30 days; the response time in the tooltip -->
             <td v-if="show('uptime')" class="right mono nowrap">

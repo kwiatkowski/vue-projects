@@ -39,7 +39,7 @@
               role="status"
             />
 
-            <StatusChip v-if="show('status')" :status="project.status" />
+            <StatusChip v-if="show('status')" :down="project.down" :status="project.status" />
             <DomainsMark v-if="show('status')" :project="project" />
           </div>
 

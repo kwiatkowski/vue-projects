@@ -1,6 +1,6 @@
 import type { Project } from '@/types'
 import { describe, expect, it } from 'vitest'
-import { ago, bareDomain, compareManual, compareVersions, domainChecks, formatDateTime, formatDay, groupProjects, LATEST_PLUGIN_MEDEN, latestWordpress, matches, missingTranslations, moveId, newestReporters, newestWordpress, ownTheme, parseReporter, pendingUpdates, phpStatus, repoHost, reporterUpdate, reportStale, reportState, siteUrl, sortProjects, stagingCheck, vulnerabilityTone } from './projects'
+import { ago, bareDomain, compareManual, compareVersions, domainChecks, formatDateTime, formatDay, groupProjects, LATEST_PLUGIN_MEDEN, latestWordpress, matches, missingTranslations, moveId, newestReporters, newestWordpress, outageText, ownTheme, parseReporter, pendingUpdates, phpStatus, repoHost, reporterUpdate, reportStale, reportState, siteUrl, sortProjects, stagingCheck, vulnerabilityTone } from './projects'
 
 const p = (name: string, extra: Partial<Project> = {}): Partial<Project> => ({ name, domains: [name], status: 'online', ...extra })
 
@@ -253,5 +253,23 @@ describe('missingTranslations', () => {
     const site = (items: ReturnType<typeof item>[]) => ({ id: 2, url: 'a.bg', name: 'a.bg', locale: 'bg_BG', theme: 't', missingTranslations: { locale: 'bg_BG', items } })
 
     expect(missingTranslations({ missingTranslations: { locale: 'pl_PL', items: [item('a')] }, sites: [site([item('a'), item('b')])] }).map(each => each.slug)).toEqual(['a', 'b'])
+  })
+})
+
+describe('outageText', () => {
+  it('kod HTTP – krótko kod, w dymku znaczenie i od kiedy', () => {
+    const text = outageText({ code: 500, error: null, since: '2026-11-04T11:05:00Z' })
+
+    expect(text.short).toBe('HTTP 500')
+    expect(text.long).toBe(`błąd PHP lub WordPressa (HTTP 500) · od ${formatDateTime('2026-11-04T11:05:00Z')}`)
+  })
+
+  it('brak odpowiedzi – powód połączenia', () => {
+    expect(outageText({ code: 0, error: 'dns', since: '2026-11-04T11:05:00Z' }).short).toBe('DNS')
+    expect(outageText({ code: 0, error: 'timeout', since: '2026-11-04T11:05:00Z' }).long).toMatch(/^brak odpowiedzi w 20 s · od /)
+  })
+
+  it('nieznany kod – sam kod', () => {
+    expect(outageText({ code: 418, since: '2026-11-04T11:05:00Z' }).long).toMatch(/^HTTP 418 · od /)
   })
 })

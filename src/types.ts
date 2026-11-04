@@ -100,6 +100,8 @@ export interface Project extends Record<Flag, boolean> {
   hasRecaptchaSecret?: boolean
   /** what the staging answered at the list's last pull – 200 means it works */
   staging?: StagingCheck | null
+  /** offline: what the home page answers now (0 – nothing, and why) and since when it fails */
+  down?: DownCheck | null
   /** the home page over 30 days: availability in % (null – not checked yet) – the "Dostępność" column */
   uptime?: number | null
   /** the home page's mean response time over the last day, in ms */
@@ -243,6 +245,13 @@ export interface StagingCheck {
   code: number
   checkedAt: string
   error?: 'dns' | 'refused' | 'timeout' | 'ssl' | 'redirects' | 'other'
+}
+
+/** A site that is down – its home page's last check and the first failed one after the last good one. */
+export interface DownCheck {
+  code: number
+  error?: StagingCheck['error'] | null
+  since: string
 }
 
 /** One site of a multisite network – its address (domain and path), language, theme, what it misses a translation of. */

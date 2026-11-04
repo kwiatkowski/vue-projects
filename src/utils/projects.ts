@@ -1,4 +1,4 @@
-import type { Category, MissingTranslation, PhpBranch, PluginUpdate, Project, SortKey, StagingCheck, Status, UpdateScope } from '@/types'
+import type { Category, DownCheck, MissingTranslation, PhpBranch, PluginUpdate, Project, SortKey, StagingCheck, Status, UpdateScope } from '@/types'
 
 /** in this order in the filters and the status select: online, offline, in progress, suspended */
 export const STATUS_LABELS: Record<Status, string> = {
@@ -309,6 +309,31 @@ export function stagingCheck (check: StagingCheck): { text: string, tone: 'ok' |
   return {
     text: meaning ? `${meaning} (HTTP ${check.code})` : `HTTP ${check.code}`,
     tone: check.code === 401 || check.code === 403 ? 'warn' : 'down',
+  }
+}
+
+/** the same, shorter – next to the status */
+const SHORT_FAILURES: Record<NonNullable<StagingCheck['error']>, string> = {
+  dns: 'DNS',
+  refused: 'odmowa połączenia',
+  timeout: 'brak odpowiedzi',
+  ssl: 'błąd SSL',
+  redirects: 'pętla przekierowań',
+  other: 'brak połączenia',
+}
+
+/**
+ * Why a site is down, in words: short – next to the status ("HTTP 500", "DNS"); long – its tooltip, with what the code
+ * usually means and since when ("błąd PHP lub WordPressa (HTTP 500) · od 2026.11.04 12:05").
+ */
+export function outageText (down: DownCheck): { short: string, long: string } {
+  const since = formatDateTime(down.since)
+  const meaning = down.code === 0 ? STAGING_FAILURES[down.error ?? 'other'] ?? STAGING_FAILURES.other : STAGING_CODES[down.code]
+  const what = down.code === 0 ? meaning : (meaning ? `${meaning} (HTTP ${down.code})` : `HTTP ${down.code}`)
+
+  return {
+    short: down.code === 0 ? SHORT_FAILURES[down.error ?? 'other'] ?? SHORT_FAILURES.other : `HTTP ${down.code}`,
+    long: since ? `${what} · od ${since}` : what!,
   }
 }
 

@@ -61,7 +61,8 @@
         </label>
 
         <label class="field">
-          <span>Status <span class="reported-mark">*</span></span>
+          <!-- down: why, from the list's last look at the home page – the tooltip: what it means, since when -->
+          <span>Status <span class="reported-mark">*</span> <span v-if="down" v-tip="down.long" class="status-why">– {{ down.short }}</span></span>
 
           <SelectField
             v-model="form.status"
@@ -220,7 +221,7 @@
   import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
-  import { bareDomain, STATUS_LABELS } from '@/utils/projects'
+  import { bareDomain, outageText, STATUS_LABELS } from '@/utils/projects'
   import '@/components/project/project-form.css'
 
   /** The project's dialog: the name and what defines the project on the left, the tabs (components/project/) right. */
@@ -270,6 +271,7 @@
   })
 
   const project = computed(() => projects.editing === 'new' || projects.editing === null ? null : projects.editing)
+  const down = computed(() => project.value?.status === 'offline' && project.value.down ? outageText(project.value.down) : null)
 
   const form = ref<Form>(blank())
   const initial = ref('')
@@ -591,5 +593,12 @@
   .cols {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* why the site is down – next to the status' label, in the offline colour */
+.status-why {
+  color: var(--danger);
+  font-family: var(--mono);
+  font-size: 12px;
 }
 </style>

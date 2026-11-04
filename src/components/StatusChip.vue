@@ -1,15 +1,27 @@
 <template>
-  <span v-if="status" class="chip" :class="[`chip--${STATUS_TONES[status]}`, { 'chip--still': !PULSING.has(status) }]">
+  <span
+    v-if="status"
+    v-tip="why?.long"
+    class="chip"
+    :class="[`chip--${STATUS_TONES[status]}`, { 'chip--still': !PULSING.has(status) }]"
+    :tabindex="why ? 0 : undefined"
+  >
     <span class="dot" />
     {{ STATUS_LABELS[status] }}
+    <!-- down: why – the code or the failure; the tooltip says what it means and since when -->
+    <span v-if="why" class="chip__why">· {{ why.short }}</span>
   </span>
 </template>
 
 <script lang="ts" setup>
-  import type { Status } from '@/types'
-  import { STATUS_LABELS, STATUS_TONES } from '@/utils/projects'
+  import type { DownCheck, Status } from '@/types'
+  import { computed } from 'vue'
+  import { vTip } from '@/directives/tip'
+  import { outageText, STATUS_LABELS, STATUS_TONES } from '@/utils/projects'
 
-  defineProps<{ status: Status | null | undefined }>()
+  const props = defineProps<{ status: Status | null | undefined, down?: DownCheck | null }>()
+
+  const why = computed(() => props.status === 'offline' && props.down ? outageText(props.down) : null)
 
   /** only a site that is up or down pulses – one in progress or suspended doesn't */
   const PULSING = new Set<Status>(['online', 'offline'])
@@ -25,6 +37,13 @@
 
 .chip--accent {
   color: var(--positive);
+}
+
+/* the reason – the status' colour, the code in the numbers' font */
+.chip__why {
+  font-family: var(--mono);
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 /* suspended – a dark dot, no pulse, the label greyed */
