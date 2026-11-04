@@ -47,7 +47,7 @@
     </button>
 
     <!-- the theme: the list's dark and light, meden.com.pl's light and dark – a swatch of each -->
-    <DropMenu label="Motyw" panel-class="theme-menu" :title="false" trigger-class="btn btn--icon btn--sm">
+    <DropMenu label="Motyw" panel-class="theme-menu" trigger-class="btn btn--icon btn--sm">
       <template #trigger>
         <Moon v-if="dark" />
         <Sun v-else />
