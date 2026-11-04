@@ -368,7 +368,7 @@
 <style scoped>
 .page {
   /* the table fills the screen and scrolls itself – the page doesn't scroll under the sticky header */
-  padding-bottom: 16px;
+  padding-bottom: var(--edge);
 }
 
 .head {
@@ -381,7 +381,7 @@
   align-items: flex-end;
   flex-wrap: wrap;
   gap: 12px 16px;
-  padding: 20px 0 16px;
+  padding: var(--edge) 0;
   background: var(--bg);
 }
 

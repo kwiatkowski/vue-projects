@@ -360,7 +360,7 @@
 .table-wrap {
   /* the rest of the screen under the top bar and the page header (--head, measured there); scrolls both ways and
      keeps the column headers on top */
-  max-height: calc(100dvh - var(--topbar) - var(--head, 0px) - 16px);
+  max-height: calc(100dvh - var(--topbar) - var(--head, 0px) - var(--edge));
   overflow: auto;
   /* with the top bar sliding away and back (below 1500px) */
   transition: max-height .2s ease;
@@ -368,7 +368,8 @@
      the wheel, the trackpad and touch */
   scrollbar-width: none;
   border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
+  /* rounded on top only, as the fields and buttons (6px) – the bottom runs on under the screen's edge */
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   background: var(--surface);
 }
 
