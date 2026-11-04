@@ -3,12 +3,7 @@
   <div class="access">
     <!-- the panel's login and password – the same on production, staging and the local copy: a quiet card over the
          environments, its name in plain text with a key -->
-    <div aria-labelledby="access-login-title" class="login-card" role="group">
-      <div class="login-card__head">
-        <span class="login-card__icon"><KeyRound /></span>
-        <strong id="access-login-title">Logowanie do panelu</strong>
-        <span class="faint">wszystkie środowiska</span>
-      </div>
+    <SectionCard :icon="KeyRound" note="wszystkie środowiska" title="Logowanie do panelu">
 
       <div class="grid">
         <label class="field">
@@ -29,22 +24,17 @@
           <PasswordInput v-model="secrets.values.panel" v-model:shown="secrets.shown.panel" :loading="secrets.loading.panel" what="Hasło" />
         </label>
       </div>
-    </div>
+    </SectionCard>
 
-    <!-- each environment a card of its own, as the login's: its icon in its colour (production's globe green, staging's
-         flask blue, development's laptop grey – the last two as the list's Stage and Local columns) -->
-    <div
+    <!-- each environment a section of its own, as the login's: its icon in its colour (production's globe green,
+         staging's flask blue, development's laptop grey – the last two as the list's Stage and Local columns) -->
+    <SectionCard
       v-for="group in ACCESS_GROUPS"
       :key="group.key"
-      :aria-labelledby="`access-${group.key}-title`"
-      class="login-card env-card"
-      :class="`env-card--${group.key}`"
-      role="group"
+      :icon="group.icon"
+      :title="group.label"
+      :tone="group.tone"
     >
-      <div class="login-card__head">
-        <span class="login-card__icon"><component :is="group.icon" /></span>
-        <strong :id="`access-${group.key}-title`">{{ group.label }}</strong>
-      </div>
 
       <!-- the Basic Auth button in the addresses' row, after the panel – as "+ Domena" after the domain -->
       <div :class="[group.links.length > 1 ? 'grid' : 'stack', { 'grid--action': addsAuth(group.key) }]">
@@ -164,7 +154,7 @@
           </div>
         </template>
       </template>
-    </div>
+    </SectionCard>
   </div>
 </template>
 
@@ -175,6 +165,7 @@
   import CopyInput from '@/components/ui/CopyInput.vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
   import PasswordInput from '@/components/ui/PasswordInput.vue'
+  import SectionCard from '@/components/ui/SectionCard.vue'
   import { bareDomain, siteUrl } from '@/utils/projects'
 
   /** "Dostęp": the panel's login, each environment's addresses and Basic Auth */
@@ -275,16 +266,16 @@
   type AccessField = 'adminUrl' | 'stagingUrl' | 'stagingAdminUrl' | 'localUrl' | 'localAdminUrl'
 
   /** one section per environment, its addresses (the logins follow in the template) */
-  const ACCESS_GROUPS: Array<{ key: 'production' | 'staging' | 'local', label: string, icon: Component, links: Array<{ field: AccessField | 'home', label: string, placeholder: string }> }> = [
-    { key: 'production', label: 'Production', icon: Globe, links: [
+  const ACCESS_GROUPS: Array<{ key: 'production' | 'staging' | 'local', label: string, icon: Component, tone: 'accent' | 'info' | 'neutral', links: Array<{ field: AccessField | 'home', label: string, placeholder: string }> }> = [
+    { key: 'production', label: 'Production', icon: Globe, tone: 'accent', links: [
       { field: 'home', label: 'Adres', placeholder: 'Główna domena – dodaj po lewej' },
       { field: 'adminUrl', label: 'Panel', placeholder: 'https://…/wp/wp-login.php' },
     ] },
-    { key: 'staging', label: 'Staging', icon: FlaskConical, links: [
+    { key: 'staging', label: 'Staging', icon: FlaskConical, tone: 'info', links: [
       { field: 'stagingUrl', label: 'Adres', placeholder: 'https://…/' },
       { field: 'stagingAdminUrl', label: 'Panel', placeholder: 'https://…/wp/wp-login.php' },
     ] },
-    { key: 'local', label: 'Development', icon: Laptop, links: [
+    { key: 'local', label: 'Development', icon: Laptop, tone: 'neutral', links: [
       { field: 'localUrl', label: 'Adres', placeholder: 'https://….local/' },
       { field: 'localAdminUrl', label: 'Panel', placeholder: 'https://….local/wp/wp-login.php' },
     ] },
@@ -343,68 +334,10 @@
   margin-left: auto;
 }
 
-/* the panel's login – the same on every environment, so set apart from them: a quiet card, its name with a key */
-.login-card {
-  display: grid;
-  gap: 12px;
-  padding: 14px 16px 16px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel);
-}
-
-.login-card__head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-}
-
-.login-card__head .faint {
-  font-size: 12px;
-}
-
-.login-card__icon {
-  display: inline-grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: var(--radius-sm);
-  background: var(--accent-soft);
-  color: var(--accent-text);
-}
-
-.login-card__icon svg {
-  width: 13px;
-  height: 13px;
-  stroke-width: 2.25;
-}
-
 /* the login and the environments – cards one under another */
 .access {
   display: grid;
   gap: 12px;
-}
-
-/* the login's key neutral – the colours tell the environments apart */
-.access > .login-card:not(.env-card) .login-card__icon {
-  background: var(--surface);
-  color: var(--text-2);
-}
-
-.env-card--production .login-card__icon {
-  background: var(--accent-soft);
-  color: var(--accent-text);
-}
-
-.env-card--staging .login-card__icon {
-  background: var(--info-soft);
-  color: var(--info);
-}
-
-.env-card--local .login-card__icon {
-  background: var(--surface);
-  color: var(--text-2);
 }
 
 /* the addresses and, after them, the "+ Basic Auth" button – level with the fields */
