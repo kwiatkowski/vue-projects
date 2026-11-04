@@ -20,7 +20,7 @@
             </button>
 
             <button class="btn btn--sm btn--outline" :disabled="selectedWithUpdates.length === 0" type="button" @click="updateSelected">
-              <ArrowUp /> Aktualizuj stronę <span class="mono faint">{{ selectedWithUpdates.length }}</span>
+              <ArrowUp /> Aktualizuj stronę <span class="mono faint count">{{ selectedWithUpdates.length }}</span>
             </button>
 
             <button class="btn btn--sm" type="button" @click="projects.setSelected([])">
@@ -67,7 +67,7 @@
             @update:model-value="setCategory($event ?? '')"
           >
             <!-- how many projects each holds – as the statuses' counts -->
-            <template #option="{ option }">{{ option.label }} <span class="mono faint">{{ categoryCounts[option.value] ?? 0 }}</span></template>
+            <template #option="{ option }">{{ option.label }} <span class="mono faint count">{{ categoryCounts[option.value] ?? 0 }}</span></template>
           </SelectField>
 
           <!-- only the projects with something to update – WordPress, plugins, translations (from the reports) -->
@@ -78,7 +78,7 @@
             type="button"
             @click="onlyUpdates = !onlyUpdates"
           >
-            <RefreshCw /> Do aktualizacji <span class="mono faint">{{ updatesCount }}</span>
+            <RefreshCw /> Do aktualizacji <span class="mono faint count">{{ updatesCount }}</span>
           </button>
 
           <!-- the owner: every project with something waiting, after a question -->
@@ -104,7 +104,7 @@
             @click="filter = option.value"
           >
             <span v-if="option.tone" class="dot" />
-            {{ option.label }} <span class="mono faint">{{ option.count }}</span>
+            {{ option.label }} <span class="mono faint count">{{ option.count }}</span>
           </button>
         </div>
 
@@ -120,7 +120,7 @@
           <template #option="{ option }">
             <StatusChip v-if="option.value in STATUS_LABELS" :status="option.value as Status" />
             <template v-else>{{ option.label }}</template>
-            <span class="mono faint">{{ filters.find(item => item.value === option.value)?.count }}</span>
+            <span class="mono faint count">{{ filters.find(item => item.value === option.value)?.count }}</span>
           </template>
         </SelectField>
 
@@ -399,6 +399,13 @@
 
 .search .input {
   padding-left: 34px;
+}
+
+/* the counts beside the filters and actions: room for two digits at least – "0" while loading and "16" after it take
+   the same space, nothing next to them moves */
+.count {
+  display: inline-block;
+  min-width: 2ch;
 }
 
 /* many filters on a phone – the row scrolls instead of the page */

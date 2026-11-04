@@ -8,6 +8,7 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 - **Wybór motywu** zamiast przełącznika słońce / księżyc: Ciemny (domyślny), Jasny oraz **Meden jasny** i **Meden ciemny** w kolorach meden.com.pl.
 - Okno **„Co nowego”** z podsumowaniem zmian dnia – samo po nowej wersji, ręcznie z wersji na górnej belce i z menu konta.
 - Filtry statusu bez „W budowie”.
+- Liczby przy filtrach, „Do aktualizacji” i kategoriach mają stałe miejsce na dwie cyfry – nic nie przeskakuje, gdy lista się wczytuje.
 - Pełne raporty stron co **15 minut** zamiast co godzinę.
 - Po zaznaczeniu projektów pasek akcji pojawia się w miejscu wyszukiwarki i kategorii – lista pod nim już nie przeskakuje.
 - Strona offline: **przyczyna w dymku** przy statusie – kod HTTP albo powód braku odpowiedzi, co zwykle oznacza, od kiedy i jak długo trwa.
