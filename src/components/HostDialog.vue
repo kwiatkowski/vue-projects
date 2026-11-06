@@ -3,7 +3,7 @@
     ref="dialog"
     v-model="open"
     :title="host ? 'Konto hostingowe' : 'Nowe konto hostingowe'"
-    :width="640"
+    :width="720"
     @submit="save()"
   >
     <!-- another account in the same dialog – searched by name; a pencil by the ones with changes kept -->
@@ -152,10 +152,14 @@
     <template #actions>
       <!-- switching to another one while this one has changes: the footer asks – stay, switch keeping them, save first -->
       <template v-if="pending">
-        <span class="unsaved switch-ask" :title="pending.name"><AlertTriangle /> <span>Przełączyć na „{{ pending.name }}”?</span></span>
+        <span v-tip="`Na „${pending.name}”`" class="unsaved switch-ask"><AlertTriangle /> <span>Przełączyć?</span></span>
         <span style="flex: 1" />
 
         <button class="btn btn--sm" type="button" @click="pending = null">Zostań</button>
+
+        <button class="btn btn--danger btn--sm" type="button" @click="confirmSwitch('drop')">
+          <X /> Odrzuć i przełącz
+        </button>
 
         <button v-tip="'Zmiany zostaną zachowane – będą w formularzu po powrocie'" class="btn btn--sm" type="button" @click="confirmSwitch('keep')">
           Zachowaj i przełącz
@@ -300,7 +304,8 @@
     }
   }
 
-  function confirmSwitch (how: 'keep' | 'save'): void {
+  /** the answer to switching with changes: keep them as a draft, drop them, or save them first */
+  function confirmSwitch (how: 'keep' | 'drop' | 'save'): void {
     const target = pending.value
     pending.value = null
 
@@ -311,17 +316,26 @@
     if (how === 'save') {
       void save(target)
     } else {
+      if (how === 'drop') {
+        revert()
+      }
+
       hosts.editing = target
     }
   }
 
-  /** the changes dropped – the form as opened – and the dialog closed */
-  function discard (): void {
+  /** the changes dropped – the form as opened, the password as saved */
+  function revert (): void {
     for (const key of Object.keys(form) as Array<keyof typeof form>) {
       ;(form as Record<string, unknown>)[key] = initial.value[key] ?? (key === 'sshPort' ? null : '')
     }
 
     password.value = savedPassword.value
+  }
+
+  /** the changes dropped and the dialog closed */
+  function discard (): void {
+    revert()
     open.value = false
   }
 
@@ -457,14 +471,9 @@
 }
 
 /* the footer's "unsaved" – as in the project's dialog */
-/* the question about switching – a long name cut short, the buttons keep their room */
+/* the question about switching – short, never cut (where to: its tooltip) */
 .switch-ask {
-  min-width: 0;
-}
-
-.switch-ask > span {
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex: none;
 }
 
 .unsaved {

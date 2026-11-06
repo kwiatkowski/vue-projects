@@ -180,10 +180,14 @@
     <template #actions>
       <!-- switching to another one while this one has changes: the footer asks – stay, switch keeping them, save first -->
       <template v-if="pending">
-        <span class="unsaved switch-ask" :title="pending.name"><AlertTriangle /> <span>Przełączyć na „{{ pending.name }}”?</span></span>
+        <span v-tip="`Na „${pending.name}”`" class="unsaved switch-ask"><AlertTriangle /> <span>Przełączyć?</span></span>
         <span style="flex: 1" />
 
         <button class="btn btn--sm" type="button" @click="pending = null">Zostań</button>
+
+        <button class="btn btn--danger btn--sm" type="button" @click="confirmSwitch('drop')">
+          <X /> Odrzuć i przełącz
+        </button>
 
         <button v-tip="'Zmiany zostaną zachowane – będą w formularzu po powrocie'" class="btn btn--sm" type="button" @click="confirmSwitch('keep')">
           Zachowaj i przełącz
@@ -446,7 +450,8 @@
     }
   }
 
-  function confirmSwitch (how: 'keep' | 'save'): void {
+  /** the answer to switching with changes: keep them as a draft, drop them, or save them first */
+  function confirmSwitch (how: 'keep' | 'drop' | 'save'): void {
     const target = pending.value
     pending.value = null
 
@@ -457,15 +462,24 @@
     if (how === 'save') {
       void save(target)
     } else {
+      if (how === 'drop') {
+        revert()
+      }
+
       projects.editing = target
     }
   }
 
   /** the changes dropped – the form as opened, the secrets as saved – and the dialog closed */
   function discard (): void {
+    revert()
+    open.value = false
+  }
+
+  /** the changes dropped – the form as opened, the secrets as saved */
+  function revert (): void {
     form.value = JSON.parse(initial.value || '{}') as Form
     secrets.revert()
-    open.value = false
   }
 
   /** the site reports – the fields it fills are read-only (the status too: online / offline from its home page);
@@ -599,14 +613,9 @@
   vertical-align: -2px;
 }
 
-/* the question about switching – a long name cut short, the buttons keep their room */
+/* the question about switching – short, never cut (where to: its tooltip) */
 .switch-ask {
-  min-width: 0;
-}
-
-.switch-ask > span {
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex: none;
 }
 
 .unsaved {
