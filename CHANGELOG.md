@@ -7,6 +7,7 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 
 - Zakładka **Serwer**: ścieżka projektu na serwerze (katalog główny Bedrocka albo WordPressa) z przyciskiem kopiowania – uzupełnia ją raport strony (plugin_meden 1.22.0).
 - Lista **Raport** w filtrach pokazuje tylko to, co dotyczy jakiegoś projektu – bez pozycji z zerem (wybrana zostaje).
+- Lista **Status** tak samo: tylko stany, które ma jakiś projekt (bez „offline 0”).
 
 ## 2026.11.04
 
