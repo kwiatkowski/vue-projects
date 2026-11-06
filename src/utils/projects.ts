@@ -294,13 +294,12 @@ export function paidState (day: string | null | undefined, now: Date = new Date(
   return { tone: days <= PAID_WARN_DAYS ? 'soon' : 'ok', text: `${formatDay(day)} (${days} dni)`, days }
 }
 
-/** a hosting account's data the list wants – the label of each that is missing (the SSH port may stay empty – 22) */
+/** a hosting account's data the list wants – the label of each that is missing (the SSH port may stay empty – 22; "opłacone do" too – a hosting the client pays for) */
 const HOST_REQUIRED: Array<[label: string, filled: (host: Host) => boolean]> = [
   ['hosting', host => !!host.server],
   ['adres panelu', host => !!host.serverUrl],
   ['login', host => !!host.serverAccount],
   ['hasło', host => host.hasPassword],
-  ['opłacone do', host => !!host.paidUntil],
   ['host SSH', host => !!host.sshHost],
   ['użytkownik SSH', host => !!host.sshUser],
 ]

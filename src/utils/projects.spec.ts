@@ -298,7 +298,7 @@ describe('hostMissing', () => {
   })
 
   it('names what is missing, in order', () => {
-    expect(hostMissing({ ...full, hasPassword: false, paidUntil: null, sshUser: null })).toEqual(['hasło', 'opłacone do', 'użytkownik SSH'])
+    expect(hostMissing({ ...full, hasPassword: false, paidUntil: null, sshUser: null })).toEqual(['hasło', 'użytkownik SSH'])
   })
 })
 

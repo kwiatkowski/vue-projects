@@ -20,6 +20,7 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 - Przełączanie **Projekty / Konta hostingowe** bez mignięcia paska przewijania strony.
 - Datę „Opłacone do” można **wpisać z klawiatury** (np. 02.04.2026, 2.4.2026, 02042026 albo wkleić 2026-04-02) – kalendarz pod ikoną obok; błędna data podświetla się na czerwono.
 - Okno konta hostingowego działa jak okno projektu: ołówek przy zmienionych polach, „Niezapisane zmiany” – zamknięcie tylko przez zapis albo „Zamknij bez zapisywania”; projekty konta jeden pod drugim, ze statusem.
+- „Opłacone do” jest opcjonalne – konto bez daty (np. hosting opłacany przez klienta) też ma zielony ptaszek kompletu danych.
 
 ## 2026.11.04
 
