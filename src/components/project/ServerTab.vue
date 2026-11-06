@@ -32,6 +32,7 @@
             <CopyInput
               disabled
               :model-value="host.server ?? ''"
+              open
               tip="Kopiuj hosting"
               type="text"
               what="Hosting"
@@ -44,6 +45,7 @@
             <CopyInput
               disabled
               :model-value="host.serverUrl ?? ''"
+              open
               tip="Kopiuj adres panelu"
               type="url"
               what="Adres panelu"

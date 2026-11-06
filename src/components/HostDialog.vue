@@ -28,6 +28,7 @@
 
         <CopyInput
           v-model="form.server"
+          open
           placeholder="hostido.pl"
           tip="Kopiuj hosting"
           type="text"
@@ -40,6 +41,7 @@
 
         <CopyInput
           v-model="form.serverUrl"
+          open
           placeholder="https://…"
           tip="Kopiuj adres panelu"
           type="url"
