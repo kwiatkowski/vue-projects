@@ -16,6 +16,8 @@ export interface Host {
   serverAccount: string | null
   /** RRRR-MM-DD – the list warns 30 days before */
   paidUntil: string | null
+  /** what the renewal costs – as typed, e.g. "299 zł brutto / rok" */
+  renewalPrice: string | null
   sshHost: string | null
   sshPort: number | null
   sshUser: string | null

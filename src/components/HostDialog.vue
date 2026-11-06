@@ -61,6 +61,11 @@
         <span>Opłacone do</span>
         <input v-model="form.paidUntil" class="input" type="date">
       </label>
+
+      <label class="field">
+        <span>Kwota odnowienia</span>
+        <input v-model.trim="form.renewalPrice" class="input" placeholder="np. 299 zł brutto / rok" type="text">
+      </label>
     </div>
 
     <!-- SSH: the project's tab builds the command from these (and the project's path) -->
@@ -169,7 +174,7 @@
 
   const host = computed(() => hosts.editing === 'new' ? null : hosts.editing)
 
-  const empty = (): Required<HostInput> => ({ name: '', server: '', serverUrl: '', serverAccount: '', paidUntil: '', sshHost: '', sshPort: null, sshUser: '' })
+  const empty = (): Required<HostInput> => ({ name: '', server: '', serverUrl: '', serverAccount: '', paidUntil: '', renewalPrice: '', sshHost: '', sshPort: null, sshUser: '' })
   const form = reactive(empty())
   const password = ref('')
   const savedPassword = ref('')

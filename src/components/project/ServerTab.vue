@@ -87,6 +87,11 @@
               :value="paid?.text ?? '–'"
             >
           </label>
+
+          <label class="field">
+            <span>Kwota odnowienia</span>
+            <input class="input" disabled type="text" :value="host.renewalPrice ?? '–'">
+          </label>
         </div>
 
         <!-- SSH – the command to log in, then the project's folder -->

@@ -16,6 +16,7 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 - **Konta hostingowe** to teraz osobna lista zamiast okienka – przełącznik **Projekty / Konta hostingowe** obok „+” na górnej belce. Konta pogrupowane według hostingu, w kolumnach login, SSH, opłacone do i – na końcu – liczba projektów; wyszukiwarka szuka też po nazwach projektów, klik w wiersz otwiera edycję. Nowe konto – przyciskiem nad listą albo z menu „+”.
 - Zielony ptaszek przy koncie, które ma komplet danych (hosting, adres panelu, login, hasło, opłacone do, SSH); przy niepełnym przerywane kółko – w dymku, czego brakuje.
 - Po najechaniu na **liczbę projektów** konta – dymek jak przy raporcie: nazwa konta w nagłówku, pod nim jego projekty ze statusem.
+- Konto hostingowe: pole **Kwota odnowienia** (np. „299 zł brutto / rok”) – w zakładce Serwer i na liście kont obok daty „opłacone do”.
 
 ## 2026.11.04
 

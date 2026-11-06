@@ -93,6 +93,7 @@
 
               <td class="nowrap">
                 <span v-if="paid(host)" :class="`paid--${paid(host)?.tone}`">{{ paid(host)?.text }}</span>
+                <span v-if="host.renewalPrice" class="faint"> · {{ host.renewalPrice }}</span>
               </td>
 
               <td class="right mono">

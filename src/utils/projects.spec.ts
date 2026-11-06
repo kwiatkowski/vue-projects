@@ -291,7 +291,7 @@ describe('paidState', () => {
 })
 
 describe('hostMissing', () => {
-  const full: Host = { id: 1, name: 'a', server: 'hostido.pl', serverUrl: 'https://hostido.pl/', serverAccount: 'meden', paidUntil: '2027-01-01', sshHost: 'h', sshPort: null, sshUser: 'u', hasPassword: true, projects: [] }
+  const full: Host = { id: 1, name: 'a', server: 'hostido.pl', serverUrl: 'https://hostido.pl/', serverAccount: 'meden', paidUntil: '2027-01-01', renewalPrice: null, sshHost: 'h', sshPort: null, sshUser: 'u', hasPassword: true, projects: [] }
 
   it('is empty for a complete account (the SSH port may be empty)', () => {
     expect(hostMissing(full)).toEqual([])
@@ -303,7 +303,7 @@ describe('hostMissing', () => {
 })
 
 describe('hostMatches', () => {
-  const host: Host = { id: 1, name: 'hostido.pl – meden', server: 'hostido.pl', serverUrl: null, serverAccount: 'meden', paidUntil: null, sshHost: 'host227530.hostido.net.pl', sshPort: 64_321, sshUser: 'host227530', hasPassword: false, projects: [] }
+  const host: Host = { id: 1, name: 'hostido.pl – meden', server: 'hostido.pl', serverUrl: null, serverAccount: 'meden', paidUntil: null, renewalPrice: null, sshHost: 'host227530.hostido.net.pl', sshPort: 64_321, sshUser: 'host227530', hasPassword: false, projects: [] }
 
   it('finds by the account and by its projects', () => {
     expect(hostMatches(host, '')).toBe(true)
