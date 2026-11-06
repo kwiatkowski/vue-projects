@@ -37,8 +37,8 @@
               <th scope="col">Hosting</th>
               <th scope="col">Login</th>
               <th scope="col">SSH</th>
-              <th class="right" scope="col">Projekty</th>
               <th scope="col">Opłacone do</th>
+              <th class="right" scope="col">Projekty</th>
             </tr>
           </thead>
 
@@ -91,6 +91,10 @@
                 </template>
               </td>
 
+              <td class="nowrap">
+                <span v-if="paid(host)" :class="`paid--${paid(host)?.tone}`">{{ paid(host)?.text }}</span>
+              </td>
+
               <td class="right mono">
                 <!-- the account's projects – as the report's popup: a header, then a row each -->
                 <HoverTip anchor-class="count-hit">
@@ -110,10 +114,6 @@
                     </dl>
                   </template>
                 </HoverTip>
-              </td>
-
-              <td class="nowrap">
-                <span v-if="paid(host)" :class="`paid--${paid(host)?.tone}`">{{ paid(host)?.text }}</span>
               </td>
             </tr>
           </tbody>
