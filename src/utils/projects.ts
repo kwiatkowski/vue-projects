@@ -1,4 +1,4 @@
-import type { Category, DownCheck, MissingTranslation, PhpBranch, PluginUpdate, Project, SortKey, StagingCheck, Status, UpdateScope } from '@/types'
+import type { Category, DownCheck, Host, MissingTranslation, PhpBranch, PluginUpdate, Project, SortKey, StagingCheck, Status, UpdateScope } from '@/types'
 
 /** in this order in the filters: online, offline, not watched, suspended */
 export const STATUS_LABELS: Record<Status, string> = {
@@ -292,6 +292,20 @@ export function paidState (day: string | null | undefined, now: Date = new Date(
   }
 
   return { tone: days <= PAID_WARN_DAYS ? 'soon' : 'ok', text: `${formatDay(day)} (${days} dni)`, days }
+}
+
+/**
+ * What must be paid for soon or already is past: the project's registered domains (RDAP) and its hosting account –
+ * only those within 30 days or past, for the report's mark, its tooltip and the "Kończące się terminy" filter.
+ */
+export function expiringTerms (project: Pick<Project, 'domainInfo'>, host: Pick<Host, 'name' | 'paidUntil'> | null, now: Date = new Date()): Array<{ what: 'domain' | 'hosting', name: string, text: string, date: string, days: number, tone: 'soon' | 'bad' }> {
+  const terms: Array<{ what: 'domain' | 'hosting', name: string, day: string | null | undefined, state: ReturnType<typeof paidState> }> = (project.domainInfo ?? []).map(info => ({ what: 'domain', name: info.domain, day: info.expires?.slice(0, 10), state: paidState(info.expires?.slice(0, 10), now) }))
+
+  if (host) {
+    terms.push({ what: 'hosting', name: host.name, day: host.paidUntil, state: paidState(host.paidUntil, now) })
+  }
+
+  return terms.flatMap(({ what, name, day, state }) => state && state.tone !== 'ok' ? [{ what, name, text: state.text, date: formatDay(day), days: state.days, tone: state.tone }] : [])
 }
 
 /** why the staging got no answer at all – the plugin's ReportPuller::failure() */

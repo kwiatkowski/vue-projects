@@ -1,6 +1,6 @@
 <template>
   <!-- a header: when (or why not), and what sent it on the right -->
-  <div class="report-tip__title" :class="{ 'report-tip__title--alone': plugins.length === 0 && themes.length === 0 && unused.length === 0 && !translations && !menu && !project.ssl && vulnerabilities.length === 0 && missing.length === 0 }">
+  <div class="report-tip__title" :class="{ 'report-tip__title--alone': plugins.length === 0 && themes.length === 0 && unused.length === 0 && !translations && !menu && !project.ssl && vulnerabilities.length === 0 && missing.length === 0 && terms.length === 0 }">
     <strong>{{ title }}</strong>
     <!-- what sends the report – orange with the newer version when plugin_meden / MK Core is older -->
     <span v-if="project.reporter" class="mono" :class="reporterNewer ? 'reporter--old' : 'faint'">
@@ -16,6 +16,15 @@
 
     <span v-else>
       do <span class="mono">{{ formatDay(project.ssl.validTo) }}</span>{{ ' ' }}<span class="faint">({{ daysLeft }} dni<template v-if="project.ssl.issuer">, {{ project.ssl.issuer }}</template>)</span>
+    </span>
+  </div>
+
+  <!-- a domain or the hosting account to pay for – 30 days before (orange) or past (red) -->
+  <div v-for="term in terms" :key="term.what + term.name" class="report-tip__row report-tip__ssl" :class="`report-tip__ssl--${term.tone}`">
+    <span>{{ term.what === 'domain' ? 'Domena' : 'Hosting' }}</span>
+
+    <span>
+      do <span class="mono">{{ term.date }}</span>{{ ' ' }}<span class="faint">({{ term.days < 0 ? 'po terminie' : `${term.days} dni` }}, {{ term.name }})</span>
     </span>
   </div>
 
@@ -101,8 +110,9 @@
 <script lang="ts" setup>
   import type { Project } from '@/types'
   import { computed } from 'vue'
+  import { useHostsStore } from '@/stores/hosts'
   import { useProjectsStore } from '@/stores/projects'
-  import { formatDay, missingTranslations, pendingUpdates, reporterUpdate, SEVERITY_LABELS, sslDaysLeft, sslState, vulnerabilityTone } from '@/utils/projects'
+  import { expiringTerms, formatDay, missingTranslations, pendingUpdates, reporterUpdate, SEVERITY_LABELS, sslDaysLeft, sslState, vulnerabilityTone } from '@/utils/projects'
 
   /**
    * What the report's mark says – the same in its tooltip and in its menu: when the site reported and what sent it, the
@@ -112,6 +122,9 @@
   const props = defineProps<{ project: Project, title: string, menu?: boolean }>()
 
   const projects = useProjectsStore()
+  const hosts = useHostsStore()
+  /** the domains and the hosting to pay for soon (or past) */
+  const terms = computed(() => expiringTerms(props.project, hosts.byId(props.project.hostId)))
 
   const plugins = computed(() => pendingUpdates(props.project, projects.latestWordpress))
   const themes = computed(() => props.project.themeUpdates ?? [])

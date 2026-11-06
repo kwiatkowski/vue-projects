@@ -17,6 +17,12 @@
         <span v-if="updateCount(project) > 0" class="report__also"><ArrowUp /><span class="mono">{{ updateCount(project) }}</span></span>
       </template>
 
+      <!-- a domain or the hosting to pay for – a calendar, orange 30 days before, red past; the updates beside it -->
+      <template v-else-if="reportMark(project) === 'expiring' || reportMark(project) === 'expired'">
+        <CalendarClock />
+        <span v-if="updateCount(project) > 0" class="report__also"><ArrowUp /><span class="mono">{{ updateCount(project) }}</span></span>
+      </template>
+
       <template v-else-if="reportMark(project) === 'todo'">
         <template v-if="updateCount(project) > 0"><ArrowUp /><span class="mono">{{ updateCount(project) }}</span></template>
         <Lock v-else-if="sslState(project) === 'soon'" />
@@ -63,12 +69,13 @@
 
 <script lang="ts" setup>
   import type { Project } from '@/types'
-  import { Archive, ArrowUp, Check, FileText, Languages, Lock, Minus, Package, RefreshCw, ShieldAlert, TriangleAlert } from 'lucide-vue-next'
+  import { Archive, ArrowUp, CalendarClock, Check, FileText, Languages, Lock, Minus, Package, RefreshCw, ShieldAlert, TriangleAlert } from 'lucide-vue-next'
   import ReportSummary from '@/components/ReportSummary.vue'
   import HoverTip from '@/components/ui/HoverTip.vue'
+  import { useHostsStore } from '@/stores/hosts'
   import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
-  import { formatDateTime, missingTranslations, pendingUpdates, reporterUpdate, reportState, sslState, UPDATE_LABELS, updateScope, vulnerabilityTone } from '@/utils/projects'
+  import { expiringTerms, formatDateTime, missingTranslations, pendingUpdates, reporterUpdate, reportState, sslState, UPDATE_LABELS, updateScope, vulnerabilityTone } from '@/utils/projects'
 
   /** The "Raport" cell: the report's mark, and its popup – what the report says and, for the owner, what to do. */
   defineProps<{ project: Project, full: boolean }>()
@@ -76,6 +83,7 @@
 
   const projects = useProjectsStore()
   const notify = useNotifyStore()
+  const hosts = useHostsStore()
 
   /** the report mark's tooltip – when the site last reported, or why it doesn't */
   function reportTitle (project: Project): string {
@@ -137,6 +145,13 @@
     // a plugin with a known vulnerability – red, with how many
     if (state !== 'off' && (project.vulnerabilities?.length ?? 0) > 0) {
       return vulnerabilityTone(project.vulnerabilities ?? []) === 'bad' ? 'vulnerable' : 'vulnerable-warn'
+    }
+
+    // a domain or the hosting account to pay for – also on a site that doesn't report
+    const terms = expiringTerms(project, hosts.byId(project.hostId))
+
+    if (terms.length > 0) {
+      return terms.some(term => term.tone === 'bad') ? 'expired' : 'expiring'
     }
 
     // something to do: updates, a certificate ending soon, missing translations, an older plugin_meden / MK Core
@@ -201,11 +216,13 @@
 
 /* only medium or low vulnerabilities – orange, as something to do */
 .report--vulnerable-warn,
+.report--expiring,
 .report--todo {
   color: var(--warn);
 }
 
 .report--failed,
+.report--expired,
 .report--vulnerable {
   color: var(--danger);
 }

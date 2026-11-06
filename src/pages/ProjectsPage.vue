@@ -168,10 +168,12 @@
   import SelectField from '@/components/ui/SelectField.vue'
   import { config } from '@/config'
   import { useColumnsStore } from '@/stores/columns'
+  import { useHostsStore } from '@/stores/hosts'
   import { useProjectsStore } from '@/stores/projects'
-  import { groupProjects, matches, pendingUpdates, sortProjects, STATUS_LABELS, STATUS_TONES, updateScope } from '@/utils/projects'
+  import { expiringTerms, groupProjects, matches, pendingUpdates, sortProjects, STATUS_LABELS, STATUS_TONES, updateScope } from '@/utils/projects'
 
   const projects = useProjectsStore()
+  const hosts = useHostsStore()
   const columns = useColumnsStore()
   const route = useRoute()
   const router = useRouter()
@@ -223,8 +225,10 @@
     { value: 'tlumaczenia', label: 'Do aktualizacji: tłumaczenia', test: project => (project.translationUpdates?.length ?? 0) > 0 },
     { value: 'nieaktywne-wtyczki', label: 'Nieaktywne wtyczki', test: project => (project.inactivePlugins?.length ?? 0) > 0 },
     { value: 'nieaktywne-motywy', label: 'Nieaktywne motywy', test: project => (project.inactiveThemes?.length ?? 0) > 0 },
+    // a domain or the hosting account within 30 days of its date, or past it
+    { value: 'terminy', label: 'Kończące się terminy', test: project => expiringTerms(project, hosts.byId(project.hostId)).length > 0 },
   ]
-  type ReportFilter = '' | 'wszystko' | 'wordpress' | 'wtyczki' | 'tlumaczenia' | 'nieaktywne-wtyczki' | 'nieaktywne-motywy'
+  type ReportFilter = '' | 'wszystko' | 'wordpress' | 'wtyczki' | 'tlumaczenia' | 'nieaktywne-wtyczki' | 'nieaktywne-motywy' | 'terminy'
 
   const fromAddress = typeof route.query.raport === 'string' ? route.query.raport : (route.query.aktualizacje === undefined ? '' : 'wszystko')
   const report = ref<ReportFilter>(REPORT_FILTERS.find(item => item.value === fromAddress)?.value ?? '')
