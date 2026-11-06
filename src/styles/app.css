@@ -679,6 +679,11 @@ textarea.input--title {
   padding-right: 40px;
 }
 
+/* and its edge in the pencil's orange – a changed field seen at a glance; the focus keeps its own colour */
+.field--changed .input:not(:focus, :focus-within) {
+  border-color: var(--warn);
+}
+
 /* ---------- segmented control ---------- */
 
 .seg {
