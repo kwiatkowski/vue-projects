@@ -309,7 +309,11 @@
     }
   }
 
-  const reportOptions = computed(() => [{ value: '' as ReportFilter, label: 'Wszystkie raporty' }, ...REPORT_FILTERS.map(({ value, label }) => ({ value, label }))])
+  /** what the reports say – only what some project has (as the categories and the statuses), the chosen one kept */
+  const reportOptions = computed(() => [
+    { value: '' as ReportFilter, label: 'Wszystkie raporty' },
+    ...REPORT_FILTERS.filter(({ value }) => (reportCounts.value[value] ?? 0) > 0 || value === report.value).map(({ value, label }) => ({ value, label })),
+  ])
   /** how many of the category's projects each report filter leaves – '' all of them */
   const reportCounts = computed<Record<string, number>>(() => Object.fromEntries([
     ['', inCategory.value.length],
