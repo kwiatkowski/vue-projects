@@ -35,6 +35,21 @@
         what="Nazwa konta"
       />
     </label>
+
+    <!-- where the project lies on the server – the site's report says (a site with a token; an older reporter: not yet) -->
+    <label v-if="project?.token" class="field">
+      <span>Ścieżka projektu <span class="reported-mark">*</span></span>
+
+      <CopyInput
+        class="mono"
+        disabled
+        :model-value="project.path ?? ''"
+        placeholder="pojawi się z raportem strony (plugin_meden 1.22.0)"
+        tip="Kopiuj ścieżkę"
+        type="text"
+        what="Ścieżka projektu"
+      />
+    </label>
   </div>
 
   <!-- the TLS certificate as the list saw it at its last pull – read only -->

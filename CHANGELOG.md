@@ -3,6 +3,10 @@
 Jedna sekcja na dzień – wersja dnia `RRRR.MM.DD`. Wydania w ciągu dnia (`.1`, `.2`…) są podsumowane razem.
 Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na górnej belce).
 
+## 2026.11.06
+
+- Zakładka **Serwer**: ścieżka projektu na serwerze (katalog główny Bedrocka albo WordPressa) z przyciskiem kopiowania – uzupełnia ją raport strony (plugin_meden 1.22.0).
+
 ## 2026.11.04
 
 - **Wybór motywu** zamiast przełącznika słońce / księżyc: Ciemny (domyślny), Jasny oraz **Meden jasny** i **Meden ciemny** w kolorach meden.com.pl.

@@ -111,6 +111,8 @@ export interface Project extends Record<Flag, boolean> {
   /** PHP as the site runs it: the full version, the SAPI, its limits (plugin_meden 1.19.0 / MK Core) */
   phpVersion?: string | null
   phpSapi?: string | null
+  /** the project's folder on the server – Bedrock's root or WordPress's (plugin_meden 1.22.0 / MK Core); null: not reported */
+  path?: string | null
   phpIni?: Record<string, string> | null
   /** what has no translation for the site's language at all – WordPress, plugins, the theme; null: not reported */
   missingTranslations?: { locale: string, items: MissingTranslation[] } | null
