@@ -68,13 +68,19 @@ export function techTabState (project: Project | null, latest: string | null, br
  * domain's and the others' (orange – ending soon, red – not valid or not answering)
  */
 export function serverTabState (project: Project | null, host: Host | null = null, now: Date = new Date()): TabState | null {
+  // the domains – until when paid, as the hosting
+  const domains = (project?.domainInfo ?? []).map(info => {
+    const state = paidState(info.expires?.slice(0, 10), now)
+
+    return state && state.tone !== 'ok' ? { tone: state.tone === 'bad' ? 'bad' : 'warn', label: `domena ${info.domain} opłacona do ${formatDay(info.expires?.slice(0, 10))}` } as const : null
+  })
   const paid = paidState(host?.paidUntil, now)
   const hosting: TabState | null = paid && paid.tone !== 'ok'
     ? { tone: paid.tone === 'bad' ? 'bad' : 'warn', label: `hosting opłacony do ${formatDay(host?.paidUntil)}` }
     : null
 
   if (!project?.ssl) {
-    return hosting
+    return worst([hosting, ...domains])
   }
 
   const SSL: Record<'ok' | 'soon' | 'bad', TabState> = {
@@ -91,7 +97,7 @@ export function serverTabState (project: Project | null, host: Host | null = nul
     return row.tone === 'warn' ? { tone: 'warn', label: `${row.domain}: ${row.text}` } as const : null
   })
 
-  return worst([main ? SSL[main] : null, ...others, hosting])
+  return worst([main ? SSL[main] : null, ...others, hosting, ...domains])
 }
 
 /** Dostęp: production and staging as last checked – red when one is down, green when the checked ones work */

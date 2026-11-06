@@ -164,6 +164,23 @@
       </div>
     </SectionCard>
 
+    <!-- the registered domains – their registries asked once a day (RDAP): who registered them, until when paid -->
+    <SectionCard v-if="project?.domains.length" :icon="Globe" note="sprawdza lista raz dziennie w rejestrze domen" title="Domena">
+      <dl v-if="domainRows.length > 0" class="domains">
+        <template v-for="row in domainRows" :key="row.domain">
+          <dt class="mono">{{ row.domain }}</dt>
+
+          <dd>
+            <span v-if="row.expires" :class="`paid--${row.tone}`">opłacona do {{ row.expires }}</span>
+            <span v-else class="faint">{{ row.error ?? 'brak daty' }}</span>
+            <span v-if="row.registrar" class="faint"> · {{ row.registrar }}</span>
+          </dd>
+        </template>
+      </dl>
+
+      <p v-else class="faint">Lista jeszcze nie pytała rejestru – zapyta przy najbliższym pełnym pobieraniu raportów.</p>
+    </SectionCard>
+
     <!-- the TLS certificate as the list saw it at its last pull – read only -->
     <SectionCard v-if="project?.domains.length" :icon="ShieldCheck" note="sprawdza lista przy pobieraniu raportów" title="Certyfikat SSL">
       <div v-if="project.ssl" class="grid">
@@ -209,7 +226,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { Database, Pencil, Plus, Server, ShieldCheck } from 'lucide-vue-next'
+  import { Database, Globe, Pencil, Plus, Server, ShieldCheck } from 'lucide-vue-next'
   import { computed, ref, watch } from 'vue'
   import { useProjectForm } from '@/components/project/form'
   import CopyInput from '@/components/ui/CopyInput.vue'
@@ -283,6 +300,13 @@
     })
   }
 
+  /** the registered domains: until when paid (orange 30 days before, red past), the registrar; or why not known */
+  const domainRows = computed(() => (project.value?.domainInfo ?? []).map(info => {
+    const state = paidState(info.expires?.slice(0, 10))
+
+    return { domain: info.domain, registrar: info.registrar, error: info.error, expires: state?.text ?? null, tone: state?.tone ?? 'ok' }
+  }))
+
   /** the site's other domains: what they answer, their certificates */
   const others = computed(() => project.value ? domainChecks(project.value) : [])
 
@@ -329,6 +353,27 @@
 }
 
 .input.paid--bad {
+  color: var(--danger);
+}
+
+/* the registered domains – the domain, then until when paid and the registrar */
+.domains {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.domains dd {
+  margin: 0;
+}
+
+.paid--soon {
+  color: var(--warn);
+}
+
+.paid--bad {
   color: var(--danger);
 }
 

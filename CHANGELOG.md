@@ -11,6 +11,7 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 - **Konta hostingowe** – dane hostingu wpisuje się raz na konto, a nie przy każdej stronie: hosting, adres panelu, login, hasło (szyfrowane), opłacone do i SSH. W projekcie (zakładka **Serwer**) wybór konta, „+” – nowe konto, ołówek – edycja (zmiana dotyczy wszystkich jego projektów); dane konta z przyciskami kopiowania i gotowe polecenie **SSH** od razu do katalogu projektu. Lista wszystkich kont: menu konta → **Konta hostingowe**. Istniejące dane serwerów zamienione na konta automatycznie.
 - Kropka przy zakładce Serwer ostrzega też o **końcu opłaconego hostingu** – pomarańczowa na 30 dni przed, czerwona po terminie.
 - Zakładka Serwer: sekcja **Baza danych** – host, nazwa, użytkownik i hasło (szyfrowane), wpisywane ręcznie.
+- Zakładka Serwer: sekcja **Domena** – rejestrator i data, do kiedy domena jest opłacona, sprawdzane raz dziennie w rejestrze (RDAP; .eu nie podaje daty). Kropka ostrzega 30 dni przed, a tygodniowe podsumowanie ma nową sekcję **Domeny i hosting (30 dni)**.
 
 ## 2026.11.04
 

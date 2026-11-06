@@ -24,6 +24,15 @@ export interface Host {
   projects: number[]
 }
 
+/** A registered domain as its registry tells (RDAP): the registrar, until when it is paid; error – why not known. */
+export interface DomainInfo {
+  domain: string
+  registrar: string | null
+  expires: string | null
+  checkedAt: string
+  error: string | null
+}
+
 /** What the API takes for an account: any field, null clears it. */
 export type HostInput = Partial<Omit<Host, 'id' | 'hasPassword' | 'projects'>>
 
@@ -109,6 +118,8 @@ export interface Project extends Record<Flag, boolean> {
   dbName?: string | null
   dbUser?: string | null
   hasDbPassword?: boolean
+  /** the registered domains as their registries tell (RDAP) – the owner's only */
+  domainInfo?: DomainInfo[]
   todo?: TodoSummary | null
   notes: string | null
   /** reCAPTCHA v3's site key – its secret apart, encrypted (projectsApi.password(id, 'recaptcha')) */
@@ -288,7 +299,7 @@ export interface SiteReport {
 }
 
 /** What the API takes: any field, null clears it. */
-export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'hasStagingAuthPassword' | 'hasRecaptchaSecret' | 'hasDbPassword' | 'staging' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter' | 'updates' | 'translationUpdates' | 'recaptcha' | 'ssl' | 'domainChecks' | 'sites'>>
+export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'hasStagingAuthPassword' | 'hasRecaptchaSecret' | 'hasDbPassword' | 'domainInfo' | 'staging' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter' | 'updates' | 'translationUpdates' | 'recaptcha' | 'ssl' | 'domainChecks' | 'sites'>>
 
 /** the secrets kept encrypted: the panel's password, HTTP Basic Auth's, reCAPTCHA's secret key */
 export type PasswordKind = 'panel' | 'auth' | 'staging' | 'recaptcha' | 'db'
