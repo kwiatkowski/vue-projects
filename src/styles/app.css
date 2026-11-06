@@ -935,6 +935,11 @@ label:has(> input[type='checkbox']:disabled) {
   animation: tip-in .12s ease-out;
 }
 
+/* v-tip's plain text: its line breaks kept (an account's projects, one per line) */
+.tip--lines {
+  white-space: pre-line;
+}
+
 /* the triangle: a square turned 45°, two of its borders showing – at the bottom (pointing down), on top when below */
 .tip::before {
   position: absolute;

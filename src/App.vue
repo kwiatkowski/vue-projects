@@ -10,7 +10,6 @@
       <ProjectDialog />
       <CategoryDialog />
       <HostDialog />
-      <HostsDialog />
       <SettingsDialog />
       <AlertsDialog />
       <ChangelogDialog />
@@ -32,7 +31,6 @@
   import CategoryDialog from '@/components/CategoryDialog.vue'
   import ChangelogDialog from '@/components/ChangelogDialog.vue'
   import HostDialog from '@/components/HostDialog.vue'
-  import HostsDialog from '@/components/HostsDialog.vue'
   import ProjectDialog from '@/components/ProjectDialog.vue'
   import SettingsDialog from '@/components/SettingsDialog.vue'
   import TipLayer from '@/components/ui/TipLayer.vue'

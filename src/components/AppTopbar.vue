@@ -20,7 +20,28 @@
 
     <span class="top__space" />
 
-    <!-- adding – rare, so a bare icon as the theme's: a new project (the more frequent) or a new category -->
+    <!-- the owner's two lists: the projects and the hosting accounts -->
+    <nav v-if="config.canManage" aria-label="Widok" class="switch">
+      <RouterLink
+        :aria-current="route.name !== 'hosts' ? 'page' : undefined"
+        class="switch__item"
+        :class="{ 'switch__item--on': route.name !== 'hosts' }"
+        :to="lastProjects"
+      >
+        <Layers /> <span class="top__label">Projekty</span>
+      </RouterLink>
+
+      <RouterLink
+        :aria-current="route.name === 'hosts' ? 'page' : undefined"
+        class="switch__item"
+        :class="{ 'switch__item--on': route.name === 'hosts' }"
+        :to="{ name: 'hosts' }"
+      >
+        <Server /> <span class="top__label">Konta hostingowe</span>
+      </RouterLink>
+    </nav>
+
+    <!-- adding – rare, so a bare icon as the theme's: a new project (the more frequent), a category or an account -->
     <DropMenu v-if="config.canManage" label="Dodaj" panel-class="user-menu" trigger-class="btn btn--icon btn--sm">
       <template #trigger>
         <Plus />
@@ -32,6 +53,10 @@
 
       <button class="menu__item" role="menuitem" type="button" @click="projects.editingCategory = 'new'">
         <FolderPlus /> Nowa kategoria
+      </button>
+
+      <button class="menu__item" role="menuitem" type="button" @click="hosts.editing = 'new'">
+        <Server /> Nowe konto hostingowe
       </button>
     </DropMenu>
 
@@ -126,17 +151,6 @@
         <Settings /> Ustawienia
       </button>
 
-      <!-- the hosting accounts – one per hosting account, shared by its projects -->
-      <button
-        v-if="config.canManage"
-        class="menu__item"
-        role="menuitem"
-        type="button"
-        @click="hosts.listOpen = true"
-      >
-        <Server /> Konta hostingowe
-      </button>
-
       <!-- e-mail and Slack: where the alerts and the weekly summary go -->
       <button
         v-if="config.canManage"
@@ -202,7 +216,8 @@
 
 <script lang="ts" setup>
   import { Bell, Check, ChevronDown, Eye, FolderPlus, Layers, LogIn, LogOut, Moon, Plus, Server, Settings, ShieldCheck, Sparkles, SquarePlus, Sun, UserRound, Users } from 'lucide-vue-next'
-  import { computed, ref } from 'vue'
+  import { computed, ref, watch } from 'vue'
+  import { type RouteLocationRaw, useRoute } from 'vue-router'
   import { viewerApi } from '@/api/projects'
   import LoginDialog from '@/components/LoginDialog.vue'
   import DropMenu from '@/components/ui/DropMenu.vue'
@@ -217,6 +232,16 @@
   const hosts = useHostsStore()
   const columns = useColumnsStore()
   const { theme, dark, setTheme } = useTheme()
+  const route = useRoute()
+
+  /** back from the accounts to the projects as they were left – the category, the filters, the search */
+  const lastProjects = ref<RouteLocationRaw>({ name: 'projects' })
+
+  watch(() => route.fullPath, () => {
+    if (route.name === 'projects') {
+      lastProjects.value = route.fullPath
+    }
+  }, { immediate: true })
 
   type View = 'admin' | 'viewer' | 'guest'
 
@@ -340,6 +365,43 @@
 
 .top__space {
   flex: 1;
+}
+
+/* the projects / the accounts – two halves of one control, the current one filled */
+.switch {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+}
+
+.switch__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 4px;
+  color: var(--text-2);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.switch__item svg {
+  width: 15px;
+  height: 15px;
+}
+
+.switch__item:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.switch__item--on,
+.switch__item--on:hover {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-weight: 600;
 }
 
 /* the owner's preview – in the warning colour, so it isn't mistaken for the owner's list */

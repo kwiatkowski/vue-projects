@@ -16,8 +16,8 @@ export const useHostsStore = defineStore('hosts', () => {
   const items = ref<Host[]>([])
   /** the account in its dialog; 'new' – a new one */
   const editing = ref<Host | 'new' | null>(null)
-  /** the list of the accounts (the account's menu) */
-  const listOpen = ref(false)
+  /** loaded once – till then the accounts' list shows its skeleton */
+  const ready = ref(false)
   /** the account just created – the project dialog that asked for it picks it */
   const created = ref<Host | null>(null)
 
@@ -29,6 +29,7 @@ export const useHostsStore = defineStore('hosts', () => {
   async function load (): Promise<void> {
     try {
       items.value = await hostsApi.list()
+      ready.value = true
     } catch (error) {
       notify.error(error)
     }
@@ -91,5 +92,5 @@ export const useHostsStore = defineStore('hosts', () => {
     }
   }
 
-  return { items, editing, listOpen, created, sorted, byId, load, save, remove, password }
+  return { items, editing, ready, created, sorted, byId, load, save, remove, password }
 })
