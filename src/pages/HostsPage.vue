@@ -1,5 +1,5 @@
 <template>
-  <div class="page" :style="{ '--head': `${headHeight}px` }">
+  <div class="page" :class="{ 'page--settled': settled }" :style="{ '--head': `${headHeight}px` }">
     <header ref="head" class="head">
       <h1 class="visually-hidden">Konta hostingowe</h1>
 
@@ -178,6 +178,8 @@
   const head = useTemplateRef<HTMLElement>('head')
   const headHeight = ref(0)
   let observer: ResizeObserver | null = null
+  /** measured – the table's height follows it smoothly only from then on (as on the projects' list) */
+  const settled = ref(false)
 
   onMounted(() => {
     observer = new ResizeObserver(() => {
@@ -185,8 +187,14 @@
     })
 
     if (head.value) {
+      // at once, before the first paint – the observer answers only after it
+      headHeight.value = head.value.offsetHeight
       observer.observe(head.value)
     }
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      settled.value = true
+    }))
   })
 
   onBeforeUnmount(() => observer?.disconnect())
@@ -256,10 +264,13 @@
 
 /* ---- the table – as the projects' (ProjectTable) */
 
+.page--settled .table-wrap {
+  transition: max-height .2s ease;
+}
+
 .table-wrap {
   max-height: calc(100dvh - var(--topbar) - var(--head, 0px) - var(--edge));
   overflow: auto;
-  transition: max-height .2s ease;
   scrollbar-width: none;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;

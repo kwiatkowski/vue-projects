@@ -1,5 +1,5 @@
 <template>
-  <div class="page" :style="{ '--head': `${headHeight}px` }">
+  <div class="page" :class="{ 'page--settled': settled }" :style="{ '--head': `${headHeight}px` }">
     <header ref="head" class="head">
       <h1 class="visually-hidden">{{ category?.name ?? 'Projekty' }}</h1>
 
@@ -186,7 +186,21 @@
     headHeight.value = entry?.borderBoxSize[0]?.blockSize ?? 0
   })
 
-  onMounted(() => head.value && headObserver.observe(head.value))
+  /** the header measured – from then on the table's height follows it smoothly (not from 0 at first: the page would
+      scroll for a moment, a scrollbar flashing) */
+  const settled = ref(false)
+
+  onMounted(() => {
+    if (head.value) {
+      // at once, before the first paint – the observer answers only after it
+      headHeight.value = head.value.offsetHeight
+      headObserver.observe(head.value)
+    }
+
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      settled.value = true
+    }))
+  })
   onBeforeUnmount(() => headObserver.disconnect())
 
   // below 1500px the top bar gives way once the list is scrolled down – the header takes its place at the very top

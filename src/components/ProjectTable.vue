@@ -362,8 +362,6 @@
      keeps the column headers on top */
   max-height: calc(100dvh - var(--topbar) - var(--head, 0px) - var(--edge));
   overflow: auto;
-  /* with the top bar sliding away and back (below 1500px) */
-  transition: max-height .2s ease;
   /* no scrollbar – it would take width only on a long list and shift the columns between filters; it scrolls with
      the wheel, the trackpad and touch */
   scrollbar-width: none;
@@ -371,6 +369,11 @@
   /* rounded on top only, as the fields and buttons (6px) – the bottom runs on under the screen's edge */
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   background: var(--surface);
+}
+
+/* with the top bar sliding away and back (below 1500px) – once the page has measured its header, not from 0 at first */
+:global(.page--settled) .table-wrap {
+  transition: max-height .2s ease;
 }
 
 /* the projects a filter hides: no room, but their widths count for the columns */

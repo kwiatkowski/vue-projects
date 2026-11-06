@@ -17,6 +17,7 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 - Zielony ptaszek przy koncie, które ma komplet danych (hosting, adres panelu, login, hasło, opłacone do, SSH); przy niepełnym przerywane kółko – w dymku, czego brakuje.
 - Po najechaniu na **liczbę projektów** konta – dymek jak przy raporcie: nazwa konta w nagłówku, pod nim jego projekty ze statusem.
 - Konto hostingowe: pole **Kwota odnowienia** (np. „299 zł brutto / rok”) – w zakładce Serwer i na liście kont obok daty „opłacone do”.
+- Przełączanie **Projekty / Konta hostingowe** bez mignięcia paska przewijania strony.
 
 ## 2026.11.04
 
