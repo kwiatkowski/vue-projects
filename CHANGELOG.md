@@ -15,7 +15,7 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 - Kolumna **Raport**: kończąca się domena albo hosting – ikona kalendarza (pomarańczowa na 30 dni przed, czerwona po terminie), w dymku co i do kiedy; w filtrze Raport nowa pozycja **Kończące się terminy**.
 - **Konta hostingowe** to teraz osobna lista zamiast okienka – przełącznik **Projekty / Konta hostingowe** obok „+” na górnej belce. Konta pogrupowane według hostingu, w kolumnach login, SSH, liczba projektów i opłacone do; wyszukiwarka szuka też po nazwach projektów, klik w wiersz otwiera edycję. Nowe konto – przyciskiem nad listą albo z menu „+”.
 - Zielony ptaszek przy koncie, które ma komplet danych (hosting, adres panelu, login, hasło, opłacone do, SSH); przy niepełnym przerywane kółko – w dymku, czego brakuje.
-- Po najechaniu na nazwę konta (albo liczbę projektów) dymek z listą jego projektów.
+- Po najechaniu na **liczbę projektów** konta – dymek jak przy raporcie: nazwa konta w nagłówku, pod nim jego projekty ze statusem.
 
 ## 2026.11.04
 

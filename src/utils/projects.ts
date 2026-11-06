@@ -310,17 +310,6 @@ export function hostMissing (host: Host): string[] {
   return HOST_REQUIRED.flatMap(([label, filled]) => filled(host) ? [] : [label])
 }
 
-/** The account's tooltip: its projects one per line, by name; none – says so. */
-export function hostProjectsTip (names: string[]): string {
-  if (names.length === 0) {
-    return 'Brak projektów na tym koncie'
-  }
-
-  const collator = new Intl.Collator('pl', { numeric: true, sensitivity: 'base' })
-
-  return `Projekty (${names.length}):\n${names.toSorted((a, b) => collator.compare(a, b)).join('\n')}`
-}
-
 /** The search over the accounts: the name, the hosting, the login, SSH and the names of its projects. */
 export function hostMatches (host: Host, query: string, projectNames: string[] = []): boolean {
   const needle = query.trim().toLowerCase()

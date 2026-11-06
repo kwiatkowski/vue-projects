@@ -66,7 +66,7 @@
                     <CircleDashed v-else :aria-label="`Brakuje: ${missing(host).join(', ')}`" />
                   </span>
 
-                  <span v-tip="projectsTip(host)" class="name">{{ host.name }}</span>
+                  <span class="name">{{ host.name }}</span>
                 </div>
               </td>
 
@@ -92,7 +92,24 @@
               </td>
 
               <td class="right mono">
-                <span v-tip="projectsTip(host)">{{ projectsOf(host).length }}</span>
+                <!-- the account's projects – as the report's popup: a header, then a row each -->
+                <HoverTip anchor-class="count-hit">
+                  <span class="count" tabindex="0">{{ projectsOf(host).length }}</span>
+
+                  <template #tip>
+                    <div class="report-tip__title" :class="{ 'report-tip__title--alone': projectsOf(host).length === 0 }">
+                      <strong>{{ host.name }}</strong>
+                      <span class="faint">{{ projectsOf(host).length === 0 ? 'brak projektów' : `projekty: ${projectsOf(host).length}` }}</span>
+                    </div>
+
+                    <dl v-if="projectsOf(host).length > 0" class="info-tip info-tip--right info-tip--after">
+                      <template v-for="project in projectsOf(host)" :key="project.id">
+                        <dt>{{ project.name }}</dt>
+                        <dd><StatusChip :status="project.status" /></dd>
+                      </template>
+                    </dl>
+                  </template>
+                </HoverTip>
               </td>
 
               <td class="nowrap">
@@ -120,10 +137,12 @@
   import type { Host } from '@/types'
   import { CircleCheck, CircleDashed, Plus, Search, SearchX } from 'lucide-vue-next'
   import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
+  import StatusChip from '@/components/StatusChip.vue'
+  import HoverTip from '@/components/ui/HoverTip.vue'
   import { vTip } from '@/directives/tip'
   import { useHostsStore } from '@/stores/hosts'
   import { useProjectsStore } from '@/stores/projects'
-  import { hostMatches, hostMissing, hostProjectsTip, paidState } from '@/utils/projects'
+  import { hostMatches, hostMissing, paidState } from '@/utils/projects'
 
   /** The hosting accounts as a list, like the projects': grouped by the hosting, a click opens the account. */
   const hosts = useHostsStore()
@@ -133,9 +152,8 @@
 
   const collator = new Intl.Collator('pl', { numeric: true, sensitivity: 'base' })
 
-  /** the account's projects – from the list itself, so a project moved to another account shows at once */
-  const projectsOf = (host: Host) => projects.items.filter(project => project.hostId === host.id)
-  const projectsTip = (host: Host) => hostProjectsTip(projectsOf(host).map(project => project.name))
+  /** the account's projects, by name – from the list itself, so a project moved to another account shows at once */
+  const projectsOf = (host: Host) => projects.items.filter(project => project.hostId === host.id).toSorted((a, b) => collator.compare(a.name, b.name))
   const missing = (host: Host) => hostMissing(host)
   const paid = (host: Host) => paidState(host.paidUntil)
 
@@ -340,6 +358,17 @@ tbody:first-of-type .group-row td {
 
 .state--done {
   color: var(--accent-text);
+}
+
+.count {
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  cursor: default;
+}
+
+.count:hover,
+.count:focus-visible {
+  background: var(--hover);
 }
 
 .nowrap {

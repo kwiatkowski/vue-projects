@@ -4,7 +4,7 @@
     <div
       v-if="shownTip.anchor"
       ref="tip"
-      class="tip tip--lines"
+      class="tip"
       :class="{ 'tip--below': below }"
       role="tooltip"
       :style="position"

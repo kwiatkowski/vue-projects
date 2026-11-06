@@ -1,6 +1,6 @@
 import type { Host, Project } from '@/types'
 import { describe, expect, it } from 'vitest'
-import { ago, bareDomain, compareManual, compareVersions, domainChecks, formatDateTime, formatDay, groupProjects, hostMatches, hostMissing, hostProjectsTip, LATEST_PLUGIN_MEDEN, latestWordpress, matches, missingTranslations, moveId, newestReporters, newestWordpress, outageText, ownTheme, paidState, parseReporter, pendingUpdates, phpStatus, repoHost, reporterUpdate, reportStale, reportState, siteUrl, sortProjects, stagingCheck, vulnerabilityTone } from './projects'
+import { ago, bareDomain, compareManual, compareVersions, domainChecks, formatDateTime, formatDay, groupProjects, hostMatches, hostMissing, LATEST_PLUGIN_MEDEN, latestWordpress, matches, missingTranslations, moveId, newestReporters, newestWordpress, outageText, ownTheme, paidState, parseReporter, pendingUpdates, phpStatus, repoHost, reporterUpdate, reportStale, reportState, siteUrl, sortProjects, stagingCheck, vulnerabilityTone } from './projects'
 
 const p = (name: string, extra: Partial<Project> = {}): Partial<Project> => ({ name, domains: [name], status: 'online', ...extra })
 
@@ -299,16 +299,6 @@ describe('hostMissing', () => {
 
   it('names what is missing, in order', () => {
     expect(hostMissing({ ...full, hasPassword: false, paidUntil: null, sshUser: null })).toEqual(['hasło', 'opłacone do', 'użytkownik SSH'])
-  })
-})
-
-describe('hostProjectsTip', () => {
-  it('lists the projects one per line, by name', () => {
-    expect(hostProjectsTip(['zeta.pl', 'ckmed.pl', 'Alfa.pl'])).toBe('Projekty (3):\nAlfa.pl\nckmed.pl\nzeta.pl')
-  })
-
-  it('says when there are none', () => {
-    expect(hostProjectsTip([])).toBe('Brak projektów na tym koncie')
   })
 })
 
