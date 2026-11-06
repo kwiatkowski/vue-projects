@@ -3,6 +3,15 @@
     <ul v-if="hosts.sorted.length > 0" class="hosts">
       <li v-for="host in hosts.sorted" :key="host.id">
         <button class="hosts__row" type="button" @click="hosts.editing = host">
+          <span
+            v-tip="missing(host).length === 0 ? 'Wszystkie dane uzupełnione' : `Brakuje: ${missing(host).join(', ')}`"
+            class="hosts__state"
+            :class="{ 'hosts__state--done': missing(host).length === 0 }"
+          >
+            <CircleCheck v-if="missing(host).length === 0" aria-label="Komplet danych" />
+            <CircleDashed v-else :aria-label="`Brakuje: ${missing(host).join(', ')}`" />
+          </span>
+
           <span class="hosts__name">{{ host.name }}</span>
           <span class="faint hosts__meta">{{ [host.server, host.serverAccount].filter(Boolean).join(' · ') }}</span>
           <span class="hosts__count mono faint">{{ host.projects.length }}</span>
@@ -29,15 +38,19 @@
 
 <script lang="ts" setup>
   import type { Host } from '@/types'
-  import { Plus, X } from 'lucide-vue-next'
+  import { CircleCheck, CircleDashed, Plus, X } from 'lucide-vue-next'
   import BaseDialog from '@/components/ui/BaseDialog.vue'
+  import { vTip } from '@/directives/tip'
   import { useHostsStore } from '@/stores/hosts'
-  import { paidState } from '@/utils/projects'
+  import { hostMissing, paidState } from '@/utils/projects'
 
   /** Every hosting account: its name, hosting and login, how many projects, until when paid – a click opens it. */
   const hosts = useHostsStore()
 
   const paid = (host: Host) => paidState(host.paidUntil)
+
+  /** a check – every field filled; a dashed circle – its tooltip lists what is missing */
+  const missing = (host: Host) => hostMissing(host)
 </script>
 
 <style scoped>
@@ -64,6 +77,21 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
+}
+
+.hosts__state {
+  display: inline-flex;
+  align-self: center;
+  color: var(--text-3);
+}
+
+.hosts__state svg {
+  width: 16px;
+  height: 16px;
+}
+
+.hosts__state--done {
+  color: var(--accent-text);
 }
 
 .hosts__row:hover .hosts__name {

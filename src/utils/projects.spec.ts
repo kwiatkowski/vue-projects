@@ -1,6 +1,6 @@
-import type { Project } from '@/types'
+import type { Host, Project } from '@/types'
 import { describe, expect, it } from 'vitest'
-import { ago, bareDomain, compareManual, compareVersions, domainChecks, formatDateTime, formatDay, groupProjects, LATEST_PLUGIN_MEDEN, latestWordpress, matches, missingTranslations, moveId, newestReporters, newestWordpress, outageText, ownTheme, paidState, parseReporter, pendingUpdates, phpStatus, repoHost, reporterUpdate, reportStale, reportState, siteUrl, sortProjects, stagingCheck, vulnerabilityTone } from './projects'
+import { ago, bareDomain, compareManual, compareVersions, domainChecks, formatDateTime, formatDay, groupProjects, hostMissing, LATEST_PLUGIN_MEDEN, latestWordpress, matches, missingTranslations, moveId, newestReporters, newestWordpress, outageText, ownTheme, paidState, parseReporter, pendingUpdates, phpStatus, repoHost, reporterUpdate, reportStale, reportState, siteUrl, sortProjects, stagingCheck, vulnerabilityTone } from './projects'
 
 const p = (name: string, extra: Partial<Project> = {}): Partial<Project> => ({ name, domains: [name], status: 'online', ...extra })
 
@@ -287,5 +287,17 @@ describe('paidState', () => {
     expect(paidState('2026-12-06', now)).toMatchObject({ tone: 'soon', days: 30 })
     expect(paidState('2026-11-06', now)).toMatchObject({ tone: 'soon', days: 0 })
     expect(paidState('2026-11-05', now)).toMatchObject({ tone: 'bad', days: -1 })
+  })
+})
+
+describe('hostMissing', () => {
+  const full: Host = { id: 1, name: 'a', server: 'hostido.pl', serverUrl: 'https://hostido.pl/', serverAccount: 'meden', paidUntil: '2027-01-01', sshHost: 'h', sshPort: null, sshUser: 'u', hasPassword: true, projects: [] }
+
+  it('is empty for a complete account (the SSH port may be empty)', () => {
+    expect(hostMissing(full)).toEqual([])
+  })
+
+  it('names what is missing, in order', () => {
+    expect(hostMissing({ ...full, hasPassword: false, paidUntil: null, sshUser: null })).toEqual(['hasło', 'opłacone do', 'użytkownik SSH'])
   })
 })

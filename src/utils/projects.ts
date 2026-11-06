@@ -294,6 +294,22 @@ export function paidState (day: string | null | undefined, now: Date = new Date(
   return { tone: days <= PAID_WARN_DAYS ? 'soon' : 'ok', text: `${formatDay(day)} (${days} dni)`, days }
 }
 
+/** a hosting account's data the list wants – the label of each that is missing (the SSH port may stay empty – 22) */
+const HOST_REQUIRED: Array<[label: string, filled: (host: Host) => boolean]> = [
+  ['hosting', host => !!host.server],
+  ['adres panelu', host => !!host.serverUrl],
+  ['login', host => !!host.serverAccount],
+  ['hasło', host => host.hasPassword],
+  ['opłacone do', host => !!host.paidUntil],
+  ['host SSH', host => !!host.sshHost],
+  ['użytkownik SSH', host => !!host.sshUser],
+]
+
+/** What a hosting account still lacks – empty when its data is complete. */
+export function hostMissing (host: Host): string[] {
+  return HOST_REQUIRED.flatMap(([label, filled]) => filled(host) ? [] : [label])
+}
+
 /**
  * What must be paid for soon or already is past: the project's registered domains (RDAP) and its hosting account –
  * only those within 30 days or past, for the report's mark, its tooltip and the "Kończące się terminy" filter.

@@ -13,6 +13,7 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 - Zakładka Serwer: sekcja **Baza danych** – host, nazwa, użytkownik i hasło (szyfrowane), wpisywane ręcznie.
 - Zakładka Serwer: sekcja **Domena** – rejestrator i data, do kiedy domena jest opłacona, sprawdzane raz dziennie w rejestrze (RDAP; .eu nie podaje daty). Kropka ostrzega 30 dni przed, a tygodniowe podsumowanie ma nową sekcję **Domeny i hosting (30 dni)**.
 - Kolumna **Raport**: kończąca się domena albo hosting – ikona kalendarza (pomarańczowa na 30 dni przed, czerwona po terminie), w dymku co i do kiedy; w filtrze Raport nowa pozycja **Kończące się terminy**.
+- Lista **Kont hostingowych**: zielony ptaszek przy koncie, które ma komplet danych (hosting, adres panelu, login, hasło, opłacone do, SSH); przy niepełnym przerywane kółko – w dymku, czego brakuje.
 
 ## 2026.11.04
 
