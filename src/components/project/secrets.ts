@@ -41,6 +41,13 @@ export function useSecrets () {
     }
   }
 
+  /** the typed ones dropped – back to what is saved */
+  function revert (): void {
+    for (const kind of KINDS) {
+      values[kind] = saved[kind]
+    }
+  }
+
   async function load (project: Project): Promise<void> {
     reset()
 
@@ -70,7 +77,7 @@ export function useSecrets () {
     return current
   }
 
-  return { values, loading, shown, changed, accessChanged, anyChanged, reset, load, save }
+  return { values, loading, shown, changed, accessChanged, anyChanged, reset, revert, load, save }
 }
 
 export type Secrets = ReturnType<typeof useSecrets>

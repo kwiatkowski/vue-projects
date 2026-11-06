@@ -1,6 +1,6 @@
 import type { Host, HostInput } from '@/types'
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { hostsApi } from '@/api/projects'
 import { useNotifyStore } from './notify'
 import { useProjectsStore } from './projects'
@@ -16,6 +16,8 @@ export const useHostsStore = defineStore('hosts', () => {
   const items = ref<Host[]>([])
   /** the account in its dialog; 'new' – a new one */
   const editing = ref<Host | 'new' | null>(null)
+  /** an account closed with changes not saved – back in the form when it opens again (this session only) */
+  const drafts = reactive(new Map<number | 'new', { form: Record<string, unknown>, password: string }>())
   /** loaded once – till then the accounts' list shows its skeleton */
   const ready = ref(false)
   /** the account just created – the project dialog that asked for it picks it */
@@ -92,5 +94,5 @@ export const useHostsStore = defineStore('hosts', () => {
     }
   }
 
-  return { items, editing, ready, created, sorted, byId, load, save, remove, password }
+  return { items, editing, drafts, ready, created, sorted, byId, load, save, remove, password }
 })

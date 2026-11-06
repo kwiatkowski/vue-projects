@@ -2,12 +2,25 @@
   <BaseDialog
     ref="dialog"
     v-model="open"
-    :can-close="canClose"
     :height="920"
     :title="project ? 'Edycja projektu' : 'Nowy projekt'"
     :width="1360"
-    @submit="save"
+    @submit="save()"
   >
+    <!-- another project in the same dialog – searched by name; a pencil by the ones with changes kept -->
+    <template v-if="project" #head>
+      <SelectField
+        :clearable="false"
+        label="Przełącz na inny projekt"
+        :model-value="project.id"
+        :options="switchOptions"
+        searchable
+        @update:model-value="switchTo"
+      >
+        <template #option="{ option }">{{ option.label }} <PenLine v-if="projects.drafts.has(option.value)" class="draft-mark" /></template>
+      </SelectField>
+    </template>
+
     <!-- two columns: the name and what defines the project on the left, always in view; the details on the right, in
          tabs that start level with the name -->
     <div class="cols project-form">
@@ -156,7 +169,16 @@
     </div>
 
     <template #note>
-      <p class="reported-note">
+      <!-- switching to another project while this one has changes – save them first, or keep them for later -->
+      <div v-if="pending" class="alert switch-alert">
+        <span>„{{ project?.name ?? 'Nowy projekt' }}” ma niezapisane zmiany.</span>
+        <span style="flex: 1" />
+        <button class="btn btn--sm" type="button" @click="pending = null">Zostań</button>
+        <button class="btn btn--sm" type="button" @click="confirmSwitch('keep')">Przełącz – zachowaj zmiany</button>
+        <button class="btn btn--accent btn--sm" type="button" @click="confirmSwitch('save')"><Check /> Zapisz i przełącz</button>
+      </div>
+
+      <p v-else class="reported-note">
         <Activity />
         <span v-if="reporting">Pola oznaczone <span class="reported-mark">*</span> uzupełnia automatycznie raport strony.</span>
         <span v-else-if="project?.token">Pola oznaczone <span class="reported-mark">*</span> uzupełni automatycznie pierwszy raport strony – token jest, strona jeszcze nic nie wysłała.</span>
@@ -165,13 +187,17 @@
     </template>
 
     <template #actions>
-      <!-- as in Todo: with changes made the only ways out are saving or dropping them -->
+      <!-- with changes: drop them, or close and keep them for later (the form has them when it opens again), or save -->
       <template v-if="dirty">
         <span class="unsaved"><AlertTriangle /> Niezapisane zmiany</span>
         <span style="flex: 1" />
 
-        <button class="btn btn--danger btn--sm" type="button" @click="open = false">
+        <button class="btn btn--danger btn--sm" type="button" @click="discard">
           <X /> Zamknij bez zapisywania
+        </button>
+
+        <button v-tip="'Zmiany zostaną zachowane – będą w formularzu po ponownym otwarciu'" class="btn btn--sm" type="button" @click="open = false">
+          Zamknij
         </button>
 
         <button class="btn btn--accent btn--sm" :disabled="!canSave" type="submit">
@@ -345,11 +371,22 @@
     }
   }
 
-  // a different project (or a new one) fills the form – a fresh token for the same one doesn't touch it
-  watch(() => projects.editing === 'new' ? 'new' : projects.editing?.id ?? null, () => {
+  // a different project (or a new one) fills the form – a fresh token for the same one doesn't touch it; the one left
+  // keeps its changes as a draft (or loses its draft when it has none)
+  watch(() => projects.editing === 'new' ? 'new' : projects.editing?.id ?? null, (key, left) => {
     const editing = projects.editing
 
-    if (editing === null) {
+    if (left !== null && left !== undefined) {
+      if (dirty.value) {
+        projects.drafts.set(left, { form: JSON.stringify(form.value), secrets: { ...secrets.values } })
+      } else {
+        projects.drafts.delete(left)
+      }
+    }
+
+    pending.value = null
+
+    if (editing === null || key === null) {
       return
     }
 
@@ -360,15 +397,69 @@
     // a new project has no report yet – it starts on the server
     tab.value = editing === 'new' ? 'server' : 'report'
 
+    // its draft from before – the changes back, over the saved values (the secrets once loaded)
+    const draft = projects.drafts.get(key)
+
+    if (draft) {
+      form.value = JSON.parse(draft.form) as Form
+      notify.show('Przywrócono niezapisane zmiany.')
+    }
+
     if (editing === 'new') {
       secrets.reset()
+      Object.assign(secrets.values, draft?.secrets ?? {})
       siteReport.value = null
       void nextTick(() => nameInput.value?.focus())
     } else {
       void loadReport(editing)
-      void secrets.load(editing)
+      void secrets.load(editing).then(() => {
+        if (draft && projects.editing !== null && projects.editing !== 'new' && projects.editing.id === key) {
+          Object.assign(secrets.values, draft.secrets)
+        }
+      })
     }
   })
+
+  /** the other projects to switch to, by name */
+  const switchOptions = computed(() => projects.items.toSorted((a, b) => a.name.localeCompare(b.name, 'pl')).map(item => ({ value: item.id, label: item.name })))
+  /** the project asked for while this one has changes – the note asks what to do */
+  const pending = ref<Project | null>(null)
+
+  function switchTo (id: number | null): void {
+    const target = projects.items.find(item => item.id === id)
+
+    if (!target || target.id === project.value?.id) {
+      return
+    }
+
+    if (dirty.value) {
+      pending.value = target
+    } else {
+      projects.editing = target
+    }
+  }
+
+  function confirmSwitch (how: 'keep' | 'save'): void {
+    const target = pending.value
+    pending.value = null
+
+    if (!target) {
+      return
+    }
+
+    if (how === 'save') {
+      void save(target)
+    } else {
+      projects.editing = target
+    }
+  }
+
+  /** the changes dropped – the form as opened, the secrets as saved – and the dialog closed */
+  function discard (): void {
+    form.value = JSON.parse(initial.value || '{}') as Form
+    secrets.revert()
+    open.value = false
+  }
 
   /** the site reports – the fields it fills are read-only (the status too: online / offline from its home page);
    * the repository only when the report brings one (git) */
@@ -398,11 +489,6 @@
 
   /** "Zapisz" only with changes to save */
   const canSave = computed(() => dirty.value && !busy.value)
-
-  /** as in Todo: ×, Esc and the backdrop close only an untouched form – changes are saved or dropped in the footer */
-  function canClose (): boolean {
-    return !dirty.value
-  }
 
   /** a domain is kept bare (no https://, no path); the main one names a new project, until a name is typed */
   function onDomainBlur (index: number): void {
@@ -434,7 +520,8 @@
     return data as Parameters<typeof projects.add>[0]
   }
 
-  async function save (): Promise<void> {
+  /** saves; then closes – or opens `next` (switching after saving) */
+  async function save (next?: Project): Promise<void> {
     if (!form.value.name) {
       nameError.value = 'Podaj nazwę.'
 
@@ -452,7 +539,7 @@
 
     if (saved) {
       initial.value = JSON.stringify(form.value)
-      projects.editing = null
+      projects.editing = next ?? null
     }
   }
 
@@ -496,6 +583,21 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px 18px;
+}
+
+/* switching with changes – the note over the buttons */
+.switch-alert {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.draft-mark {
+  width: 13px;
+  height: 13px;
+  color: var(--warn);
+  vertical-align: -2px;
 }
 
 .unsaved {

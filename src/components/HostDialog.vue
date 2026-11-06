@@ -2,11 +2,24 @@
   <BaseDialog
     ref="dialog"
     v-model="open"
-    :can-close="canClose"
     :title="host ? 'Konto hostingowe' : 'Nowe konto hostingowe'"
     :width="640"
-    @submit="save"
+    @submit="save()"
   >
+    <!-- another account in the same dialog – searched by name; a pencil by the ones with changes kept -->
+    <template v-if="host" #head>
+      <SelectField
+        :clearable="false"
+        label="Przełącz na inne konto"
+        :model-value="host.id"
+        :options="switchOptions"
+        searchable
+        @update:model-value="switchTo"
+      >
+        <template #option="{ option }">{{ option.label }} <PenLine v-if="hosts.drafts.has(option.value)" class="draft-mark" /></template>
+      </SelectField>
+    </template>
+
     <label class="field" :class="{ 'field--changed': changed('name') }">
       <span>Nazwa</span>
 
@@ -136,14 +149,29 @@
       <div>Usunąć konto „{{ host?.name }}”? Jego projekty zostaną – bez konta hostingowego.</div>
     </div>
 
+    <!-- switching to another one while this one has changes – save them first, or keep them for later -->
+    <template v-if="pending" #note>
+      <div class="alert switch-alert">
+        <span>„{{ host?.name ?? 'Nowe konto' }}” ma niezapisane zmiany.</span>
+        <span style="flex: 1" />
+        <button class="btn btn--sm" type="button" @click="pending = null">Zostań</button>
+        <button class="btn btn--sm" type="button" @click="confirmSwitch('keep')">Przełącz – zachowaj zmiany</button>
+        <button class="btn btn--accent btn--sm" type="button" @click="confirmSwitch('save')"><Check /> Zapisz i przełącz</button>
+      </div>
+    </template>
+
     <template #actions>
-      <!-- as in the project's dialog: with changes made the only ways out are saving or dropping them -->
+      <!-- with changes: drop them, or close and keep them for later (the form has them when it opens again), or save -->
       <template v-if="dirty">
         <span class="unsaved"><AlertTriangle /> Niezapisane zmiany</span>
         <span style="flex: 1" />
 
-        <button class="btn btn--danger btn--sm" type="button" @click="open = false">
+        <button class="btn btn--danger btn--sm" type="button" @click="discard">
           <X /> Zamknij bez zapisywania
+        </button>
+
+        <button v-tip="'Zmiany zostaną zachowane – będą w formularzu po ponownym otwarciu'" class="btn btn--sm" type="button" @click="open = false">
+          Zamknij
         </button>
 
         <button class="btn btn--accent btn--sm" :disabled="busy" type="submit">
@@ -184,19 +212,23 @@
 
 <script lang="ts" setup>
   import type { HostInput } from '@/types'
-  import { AlertTriangle, Check, Plus, Trash2, X } from 'lucide-vue-next'
+  import { AlertTriangle, Check, PenLine, Plus, Trash2, X } from 'lucide-vue-next'
   import { computed, nextTick, reactive, ref, useTemplateRef, watch } from 'vue'
   import StatusChip from '@/components/StatusChip.vue'
   import BaseDialog from '@/components/ui/BaseDialog.vue'
   import CopyInput from '@/components/ui/CopyInput.vue'
   import DateField from '@/components/ui/DateField.vue'
   import PasswordInput from '@/components/ui/PasswordInput.vue'
+  import SelectField from '@/components/ui/SelectField.vue'
+  import { vTip } from '@/directives/tip'
   import { useHostsStore } from '@/stores/hosts'
+  import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
 
   /** A hosting account: its hosting, panel, login and password, paid until, SSH – shared by its projects. */
   const hosts = useHostsStore()
   const projects = useProjectsStore()
+  const notify = useNotifyStore()
 
   const open = computed({
     get: () => hosts.editing !== null,
@@ -238,12 +270,70 @@
       : JSON.stringify(snapshot()[key] ?? null) !== JSON.stringify(initial.value[key] ?? null)
   }
 
-  const dirty = computed(() => open.value && (password.value !== savedPassword.value || Object.keys(form).some(key => changed(key))))
+  /** something typed since it opened – kept as a draft when the dialog closes (or switches) without saving */
+  const modified = computed(() => password.value !== savedPassword.value || Object.keys(form).some(key => changed(key)))
+  const dirty = computed(() => open.value && modified.value)
 
-  /** ×, Esc and the backdrop close only an untouched form – changes are saved or dropped in the footer */
-  const canClose = () => !dirty.value
+  const keyOf = (editing: typeof hosts.editing) => editing === null ? null : (editing === 'new' ? 'new' : editing.id)
 
-  watch(() => hosts.editing, async editing => {
+  /** the other accounts to switch to, by name */
+  const switchOptions = computed(() => hosts.sorted.map(item => ({ value: item.id, label: item.name })))
+  /** the account asked for while this one has changes – the note asks what to do */
+  const pending = ref<NonNullable<typeof host.value> | null>(null)
+
+  function switchTo (id: number | null): void {
+    const target = hosts.byId(id)
+
+    if (!target || target.id === host.value?.id) {
+      return
+    }
+
+    if (dirty.value) {
+      pending.value = target
+    } else {
+      hosts.editing = target
+    }
+  }
+
+  function confirmSwitch (how: 'keep' | 'save'): void {
+    const target = pending.value
+    pending.value = null
+
+    if (!target) {
+      return
+    }
+
+    if (how === 'save') {
+      void save(target)
+    } else {
+      hosts.editing = target
+    }
+  }
+
+  /** the changes dropped – the form as opened – and the dialog closed */
+  function discard (): void {
+    for (const key of Object.keys(form) as Array<keyof typeof form>) {
+      ;(form as Record<string, unknown>)[key] = initial.value[key] ?? (key === 'sshPort' ? null : '')
+    }
+
+    password.value = savedPassword.value
+    open.value = false
+  }
+
+  watch(() => hosts.editing, async (editing, previous) => {
+    // the one left: its changes kept for later, or its draft gone when there is none
+    const left = keyOf(previous ?? null)
+
+    if (left !== null && left !== keyOf(editing)) {
+      if (modified.value) {
+        hosts.drafts.set(left, { form: { ...form }, password: password.value })
+      } else {
+        hosts.drafts.delete(left)
+      }
+    }
+
+    pending.value = null
+
     if (editing === null) {
       return
     }
@@ -256,14 +346,27 @@
     confirmDelete.value = false
     void nextTick(() => input.value?.focus())
 
+    // its draft from before – the changes back, over the saved values
+    const draft = hosts.drafts.get(keyOf(editing) ?? 'new')
+
+    if (draft) {
+      Object.assign(form, draft.form)
+      notify.show('Przywrócono niezapisane zmiany.')
+    }
+
     if (editing !== 'new' && editing.hasPassword) {
       loading.value = true
       password.value = savedPassword.value = await hosts.password(editing.id) ?? ''
       loading.value = false
     }
+
+    if (draft && keyOf(hosts.editing) === keyOf(editing)) {
+      password.value = draft.password
+    }
   })
 
-  async function save (): Promise<void> {
+  /** saves; then closes – or opens `next` (switching after saving) */
+  async function save (next?: NonNullable<typeof host.value>): Promise<void> {
     if (!form.name) {
       error.value = 'Podaj nazwę.'
 
@@ -277,7 +380,10 @@
     busy.value = false
 
     if (saved) {
-      open.value = false
+      // saved – nothing left to keep as a draft
+      initial.value = snapshot()
+      savedPassword.value = password.value
+      hosts.editing = next ?? null
     }
   }
 
@@ -289,6 +395,8 @@
     busy.value = true
 
     if (await hosts.remove(host.value.id)) {
+      initial.value = snapshot()
+      savedPassword.value = password.value
       open.value = false
     }
 
@@ -334,6 +442,21 @@
 .used p {
   margin: 0;
   font-size: 13px;
+}
+
+/* switching with changes – the note over the buttons */
+.switch-alert {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.draft-mark {
+  width: 13px;
+  height: 13px;
+  color: var(--warn);
+  vertical-align: -2px;
 }
 
 /* the footer's "unsaved" – as in the project's dialog */

@@ -1,6 +1,6 @@
 import type { Category, PasswordKind, Project, ProjectInput, TodoProject, UpdateScope } from '@/types'
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { categoriesApi, projectsApi, todoApi } from '@/api/projects'
 import { config } from '@/config'
 import { compareManual, groupProjects, moveId, newestReporters, newestWordpress, updateScope } from '@/utils/projects'
@@ -21,6 +21,9 @@ export const useProjectsStore = defineStore('projects', () => {
 
   /** the project in the edit dialog; 'new' – a new one */
   const editing = ref<Project | 'new' | null>(null)
+  /** a project closed with changes not saved – the form (JSON) and the secrets typed, back when it opens again (this
+   * session only, in memory) */
+  const drafts = reactive(new Map<number | 'new', { form: string, secrets: Record<string, string> }>())
   /** the category in its dialog; 'new' – a new one */
   const editingCategory = ref<Category | 'new' | null>(null)
 
@@ -627,6 +630,7 @@ export const useProjectsStore = defineStore('projects', () => {
     status,
     loadError,
     editing,
+    drafts,
     editingCategory,
     load,
     refresh,

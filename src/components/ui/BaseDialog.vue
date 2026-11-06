@@ -19,6 +19,9 @@
       <header class="dialog__head">
         <h2 :id="titleId" class="dialog__title">{{ title }}</h2>
 
+        <!-- beside the title: what the dialog can switch to (another project, another account) -->
+        <div v-if="$slots.head" class="dialog__switch"><slot name="head" /></div>
+
         <button aria-label="Zamknij" class="btn btn--icon btn--sm" type="button" @click="requestClose">
           <X />
         </button>
@@ -105,8 +108,9 @@
   width: min(var(--width), calc(100vw - 24px));
   max-height: calc(100dvh - 48px);
   padding: 0;
-  /* only the body scrolls – the dialog's own (UA) overflow would add a second bar */
-  overflow: hidden;
+  /* only the body scrolls – the dialog's own (UA) overflow would add a second bar; clip, not hidden: a hidden box can
+     still be scrolled by focus (a select's search near the edge moved the whole dialog sideways) */
+  overflow: clip;
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--surface);
@@ -178,6 +182,12 @@
   font-size: 13px;
   font-weight: 500;
   color: var(--text-2);
+}
+
+/* the switch – after the title, the close button pushed to the end */
+.dialog__switch {
+  width: min(320px, 50%);
+  margin: 0 auto 0 16px;
 }
 
 .dialog__body {
