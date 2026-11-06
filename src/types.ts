@@ -6,6 +6,27 @@ export const FLAGS = ['deploy', 'bedrock', 'security', 'acf', 'miModal'] as cons
 export type Flag = typeof FLAGS[number]
 
 /** A category of the list – the projects are grouped by it, in the user's order. */
+/** A hosting account – one holds several projects; its panel password apart, encrypted (hostsApi.password). */
+export interface Host {
+  id: number
+  name: string
+  server: string | null
+  serverUrl: string | null
+  /** the login to the hosting's panel */
+  serverAccount: string | null
+  /** RRRR-MM-DD – the list warns 30 days before */
+  paidUntil: string | null
+  sshHost: string | null
+  sshPort: number | null
+  sshUser: string | null
+  hasPassword: boolean
+  /** the projects on it */
+  projects: number[]
+}
+
+/** What the API takes for an account: any field, null clears it. */
+export type HostInput = Partial<Omit<Host, 'id' | 'hasPassword' | 'projects'>>
+
 export interface Category {
   id: number
   name: string
@@ -81,6 +102,13 @@ export interface Project extends Record<Flag, boolean> {
   /** RRRR-MM-DD */
   /** id of the linked Todo project */
   todoProject: number | null
+  /** the hosting account (Host) – its hosting, panel and login stand for server, serverUrl and serverAccount */
+  hostId?: number | null
+  /** the database, typed by the owner (its password apart, encrypted – projectsApi.password(id, 'db')) */
+  dbHost?: string | null
+  dbName?: string | null
+  dbUser?: string | null
+  hasDbPassword?: boolean
   todo?: TodoSummary | null
   notes: string | null
   /** reCAPTCHA v3's site key – its secret apart, encrypted (projectsApi.password(id, 'recaptcha')) */
@@ -260,10 +288,10 @@ export interface SiteReport {
 }
 
 /** What the API takes: any field, null clears it. */
-export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'hasStagingAuthPassword' | 'hasRecaptchaSecret' | 'staging' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter' | 'updates' | 'translationUpdates' | 'recaptcha' | 'ssl' | 'domainChecks' | 'sites'>>
+export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'hasStagingAuthPassword' | 'hasRecaptchaSecret' | 'hasDbPassword' | 'staging' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter' | 'updates' | 'translationUpdates' | 'recaptcha' | 'ssl' | 'domainChecks' | 'sites'>>
 
 /** the secrets kept encrypted: the panel's password, HTTP Basic Auth's, reCAPTCHA's secret key */
-export type PasswordKind = 'panel' | 'auth' | 'staging' | 'recaptcha'
+export type PasswordKind = 'panel' | 'auth' | 'staging' | 'recaptcha' | 'db'
 
 export type SortKey = 'name' | 'status' | 'uptime' | 'server' | 'php' | 'version' | 'theme' | 'reportedAt'
 

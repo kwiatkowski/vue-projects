@@ -233,6 +233,7 @@
   import SelectField from '@/components/ui/SelectField.vue'
   import { config } from '@/config'
   import { vTip } from '@/directives/tip'
+  import { useHostsStore } from '@/stores/hosts'
   import { useNotifyStore } from '@/stores/notify'
   import { useProjectsStore } from '@/stores/projects'
   import { FLAGS } from '@/types'
@@ -241,6 +242,7 @@
 
   /** The project's dialog: the name and what defines the project on the left, the tabs (components/project/) right. */
   const projects = useProjectsStore()
+  const hosts = useHostsStore()
   const notify = useNotifyStore()
 
   // the notes' editor (Tiptap) comes in its own chunk – fetched a moment after the list, not with it
@@ -272,7 +274,7 @@
   const TABS: Array<{ key: Tab, label: string, icon: Component, fields: string[] }> = [
     { key: 'report', label: 'Raport strony', icon: Activity, fields: [] },
     { key: 'history', label: 'Historia', icon: History, fields: [] },
-    { key: 'server', label: 'Serwer', icon: Server, fields: ['server', 'serverUrl', 'serverAccount'] },
+    { key: 'server', label: 'Serwer', icon: Server, fields: ['hostId', 'dbHost', 'dbName', 'dbUser'] },
     { key: 'tech', label: 'Technologia', icon: Cpu, fields: ['engine', 'version', 'theme', 'php'] },
     { key: 'access', label: 'Dostęp', icon: KeyRound, fields: ['adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login', 'authUser', 'authScope', 'stagingAuthUser', 'stagingAuthScope'] },
     { key: 'integrations', label: 'Integracje', icon: Puzzle, fields: ['recaptchaSiteKey', 'googleMapsKey'] },
@@ -298,7 +300,7 @@
     const fields = TABS.find(item => item.key === key)?.fields ?? []
     const changed = fields.some(field => JSON.stringify((form.value as Record<string, unknown>)[field]) !== JSON.stringify(before[field]))
 
-    return changed || (key === 'access' && secrets.accessChanged.value) || (key === 'integrations' && secrets.changed('recaptcha'))
+    return changed || (key === 'access' && secrets.accessChanged.value) || (key === 'integrations' && secrets.changed('recaptcha')) || (key === 'server' && secrets.changed('db'))
   }
 
   const open = computed({
@@ -326,7 +328,7 @@
   /** each tab's dot – what is in it at a glance (tabState.ts) */
   const tabState = computed<Partial<Record<Tab, TabState | null>>>(() => ({
     report: reportTabState(project.value, projects.latestWordpress),
-    server: serverTabState(project.value),
+    server: serverTabState(project.value, hosts.byId(form.value.hostId)),
     tech: techTabState(project.value, projects.latestWordpress, config.phpBranches ?? {}),
     access: accessTabState(project.value),
     integrations: integrationsTabState(project.value, form.value.recaptchaSiteKey, recaptchaHash.value),

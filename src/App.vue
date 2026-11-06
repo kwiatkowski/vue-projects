@@ -9,6 +9,8 @@
     <template v-if="config.canManage">
       <ProjectDialog />
       <CategoryDialog />
+      <HostDialog />
+      <HostsDialog />
       <SettingsDialog />
       <AlertsDialog />
       <ChangelogDialog />
@@ -29,6 +31,8 @@
   import AppTopbar from '@/components/AppTopbar.vue'
   import CategoryDialog from '@/components/CategoryDialog.vue'
   import ChangelogDialog from '@/components/ChangelogDialog.vue'
+  import HostDialog from '@/components/HostDialog.vue'
+  import HostsDialog from '@/components/HostsDialog.vue'
   import ProjectDialog from '@/components/ProjectDialog.vue'
   import SettingsDialog from '@/components/SettingsDialog.vue'
   import TipLayer from '@/components/ui/TipLayer.vue'
@@ -36,6 +40,7 @@
   import ViewDialog from '@/components/ViewDialog.vue'
   import { useTabBadge } from '@/composables/tabBadge'
   import { config } from '@/config'
+  import { useHostsStore } from '@/stores/hosts'
   import { useProjectsStore } from '@/stores/projects'
   import { updateScope } from '@/utils/projects'
 
@@ -89,6 +94,11 @@
 
   onMounted(() => {
     void projects.load()
+
+    // the hosting accounts – the owner's only
+    if (config.canManage) {
+      void useHostsStore().load()
+    }
     checkTimer = setInterval(check, CHECK_MS)
     refreshTimer = setInterval(refresh, REFRESH_MS)
     document.addEventListener('visibilitychange', onVisible)

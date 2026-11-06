@@ -271,6 +271,29 @@ export function sslDaysLeft (project: Pick<Project, 'ssl'>, now: Date = new Date
   return project.ssl?.validTo ? Math.max(0, Math.floor((new Date(project.ssl.validTo).getTime() - now.getTime()) / 86_400_000)) : null
 }
 
+/** how many days before a paid-until date the list warns */
+export const PAID_WARN_DAYS = 30
+
+/**
+ * Until when a hosting is paid: ok, soon (30 days or less), bad (past) – with the date and the days left; null without
+ * a date.
+ */
+export function paidState (day: string | null | undefined, now: Date = new Date()): { tone: 'ok' | 'soon' | 'bad', text: string, days: number } | null {
+  if (!day) {
+    return null
+  }
+
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+  const [year = 0, month = 1, date = 1] = day.split('-').map(Number)
+  const days = Math.round((new Date(year, month - 1, date).getTime() - today) / 86_400_000)
+
+  if (days < 0) {
+    return { tone: 'bad', text: `${formatDay(day)} – po terminie`, days }
+  }
+
+  return { tone: days <= PAID_WARN_DAYS ? 'soon' : 'ok', text: `${formatDay(day)} (${days} dni)`, days }
+}
+
 /** why the staging got no answer at all – the plugin's ReportPuller::failure() */
 const STAGING_FAILURES: Record<NonNullable<StagingCheck['error']>, string> = {
   dns: 'nie ma takiej domeny (DNS)',

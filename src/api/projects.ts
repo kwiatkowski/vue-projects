@@ -1,4 +1,4 @@
-import type { AlertChannel, AlertSettings, Category, PasswordKind, Project, ProjectHistory, ProjectInput, SiteReport, TodoProject, TodoSummary, TodoTask, UpdateScope, UpdateState } from '@/types'
+import type { AlertChannel, AlertSettings, Category, Host, HostInput, PasswordKind, Project, ProjectHistory, ProjectInput, SiteReport, TodoProject, TodoSummary, TodoTask, UpdateScope, UpdateState } from '@/types'
 import type { ColumnKey } from '@/utils/columns'
 import { request } from './client'
 
@@ -42,6 +42,18 @@ export const categoriesApi = {
   remove: (id: number) => request<{ deleted: boolean }>('DELETE', `categories/${id}`),
   /** every category once, in the new order; answers with the list */
   reorder: (ids: number[]) => request<Category[]>('POST', 'categories/order', { ids }),
+}
+
+/** the hosting accounts – the owner's */
+export const hostsApi = {
+  list: () => request<Host[]>('GET', 'hosts'),
+  create: (input: HostInput) => request<Host>('POST', 'hosts', input),
+  update: (id: number, input: HostInput) => request<Host>('PATCH', `hosts/${id}`, input),
+  remove: (id: number) => request<{ deleted: boolean }>('DELETE', `hosts/${id}`),
+  /** the panel's password – kept encrypted, sent only on request */
+  password: (id: number) => request<{ password: string | null }>('GET', `hosts/${id}/password`),
+  /** sets it; empty or null removes it; answers with the account */
+  setPassword: (id: number, password: string | null) => request<Host>('POST', `hosts/${id}/password`, { password }),
 }
 
 export const columnsApi = {

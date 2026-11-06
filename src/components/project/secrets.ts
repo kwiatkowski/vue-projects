@@ -3,7 +3,7 @@ import { computed, reactive } from 'vue'
 import { projectsApi } from '@/api/projects'
 import { useProjectsStore } from '@/stores/projects'
 
-const KINDS: PasswordKind[] = ['panel', 'auth', 'staging', 'recaptcha']
+const KINDS: PasswordKind[] = ['panel', 'auth', 'staging', 'recaptcha', 'db']
 
 /** which "has…" flag of the project says the secret is kept */
 const KEPT: Record<PasswordKind, keyof Project> = {
@@ -11,6 +11,7 @@ const KEPT: Record<PasswordKind, keyof Project> = {
   auth: 'hasAuthPassword',
   staging: 'hasStagingAuthPassword',
   recaptcha: 'hasRecaptchaSecret',
+  db: 'hasDbPassword',
 }
 
 const each = <T>(value: () => T) => Object.fromEntries(KINDS.map(kind => [kind, value()])) as Record<PasswordKind, T>

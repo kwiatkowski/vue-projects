@@ -1,6 +1,6 @@
-import type { PhpBranch, Project } from '@/types'
+import type { Host, PhpBranch, Project } from '@/types'
 import { recaptchaUses } from '@/components/project/recaptcha'
-import { domainChecks, envStatus, phpStatus, reportState, sslState, updateScope, vulnerabilityTone } from '@/utils/projects'
+import { domainChecks, envStatus, formatDay, paidState, phpStatus, reportState, sslState, updateScope, vulnerabilityTone } from '@/utils/projects'
 
 /**
  * A tab's dot in the project's dialog: all there and fine (green), something to look at (orange), something wrong
@@ -63,10 +63,18 @@ export function techTabState (project: Project | null, latest: string | null, br
   return worst([wordpress, phpState[php]])
 }
 
-/** Serwer: the certificates – the main domain's and the others' (orange – ending soon, red – not valid or not answering) */
-export function serverTabState (project: Project | null, now: Date = new Date()): TabState | null {
+/**
+ * Serwer: the hosting account paid for (orange – 30 days or less left, red – past) and the certificates – the main
+ * domain's and the others' (orange – ending soon, red – not valid or not answering)
+ */
+export function serverTabState (project: Project | null, host: Host | null = null, now: Date = new Date()): TabState | null {
+  const paid = paidState(host?.paidUntil, now)
+  const hosting: TabState | null = paid && paid.tone !== 'ok'
+    ? { tone: paid.tone === 'bad' ? 'bad' : 'warn', label: `hosting opłacony do ${formatDay(host?.paidUntil)}` }
+    : null
+
   if (!project?.ssl) {
-    return null
+    return hosting
   }
 
   const SSL: Record<'ok' | 'soon' | 'bad', TabState> = {
@@ -83,7 +91,7 @@ export function serverTabState (project: Project | null, now: Date = new Date())
     return row.tone === 'warn' ? { tone: 'warn', label: `${row.domain}: ${row.text}` } as const : null
   })
 
-  return worst([main ? SSL[main] : null, ...others])
+  return worst([main ? SSL[main] : null, ...others, hosting])
 }
 
 /** Dostęp: production and staging as last checked – red when one is down, green when the checked ones work */

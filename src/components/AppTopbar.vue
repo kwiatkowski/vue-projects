@@ -126,6 +126,17 @@
         <Settings /> Ustawienia
       </button>
 
+      <!-- the hosting accounts – one per hosting account, shared by its projects -->
+      <button
+        v-if="config.canManage"
+        class="menu__item"
+        role="menuitem"
+        type="button"
+        @click="hosts.listOpen = true"
+      >
+        <Server /> Konta hostingowe
+      </button>
+
       <!-- e-mail and Slack: where the alerts and the weekly summary go -->
       <button
         v-if="config.canManage"
@@ -190,7 +201,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { Bell, Check, ChevronDown, Eye, FolderPlus, Layers, LogIn, LogOut, Moon, Plus, Settings, ShieldCheck, Sparkles, SquarePlus, Sun, UserRound, Users } from 'lucide-vue-next'
+  import { Bell, Check, ChevronDown, Eye, FolderPlus, Layers, LogIn, LogOut, Moon, Plus, Server, Settings, ShieldCheck, Sparkles, SquarePlus, Sun, UserRound, Users } from 'lucide-vue-next'
   import { computed, ref } from 'vue'
   import { viewerApi } from '@/api/projects'
   import LoginDialog from '@/components/LoginDialog.vue'
@@ -199,9 +210,11 @@
   import { config } from '@/config'
   import { vTip } from '@/directives/tip'
   import { useColumnsStore } from '@/stores/columns'
+  import { useHostsStore } from '@/stores/hosts'
   import { useProjectsStore } from '@/stores/projects'
 
   const projects = useProjectsStore()
+  const hosts = useHostsStore()
   const columns = useColumnsStore()
   const { theme, dark, setTheme } = useTheme()
 

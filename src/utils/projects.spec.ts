@@ -1,6 +1,6 @@
 import type { Project } from '@/types'
 import { describe, expect, it } from 'vitest'
-import { ago, bareDomain, compareManual, compareVersions, domainChecks, formatDateTime, formatDay, groupProjects, LATEST_PLUGIN_MEDEN, latestWordpress, matches, missingTranslations, moveId, newestReporters, newestWordpress, outageText, ownTheme, parseReporter, pendingUpdates, phpStatus, repoHost, reporterUpdate, reportStale, reportState, siteUrl, sortProjects, stagingCheck, vulnerabilityTone } from './projects'
+import { ago, bareDomain, compareManual, compareVersions, domainChecks, formatDateTime, formatDay, groupProjects, LATEST_PLUGIN_MEDEN, latestWordpress, matches, missingTranslations, moveId, newestReporters, newestWordpress, outageText, ownTheme, paidState, parseReporter, pendingUpdates, phpStatus, repoHost, reporterUpdate, reportStale, reportState, siteUrl, sortProjects, stagingCheck, vulnerabilityTone } from './projects'
 
 const p = (name: string, extra: Partial<Project> = {}): Partial<Project> => ({ name, domains: [name], status: 'online', ...extra })
 
@@ -275,5 +275,17 @@ describe('outageText', () => {
 
     expect(text.meaning).toBe('nietypowa odpowiedź serwera')
     expect(text.long).toMatch(/^nietypowa odpowiedź serwera \(HTTP 418\) · od /)
+  })
+})
+
+describe('paidState', () => {
+  const now = new Date(2026, 10, 6, 15, 0)
+
+  it('tells a hosting paid well ahead, ending soon and past its date', () => {
+    expect(paidState(null, now)).toBeNull()
+    expect(paidState('2027-01-10', now)).toMatchObject({ tone: 'ok', days: 65 })
+    expect(paidState('2026-12-06', now)).toMatchObject({ tone: 'soon', days: 30 })
+    expect(paidState('2026-11-06', now)).toMatchObject({ tone: 'soon', days: 0 })
+    expect(paidState('2026-11-05', now)).toMatchObject({ tone: 'bad', days: -1 })
   })
 })

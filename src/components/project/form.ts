@@ -11,6 +11,7 @@ export type Form = Required<Omit<ProjectInput, 'status'>> & { status: Status | n
 export const TEXT_FIELDS = [
   'server', 'serverUrl', 'serverAccount', 'php', 'engine', 'version', 'theme', 'repo', 'notes',
   'adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login', 'authUser', 'authScope', 'stagingAuthUser', 'stagingAuthScope', 'recaptchaSiteKey', 'googleMapsKey',
+  'dbHost', 'dbName', 'dbUser',
 ] as const
 
 export const FLAG_LABELS: Record<Flag, string> = {
@@ -36,6 +37,7 @@ export function blank (): Form {
     status: null,
     categoryId: null,
     todoProject: null,
+    hostId: null,
     ...Object.fromEntries(TEXT_FIELDS.map(field => [field, ''])),
     ...Object.fromEntries(FLAGS.map(flag => [flag, false])),
   } as Form

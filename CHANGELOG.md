@@ -8,6 +8,9 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 - Zakładka **Serwer**: ścieżka projektu na serwerze (katalog główny Bedrocka albo WordPressa) z przyciskiem kopiowania – uzupełnia ją raport strony (plugin_meden 1.22.0).
 - Lista **Raport** w filtrach pokazuje tylko to, co dotyczy jakiegoś projektu – bez pozycji z zerem (wybrana zostaje).
 - Lista **Status** tak samo: tylko stany, które ma jakiś projekt (bez „offline 0”).
+- **Konta hostingowe** – dane hostingu wpisuje się raz na konto, a nie przy każdej stronie: hosting, adres panelu, login, hasło (szyfrowane), opłacone do i SSH. W projekcie (zakładka **Serwer**) wybór konta, „+” – nowe konto, ołówek – edycja (zmiana dotyczy wszystkich jego projektów); dane konta z przyciskami kopiowania i gotowe polecenie **SSH** od razu do katalogu projektu. Lista wszystkich kont: menu konta → **Konta hostingowe**. Istniejące dane serwerów zamienione na konta automatycznie.
+- Kropka przy zakładce Serwer ostrzega też o **końcu opłaconego hostingu** – pomarańczowa na 30 dni przed, czerwona po terminie.
+- Zakładka Serwer: sekcja **Baza danych** – host, nazwa, użytkownik i hasło (szyfrowane), wpisywane ręcznie.
 
 ## 2026.11.04
 
