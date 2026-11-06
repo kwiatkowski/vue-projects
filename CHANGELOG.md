@@ -18,6 +18,7 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 - Po najechaniu na **liczbę projektów** konta – dymek jak przy raporcie: nazwa konta w nagłówku, pod nim jego projekty ze statusem.
 - Konto hostingowe: pole **Kwota odnowienia** (np. „299 zł brutto / rok”) – w zakładce Serwer i na liście kont obok daty „opłacone do”.
 - Przełączanie **Projekty / Konta hostingowe** bez mignięcia paska przewijania strony.
+- Datę „Opłacone do” można **wpisać z klawiatury** (np. 02.04.2026, 2.4.2026, 02042026 albo wkleić 2026-04-02) – kalendarz pod ikoną obok; błędna data podświetla się na czerwono.
 
 ## 2026.11.04
 

@@ -59,7 +59,7 @@
 
       <label class="field">
         <span>Opłacone do</span>
-        <input v-model="form.paidUntil" class="input" type="date">
+        <DateField v-model="form.paidUntil" />
       </label>
 
       <label class="field">
@@ -155,6 +155,7 @@
   import { computed, nextTick, reactive, ref, useTemplateRef, watch } from 'vue'
   import BaseDialog from '@/components/ui/BaseDialog.vue'
   import CopyInput from '@/components/ui/CopyInput.vue'
+  import DateField from '@/components/ui/DateField.vue'
   import PasswordInput from '@/components/ui/PasswordInput.vue'
   import { useHostsStore } from '@/stores/hosts'
   import { useProjectsStore } from '@/stores/projects'
