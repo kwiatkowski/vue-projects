@@ -203,13 +203,13 @@
               <Check v-if="project[flag]" :aria-label="FLAG_LABELS[flag]" class="yes" />
             </td>
 
-            <td v-if="show('todo')" class="nowrap" :class="cellChanged(project, 'todo')">
-              <TodoChip v-if="project.todo" :todo="project.todo" />
-            </td>
-
             <!-- the forms – their popup, not the row's dialog -->
             <td v-if="show('forms')" class="center cell-link" :class="cellChanged(project, 'forms')" @click.stop>
               <FormsCell :project="project" />
+            </td>
+
+            <td v-if="show('todo')" class="nowrap" :class="cellChanged(project, 'todo')">
+              <TodoChip v-if="project.todo" :todo="project.todo" />
             </td>
 
             <!-- a click here works the report's popup, not the row's dialog -->

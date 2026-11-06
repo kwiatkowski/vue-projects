@@ -27,6 +27,7 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 - Zmienione, niezapisane pole ma też **pomarańczową ramkę** – w kolorze ołówka.
 - Przeglądarka **nie proponuje już zapisania hasła** po każdym zapisie projektu czy konta – pola haseł stron i kont są dalej zakryte kropkami (logowanie do samej listy działa jak dotąd).
 - **Formularze** (raport strony – plugin_meden 1.23.0, MK Core): nowa kolumna z kopertą i liczbą formularzy – zielona, gdy działają; pomarańczowa przy błędach konfiguracji albo bez reCAPTCHA; czerwona, gdy wysyłka się nie udała (30 dni). W dymku każdy formularz z licznikami (wysłane / nieudane / spam), ostatnim błędem i stronami, na których jest. W oknie projektu zakładka **Formularze**: integracje (reCAPTCHA, wysyłka poczty, Flamingo), a dla każdego formularza pola, odbiorca, liczniki, błędy i strony z linkami. Filtr Raport: **Formularze z błędami**; powiadomienie „Formularz nie wysłał wiadomości” (e-mail, Slack) i sekcja **Formularze** w podsumowaniu tygodnia. Liczniki działają od wdrożenia wtyczki.
+- Kolumna **Formularze** przed kolumną Todo.
 
 ## 2026.11.04
 
