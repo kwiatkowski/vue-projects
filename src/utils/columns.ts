@@ -4,7 +4,7 @@
  */
 export const COLUMN_KEYS = [
   'name', 'status', 'uptime', 'server', 'php', 'engine', 'theme', 'repo', 'deploy', 'bedrock', 'security',
-  'local', 'stage', 'acf', 'miModal', 'todo', 'report',
+  'local', 'stage', 'acf', 'miModal', 'todo', 'forms', 'report',
 ] as const
 
 export type ColumnKey = typeof COLUMN_KEYS[number]
@@ -34,6 +34,7 @@ export const COLUMNS: ColumnDef[] = [
   { key: 'acf', label: 'ACF', section: 'Konfiguracja' },
   { key: 'miModal', label: 'MI Modal', section: 'Konfiguracja' },
   { key: 'todo', label: 'Todo', section: 'Praca', private: true },
+  { key: 'forms', label: 'Formularze', section: 'Praca', private: true },
   { key: 'report', label: 'Raport', section: 'Praca', private: true },
 ]
 

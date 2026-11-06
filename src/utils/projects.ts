@@ -1,4 +1,4 @@
-import type { Category, DownCheck, Host, MissingTranslation, PhpBranch, PluginUpdate, Project, SortKey, StagingCheck, Status, UpdateScope } from '@/types'
+import type { Category, DownCheck, FormsReport, Host, MissingTranslation, PhpBranch, PluginUpdate, Project, SortKey, StagingCheck, Status, UpdateScope } from '@/types'
 
 /** in this order in the filters: online, offline, not watched, suspended */
 export const STATUS_LABELS: Record<Status, string> = {
@@ -331,6 +331,30 @@ export function expiringTerms (project: Pick<Project, 'domainInfo'>, host: Pick<
   return terms.flatMap(({ what, name, day, state }) => state && state.tone !== 'ok' ? [{ what, name, text: state.text, date: formatDay(day), days: state.days, tone: state.tone }] : [])
 }
 
+/**
+ * The forms at a glance – the "Formularze" cell, the tab's dot, the filter: none without a report of them; red – a send
+ * failed (30 days); orange – CF7 finds setup errors, or there is no reCAPTCHA; green – fine.
+ */
+export function formsState (forms: FormsReport | null | undefined): { count: number, failed: number, setup: number, tone: 'ok' | 'warn' | 'bad', label: string } | null {
+  if (!forms || (forms.items.length === 0 && forms.others.length === 0)) {
+    return null
+  }
+
+  const count = forms.items.length
+  const failed = forms.items.reduce((sum, form) => sum + form.failed, 0)
+  const setup = forms.items.reduce((sum, form) => sum + form.configErrors.length, 0)
+
+  if (failed > 0) {
+    return { count, failed, setup, tone: 'bad', label: `Formularze: ${count} – nieudane wysyłki: ${failed}` }
+  }
+
+  if (setup > 0 || (count > 0 && !forms.recaptcha)) {
+    return { count, failed, setup, tone: 'warn', label: setup > 0 ? `Formularze: ${count} – błędy konfiguracji: ${setup}` : `Formularze: ${count} – bez reCAPTCHA` }
+  }
+
+  return { count, failed, setup, tone: 'ok', label: `Formularze: ${count} – działają` }
+}
+
 /** why the staging got no answer at all – the plugin's ReportPuller::failure() */
 const STAGING_FAILURES: Record<NonNullable<StagingCheck['error']>, string> = {
   dns: 'nie ma takiej domeny (DNS)',
@@ -496,7 +520,7 @@ export function parseReporter (reporter: string | null | undefined): { name: str
  * The newest plugin_meden released – its repository is private, the list can't ask GitHub. Bump it with every
  * release of plugin_meden (the tag vX.Y.Z), so the sites on an older one show it at once.
  */
-export const LATEST_PLUGIN_MEDEN = '1.22.0'
+export const LATEST_PLUGIN_MEDEN = '1.23.0'
 
 /**
  * The newest version of each reporter: the highest any site sends – at least the released plugin_meden

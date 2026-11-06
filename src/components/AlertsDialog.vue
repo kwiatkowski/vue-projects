@@ -235,6 +235,7 @@
     { key: 'ssl', label: 'Certyfikat SSL wygasa lub jest zły', param: 'days', unit: 'dni przed końcem', max: 90 },
     { key: 'report', label: 'Brak raportu strony', param: 'hours', unit: 'godzin', max: 168 },
     { key: 'vulnerability', label: 'Nowa podatność wtyczki' },
+    { key: 'forms', label: 'Formularz nie wysłał wiadomości' },
   ]
 
   const SECURE_OPTIONS: Array<{ value: AlertSettings['smtp']['secure'], label: string }> = [

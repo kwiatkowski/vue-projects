@@ -1,6 +1,6 @@
 import type { Host, PhpBranch, Project } from '@/types'
 import { recaptchaUses } from '@/components/project/recaptcha'
-import { domainChecks, envStatus, formatDay, paidState, phpStatus, reportState, sslState, updateScope, vulnerabilityTone } from '@/utils/projects'
+import { domainChecks, envStatus, formatDay, formsState, paidState, phpStatus, reportState, sslState, updateScope, vulnerabilityTone } from '@/utils/projects'
 
 /**
  * A tab's dot in the project's dialog: all there and fine (green), something to look at (orange), something wrong
@@ -98,6 +98,13 @@ export function serverTabState (project: Project | null, host: Host | null = nul
   })
 
   return worst([main ? SSL[main] : null, ...others, hosting, ...domains])
+}
+
+/** Formularze: as the table's cell – red: failed sends, orange: setup errors or no reCAPTCHA, green: fine */
+export function formsTabState (project: Project | null): TabState | null {
+  const state = formsState(project?.forms)
+
+  return state ? { tone: state.tone, label: state.label } : null
 }
 
 /** Dostęp: production and staging as last checked – red when one is down, green when the checked ones work */

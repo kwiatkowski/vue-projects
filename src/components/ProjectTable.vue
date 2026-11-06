@@ -207,6 +207,11 @@
               <TodoChip v-if="project.todo" :todo="project.todo" />
             </td>
 
+            <!-- the forms – their popup, not the row's dialog -->
+            <td v-if="show('forms')" class="center cell-link" :class="cellChanged(project, 'forms')" @click.stop>
+              <FormsCell :project="project" />
+            </td>
+
             <!-- a click here works the report's popup, not the row's dialog -->
             <td v-if="show('report')" class="center cell-link" :class="cellChanged(project, 'reportedAt', 'token')" @click.stop>
               <ReportCell :full="full" :project="project" @open="emit('open', $event)" />
@@ -236,6 +241,7 @@
   import DomainsMark from '@/components/table/DomainsMark.vue'
   import { useTableDrag } from '@/components/table/drag'
   import EngineCell from '@/components/table/EngineCell.vue'
+  import FormsCell from '@/components/table/FormsCell.vue'
   import PhpCell from '@/components/table/PhpCell.vue'
   import ProjectCards from '@/components/table/ProjectCards.vue'
   import ReportCell from '@/components/table/ReportCell.vue'
@@ -341,6 +347,7 @@
     stage: { class: 'center' },
     acf: { class: 'center' },
     miModal: { class: 'center' },
+    forms: { class: 'center' },
     report: { sort: 'reportedAt', class: 'center' },
   }
 

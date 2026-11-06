@@ -26,6 +26,36 @@ export interface Host {
   projects: number[]
 }
 
+/** One Contact Form 7 form as the site's report tells (plugin_meden 1.23.0 / MK Core). */
+export interface FormItem {
+  id: number
+  title: string
+  /** on a multisite – the network's site it belongs to */
+  site: string | null
+  fields: number
+  recipient: string | null
+  /** the published pages and posts with its shortcode or block */
+  pages: Array<{ title: string, url: string }>
+  /** CF7's own check of its setup – the messages */
+  configErrors: string[]
+  /** the last 30 days, counted on the site */
+  sent: number
+  failed: number
+  spam: number
+  lastError: { at: string, message: string } | null
+}
+
+/** The site's forms: CF7 (its version), reCAPTCHA, how mail goes out, Flamingo, other form plugins by name. */
+export interface FormsReport {
+  cf7: string | null
+  recaptcha: boolean
+  flamingo: boolean
+  /** WP Mail SMTP's mailer – null: PHP's mail() */
+  mailer: string | null
+  others: string[]
+  items: FormItem[]
+}
+
 /** A registered domain as its registry tells (RDAP): the registrar, until when it is paid; error – why not known. */
 export interface DomainInfo {
   domain: string
@@ -122,6 +152,8 @@ export interface Project extends Record<Flag, boolean> {
   hasDbPassword?: boolean
   /** the registered domains as their registries tell (RDAP) – the owner's only */
   domainInfo?: DomainInfo[]
+  /** the site's forms (plugin_meden 1.23.0 / MK Core) – null: none, or not reported */
+  forms?: FormsReport | null
   todo?: TodoSummary | null
   notes: string | null
   /** reCAPTCHA v3's site key – its secret apart, encrypted (projectsApi.password(id, 'recaptcha')) */
@@ -301,7 +333,7 @@ export interface SiteReport {
 }
 
 /** What the API takes: any field, null clears it. */
-export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'hasStagingAuthPassword' | 'hasRecaptchaSecret' | 'hasDbPassword' | 'domainInfo' | 'staging' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter' | 'updates' | 'translationUpdates' | 'recaptcha' | 'ssl' | 'domainChecks' | 'sites'>>
+export type ProjectInput = Partial<Omit<Project, 'id' | 'position' | 'todo' | 'reportedAt' | 'token' | 'hasPassword' | 'hasAuthPassword' | 'hasStagingAuthPassword' | 'hasRecaptchaSecret' | 'hasDbPassword' | 'domainInfo' | 'forms' | 'staging' | 'updatedAt' | 'parentTheme' | 'themeDetails' | 'reporter' | 'updates' | 'translationUpdates' | 'recaptcha' | 'ssl' | 'domainChecks' | 'sites'>>
 
 /** the secrets kept encrypted: the panel's password, HTTP Basic Auth's, reCAPTCHA's secret key */
 export type PasswordKind = 'panel' | 'auth' | 'staging' | 'recaptcha' | 'db'
@@ -412,7 +444,7 @@ export interface AlertRule {
   hours?: number
 }
 
-export type AlertRuleKey = 'down' | 'recovery' | 'staging' | 'ssl' | 'report' | 'vulnerability'
+export type AlertRuleKey = 'down' | 'recovery' | 'staging' | 'ssl' | 'report' | 'vulnerability' | 'forms'
 
 /** the owner's "Powiadomienia" (the plugin's AlertSettings) */
 export interface AlertSettings {

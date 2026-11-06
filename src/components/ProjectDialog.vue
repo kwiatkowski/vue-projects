@@ -155,6 +155,7 @@
         <div v-show="tab === 'tech'" class="tab-panel" role="tabpanel"><TechTab /></div>
         <div v-show="tab === 'access'" class="tab-panel" role="tabpanel"><AccessTab /></div>
         <div v-show="tab === 'integrations'" class="tab-panel" role="tabpanel"><IntegrationsTab /></div>
+        <div v-show="tab === 'forms'" class="tab-panel" role="tabpanel"><FormsTab /></div>
 
         <div v-show="tab === 'notes'" class="tab-panel" role="tabpanel">
           <NotesEditor :max-length="5000" :model-value="form.notes ?? ''" placeholder="Notatki" @update:model-value="form.notes = $event" />
@@ -249,18 +250,19 @@
 
 <script lang="ts" setup>
   import type { PasswordKind, Project, SiteReport } from '@/types'
-  import { Activity, AlertTriangle, Check, Cpu, History, KeyRound, ListChecks, NotebookPen, PenLine, Plus, Puzzle, Server, Trash2, X } from 'lucide-vue-next'
+  import { Activity, AlertTriangle, Check, Cpu, History, KeyRound, ListChecks, Mail, NotebookPen, PenLine, Plus, Puzzle, Server, Trash2, X } from 'lucide-vue-next'
   import { type Component, computed, defineAsyncComponent, nextTick, provide, ref, useTemplateRef, watch } from 'vue'
   import { projectsApi } from '@/api/projects'
   import AccessTab from '@/components/project/AccessTab.vue'
   import { blank, FLAG_LABELS, type Form, fromProject, type LockedField, projectFormKey, REPORTED_FLAGS, TEXT_FIELDS } from '@/components/project/form'
+  import FormsTab from '@/components/project/FormsTab.vue'
   import HistoryTab from '@/components/project/HistoryTab.vue'
   import IntegrationsTab from '@/components/project/IntegrationsTab.vue'
   import { useSecretHash } from '@/components/project/recaptcha'
   import ReportTab from '@/components/project/ReportTab.vue'
   import { useSecrets } from '@/components/project/secrets'
   import ServerTab from '@/components/project/ServerTab.vue'
-  import { accessTabState, integrationsTabState, reportTabState, serverTabState, type TabState, techTabState } from '@/components/project/tabState'
+  import { accessTabState, formsTabState, integrationsTabState, reportTabState, serverTabState, type TabState, techTabState } from '@/components/project/tabState'
   import TechTab from '@/components/project/TechTab.vue'
   import TodoTab from '@/components/project/TodoTab.vue'
   import StatusChip from '@/components/StatusChip.vue'
@@ -305,7 +307,7 @@
   })
   const categoryOptions = computed(() => projects.sortedCategories.map(category => ({ value: category.id, label: category.name })))
 
-  type Tab = 'report' | 'history' | 'server' | 'tech' | 'access' | 'integrations' | 'notes' | 'todo'
+  type Tab = 'report' | 'history' | 'server' | 'tech' | 'access' | 'integrations' | 'forms' | 'notes' | 'todo'
 
   /** the right column's tabs; `fields` – what a change there marks the tab with */
   const TABS: Array<{ key: Tab, label: string, icon: Component, fields: string[] }> = [
@@ -315,6 +317,7 @@
     { key: 'tech', label: 'Technologia', icon: Cpu, fields: ['engine', 'version', 'theme', 'php'] },
     { key: 'access', label: 'Dostęp', icon: KeyRound, fields: ['adminUrl', 'stagingUrl', 'stagingAdminUrl', 'localUrl', 'localAdminUrl', 'login', 'authUser', 'authScope', 'stagingAuthUser', 'stagingAuthScope'] },
     { key: 'integrations', label: 'Integracje', icon: Puzzle, fields: ['recaptchaSiteKey', 'googleMapsKey'] },
+    { key: 'forms', label: 'Formularze', icon: Mail, fields: [] },
     { key: 'notes', label: 'Notatki', icon: NotebookPen, fields: ['notes'] },
     { key: 'todo', label: 'Todo', icon: ListChecks, fields: ['todoProject'] },
   ]
@@ -368,6 +371,7 @@
     server: serverTabState(project.value, hosts.byId(form.value.hostId)),
     tech: techTabState(project.value, projects.latestWordpress, config.phpBranches ?? {}),
     access: accessTabState(project.value),
+    forms: formsTabState(project.value),
     integrations: integrationsTabState(project.value, form.value.recaptchaSiteKey, recaptchaHash.value),
     notes: form.value.notes?.trim() ? { tone: 'ok', label: 'jest notatka' } : null,
   }))
@@ -672,9 +676,10 @@
   flex: 1 0 auto;
   justify-content: center;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   margin-bottom: -1px;
-  padding: 8px 9px;
+  /* ten tabs in the column's width – tight sides */
+  padding: 8px 6px;
   border: 0;
   border-bottom: 2px solid transparent;
   background: none;
