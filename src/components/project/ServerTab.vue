@@ -69,11 +69,12 @@
             <span>Hasło</span>
 
             <CopyInput
+              class="input--masked"
               disabled
               :model-value="hostPassword"
               :placeholder="host.hasPassword ? 'Wczytuję…' : '–'"
               tip="Kopiuj hasło"
-              type="password"
+              type="text"
               what="Hasło do panelu hostingu"
             />
           </label>

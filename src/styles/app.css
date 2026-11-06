@@ -684,6 +684,12 @@ textarea.input--title {
   border-color: var(--warn);
 }
 
+/* a secret shown as dots in a text field, not a password field – the browser doesn't offer to save the sites' passwords
+   (PasswordInput; the hosting's password in the project's Serwer tab) */
+.input--masked {
+  -webkit-text-security: disc;
+}
+
 /* ---------- segmented control ---------- */
 
 .seg {

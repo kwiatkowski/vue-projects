@@ -2,10 +2,14 @@
   <span class="input-row input-row--inside input-row--two">
     <input
       v-model="model"
-      autocomplete="new-password"
+      autocomplete="off"
       class="input mono"
+      :class="{ 'input--masked': masked && !shown }"
+      data-1p-ignore
+      data-lpignore="true"
       :placeholder="loading ? 'Wczytuję…' : ''"
-      :type="shown ? 'text' : 'password'"
+      spellcheck="false"
+      :type="shown || masked ? 'text' : 'password'"
     >
 
     <!-- the eye – left of copy, or in copy's place when there is no password to copy; as copy, shown on hover -->
@@ -46,6 +50,13 @@
   const model = defineModel<string>({ default: '' })
   const shown = defineModel<boolean>('shown', { default: false })
   const notify = useNotifyStore()
+
+  /**
+   * Hidden as dots by CSS in a text field, not as a password field – the browser then doesn't offer to save it on
+   * every save (these are the sites' passwords, not the list's own login). A browser without -webkit-text-security
+   * gets a real password field.
+   */
+  const masked = typeof CSS !== 'undefined' && CSS.supports('-webkit-text-security', 'disc')
 
   async function copy (): Promise<void> {
     try {
