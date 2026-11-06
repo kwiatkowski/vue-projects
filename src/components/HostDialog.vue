@@ -149,20 +149,25 @@
       <div>Usunąć konto „{{ host?.name }}”? Jego projekty zostaną – bez konta hostingowego.</div>
     </div>
 
-    <!-- switching to another one while this one has changes – save them first, or keep them for later -->
-    <template v-if="pending" #note>
-      <div class="alert switch-alert">
-        <span>„{{ host?.name ?? 'Nowe konto' }}” ma niezapisane zmiany.</span>
-        <span style="flex: 1" />
-        <button class="btn btn--sm" type="button" @click="pending = null">Zostań</button>
-        <button class="btn btn--sm" type="button" @click="confirmSwitch('keep')">Przełącz – zachowaj zmiany</button>
-        <button class="btn btn--accent btn--sm" type="button" @click="confirmSwitch('save')"><Check /> Zapisz i przełącz</button>
-      </div>
-    </template>
-
     <template #actions>
+      <!-- switching to another one while this one has changes: the footer asks – stay, switch keeping them, save first -->
+      <template v-if="pending">
+        <span class="unsaved switch-ask" :title="pending.name"><AlertTriangle /> <span>Przełączyć na „{{ pending.name }}”?</span></span>
+        <span style="flex: 1" />
+
+        <button class="btn btn--sm" type="button" @click="pending = null">Zostań</button>
+
+        <button v-tip="'Zmiany zostaną zachowane – będą w formularzu po powrocie'" class="btn btn--sm" type="button" @click="confirmSwitch('keep')">
+          Zachowaj i przełącz
+        </button>
+
+        <button class="btn btn--accent btn--sm" type="button" @click="confirmSwitch('save')">
+          <Check /> Zapisz i przełącz
+        </button>
+      </template>
+
       <!-- with changes: drop them, or close and keep them for later (the form has them when it opens again), or save -->
-      <template v-if="dirty">
+      <template v-else-if="dirty">
         <span class="unsaved"><AlertTriangle /> Niezapisane zmiany</span>
         <span style="flex: 1" />
 
@@ -444,14 +449,6 @@
   font-size: 13px;
 }
 
-/* switching with changes – the note over the buttons */
-.switch-alert {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-
 .draft-mark {
   width: 13px;
   height: 13px;
@@ -460,6 +457,16 @@
 }
 
 /* the footer's "unsaved" – as in the project's dialog */
+/* the question about switching – a long name cut short, the buttons keep their room */
+.switch-ask {
+  min-width: 0;
+}
+
+.switch-ask > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .unsaved {
   display: inline-flex;
   align-items: center;

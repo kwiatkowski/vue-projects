@@ -23,7 +23,7 @@ Aplikacja pokazuje najnowszą sekcję w oknie „Co nowego” (klik w wersję na
 - „Opłacone do” jest opcjonalne – konto bez daty (np. hosting opłacany przez klienta) też ma zielony ptaszek kompletu danych.
 - Pola **Hosting** i **Adres panelu** (okno konta, zakładka Serwer) mają przycisk otwierania w nowej karcie – obok kopiowania.
 - **Szkice** w oknach projektu i konta hostingowego: „Zamknij” (albo ✕, Esc) zamyka okno i **zachowuje niezapisane zmiany** – po ponownym otwarciu są w formularzu; „Zamknij bez zapisywania” je odrzuca. Szkice trzymane są do odświeżenia strony.
-- W nagłówku obu okien **przełącznik** na inny projekt / inne konto – lista z wyszukiwarką, ołówek przy tych ze szkicem; gdy bieżący ma zmiany, okno pyta: zostań, przełącz z zachowaniem zmian albo zapisz i przełącz.
+- W nagłówku obu okien **przełącznik** na inny projekt / inne konto – lista z wyszukiwarką, ołówek przy tych ze szkicem; gdy bieżący ma zmiany, okno pyta w stopce (zamiast jej przycisków): zostań, zachowaj i przełącz albo zapisz i przełącz.
 
 ## 2026.11.04
 
